@@ -1,5 +1,7 @@
 # BlackRaptor Workforce
 
+**Currently in PRIVATE ALPHA — see [docs/ALPHA.md](docs/ALPHA.md).**
+
 ![agents](https://img.shields.io/badge/agents-58-6E56CF) ![skills](https://img.shields.io/badge/skills-26-6E56CF) ![packs](https://img.shields.io/badge/packs-5-6E56CF) ![license](https://img.shields.io/badge/license-Apache--2.0-blue)
 
 **Specialist agent packs with read-only review gates that block work until it meets the standard.**

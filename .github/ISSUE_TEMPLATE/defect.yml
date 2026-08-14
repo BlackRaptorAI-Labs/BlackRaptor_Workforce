@@ -1,0 +1,70 @@
+name: Defect
+description: Something broke or behaved wrong. File one per defect, any time.
+title: "[defect] "
+labels: ["alpha", "alpha-defect"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A defect is anything that broke, errored, or behaved differently than you expected.
+        Small ones count. When in doubt, file it.
+  - type: input
+    id: summary
+    attributes:
+      label: One-line summary
+      placeholder: e.g. "Marketing plugin failed to load after install."
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Pack / area involved
+      options:
+        - engineering
+        - council
+        - marketing
+        - hardware
+        - core
+        - install / marketplace
+        - docs
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened vs. what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: As best you can — even a rough sequence helps.
+    validations:
+      required: false
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity, as you felt it
+      options:
+        - "blocked me"
+        - "worked around it"
+        - "cosmetic"
+    validations:
+      required: true
+  - type: input
+    id: client_version
+    attributes:
+      label: Claude Code client version
+      description: Run `claude --version`.
+      placeholder: e.g. 2.1.170
+    validations:
+      required: true
+  - type: textarea
+    id: excerpt
+    attributes:
+      label: Session excerpt, if shareable
+      description: Optional — only if you choose to include it.
+    validations:
+      required: false

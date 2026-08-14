@@ -1,0 +1,101 @@
+name: Session report
+description: One report per meaningful session — what you did, what fired, what felt wrong.
+title: "[session] "
+labels: ["alpha", "session-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing BlackRaptor Workforce. One of these per meaningful session.
+        Blunt is better than polite — "it wasted my time" is a valid, useful report.
+  - type: dropdown
+    id: packs
+    attributes:
+      label: Which pack(s) did you use?
+      multiple: true
+      options:
+        - engineering
+        - council
+        - marketing
+        - hardware
+        - core
+        - multiple
+    validations:
+      required: true
+  - type: input
+    id: task
+    attributes:
+      label: What task did you attempt?
+      description: One line.
+      placeholder: e.g. "Refactor the auth module and get it reviewed."
+    validations:
+      required: true
+  - type: textarea
+    id: fired
+    attributes:
+      label: Which agents or skills fired?
+      description: Best recollection is fine — no need to be exact.
+    validations:
+      required: false
+  - type: dropdown
+    id: gate_blocked
+    attributes:
+      label: Did any review gate BLOCK or flag your work?
+      options:
+        - "yes — and it was right"
+        - "yes — but it was wrong"
+        - "no"
+        - "not sure"
+    validations:
+      required: true
+  - type: textarea
+    id: gate_next
+    attributes:
+      label: If a gate fired, what happened next?
+      description: What did it say, and what did you do about it?
+    validations:
+      required: false
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: The output
+      options:
+        - accepted as-is
+        - accepted after rework
+        - rejected
+        - abandoned
+    validations:
+      required: true
+  - type: input
+    id: cost
+    attributes:
+      label: Rough cost, if known
+      description: Optional — run /cost in the session.
+    validations:
+      required: false
+  - type: textarea
+    id: wrong
+    attributes:
+      label: What felt wrong, slow, or confusing?
+      description: The gold. Be blunt — this is the most useful field in the form.
+    validations:
+      required: true
+  - type: dropdown
+    id: reuse
+    attributes:
+      label: Would you use this again for similar work?
+      options:
+        - "1 — no"
+        - "2"
+        - "3"
+        - "4"
+        - "5 — definitely"
+    validations:
+      required: true
+  - type: textarea
+    id: anything_else
+    attributes:
+      label: Anything else?
+      description: Optional. Include a transcript excerpt ONLY if you choose to share it.
+    validations:
+      required: false
