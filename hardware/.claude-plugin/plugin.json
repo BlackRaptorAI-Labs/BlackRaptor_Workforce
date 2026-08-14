@@ -1,0 +1,31 @@
+{
+  "name": "blackraptor-hardware",
+  "displayName": "BlackRaptor Workforce — Hardware Engineering",
+  "version": "1.2.0",
+  "dependencies": [
+    "blackraptor-core"
+  ],
+  "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. A governed hardware-engineering department plus an adversarial design-review gate, conducted by the hw-program skill (main session), built on the Agent Operating Standard v2. Conductor: the hw-program skill (decision register, interfaces, dispatch, PDR/CDR/MRR gates) — a main-session skill, not a seat. Seats: power-electronics, thermal-mechanical, rf-connectivity, embedded-firmware, reliability-dfr, compliance-cert, manufacturing-dfm, cost-engineer — with hw-design-reviewer as the mandatory second set of eyes before any board spin, tooling commitment, purchase, or external commitment. Product-agnostic: each program supplies its own PROGRAM-CONTEXT.md (template included). Design doctrine baked in: the least expensive device that functions in its conditions for its design life — cost is a requirement with the same standing as performance, over-design is a reviewable defect, datasheets are ground truth, worst-case not typical. Auto-pulls the blackraptor-core pack: product-manager validates requirements against market need at intake and PDR (engineers do not author market requirements), and evidence-auditor + research-integrity gate load-bearing external research claims (pricing, lifecycle, standards applicability). Agents design and analyze — humans make the irreversible calls.",
+  "author": {
+    "name": "BlackRaptor AI",
+    "url": "https://github.com/BlackRaptorAI"
+  },
+  "homepage": "https://github.com/BlackRaptorAI/blackraptor/tree/main/hardware",
+  "repository": "https://github.com/BlackRaptorAI/blackraptor",
+  "license": "Apache-2.0",
+  "keywords": [
+    "hardware",
+    "electronics",
+    "firmware",
+    "embedded",
+    "power-electronics",
+    "thermal",
+    "rf",
+    "reliability",
+    "dfm",
+    "compliance",
+    "cost-engineering",
+    "design-review"
+  ],
+  "skills": "./skills/"
+}

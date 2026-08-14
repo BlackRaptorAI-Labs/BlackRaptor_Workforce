@@ -1,0 +1,153 @@
+# change-record-required — file-presence gate (no LLM, no secrets beyond GITHUB_TOKEN)
+#
+# Install to: .github/workflows/change-record-required.yml
+# Then mark the "change-record-required" check as REQUIRED in branch protection.
+#
+# WHAT IT DOES
+#   If a PR touches any GATED path (Tier 2/3 surfaces below), it fails unless
+#   the same PR adds or modifies a Change Record at docs/change-records/CR-*.md.
+#   This makes "forgot the Change Record" fail CLOSED, with zero AI involved.
+#
+# WHAT IT CANNOT DO
+#   Judge whether the CR is honest or complete. That stays on you (Layer 2).
+#
+# PHASE 2 HOOK
+#   When agent reviews later run in CI, add a second job here that invokes the
+#   relevant agent per matched gate and appends its verdict to the CR file.
+#   This check's contract (CR file must exist) does not change.
+
+name: change-record-required
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  pull-requests: read
+  contents: read
+
+jobs:
+  change-record-required:
+    name: change-record-required
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Check gated paths vs Change Record
+        id: scan
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Tier 2/3 gated surfaces. Keep in sync with .github/CODEOWNERS
+            // and gate-enforcement-map.md. Prefixes unless noted.
+            const GATED = [
+              // CUSTOMIZE: your Tier 2/3 gated surfaces. Keep in sync with
+              // .github/CODEOWNERS and .claude/hooks/protect-tier3.py.
+              // The first two protect the enforcement mechanism — keep them.
+              '.github/',
+              '.claude/',
+              // 'src/auth/',              // auth / RBAC / tenant scoping
+              // 'db/migrations/',         // schema
+              // 'src/remote-exec/',       // remote command execution
+              // 'src/pii/',               // privacy-sensitive surfaces
+              // 'src/regulated-domain/',  // your regulated data of record
+            ];
+
+            const CR_PATTERN = /^docs\/change-records\/CR-.+\.md$/;
+
+            // Paginated: handles PRs with >100 changed files.
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+                per_page: 100,
+              }
+            );
+
+            const paths = files.map(f => f.filename);
+            const gatedHits = paths.filter(p =>
+              GATED.some(g => g.endsWith('/') ? p.startsWith(g) : p === g)
+            );
+            const crFiles = files.filter(f =>
+              CR_PATTERN.test(f.filename) && f.status !== 'removed'
+            );
+
+            if (gatedHits.length === 0) {
+              core.info('No gated paths touched — Change Record not required.');
+              core.setOutput('required', 'false');
+              return;
+            }
+
+            core.info(`Gated paths touched (${gatedHits.length}):`);
+            gatedHits.forEach(p => core.info(`  - ${p}`));
+
+            if (crFiles.length === 0) {
+              core.setFailed(
+                'This PR touches gated (Tier 2/3) paths but contains no Change ' +
+                'Record. Add docs/change-records/CR-YYYYMMDD-<slug>.md (see ' +
+                'docs/change-record-template.md) in this PR. Gated paths: ' +
+                gatedHits.slice(0, 10).join(', ') +
+                (gatedHits.length > 10 ? ` (+${gatedHits.length - 10} more)` : '')
+              );
+              return;
+            }
+
+            // Cheap anti-rubber-stamp: warn on a barely-modified copy (the verdict-block
+            // validation in the next step is the hard gate — an unmodified template ships
+            // "verdict":"___", which the validator rejects).
+            for (const f of crFiles) {
+              if (f.additions < 10) {
+                core.warning(
+                  `${f.filename} has only ${f.additions} added lines — ` +
+                  'verify it is a filled-in record, not a placeholder.'
+                );
+              }
+            }
+            core.info(`Change Record present: ${crFiles.map(f => f.filename).join(', ')}`);
+
+            // Verdict-block validation is delegated to the ONE shipped implementation
+            // (validate_verdict.py, next step) so the CI and the skill/orchestrator can
+            // never disagree. Hand it the CR file list; it reads the checked-out files.
+            core.setOutput('required', 'true');
+            core.setOutput('crfiles', crFiles.map(f => f.filename).join('\n'));
+
+      - name: Validate gate verdict blocks (single source of truth = validate_verdict.py)
+        if: steps.scan.outputs.required == 'true'
+        env:
+          # Passed via env (not spliced into the script) to avoid ${{ }} injection.
+          CR_FILES: ${{ steps.scan.outputs.crfiles }}
+        run: |
+          set -uo pipefail
+          # Run the validator from the BASE ref, not the PR head. Pinning to the .claude/ path
+          # (no ungated shadow) was necessary but not sufficient: a PR that edits
+          # .claude/skills/gate-verdict-format/validate_verdict.py itself would supply its own
+          # (permissive) validator to judge its own CR (audit N1 residual). Fetching the base
+          # copy removes that. The .claude/ path is also code-owned, so changing it needs the
+          # second person — defence in depth.
+          BASE="${GITHUB_BASE_REF:-main}"
+          git fetch --no-tags --depth=1 origin "$BASE" >/dev/null 2>&1 || git fetch --no-tags origin "$BASE"
+          VDIR="${RUNNER_TEMP:-/tmp}/gvf"; mkdir -p "$VDIR"
+          if ! git show "origin/$BASE:.claude/skills/gate-verdict-format/validate_verdict.py" > "$VDIR/validate_verdict.py" 2>/dev/null; then
+            echo "::error::could not read the validator from the base ref (origin/$BASE). Failing closed."; exit 1
+          fi
+          # the validator loads verdict-schema.json next to itself — take it from the base ref too.
+          if ! git show "origin/$BASE:.claude/skills/gate-verdict-format/verdict-schema.json" > "$VDIR/verdict-schema.json" 2>/dev/null; then
+            echo "::error::could not read verdict-schema.json from the base ref. Failing closed."; exit 1
+          fi
+          V="$VDIR/validate_verdict.py"
+          echo "Using base-ref validator: origin/$BASE:.claude/skills/gate-verdict-format/validate_verdict.py"
+          rc=0
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            echo "== $f =="
+            # --require: a gated CR with ZERO verdict blocks is a missing gate = FAIL
+            # (TEAM.md: a missing gate is treated as a FAIL). Malformed blocks also fail.
+            python3 "$V" "$f" --require || rc=1
+          done <<< "$CR_FILES"
+          exit "$rc"

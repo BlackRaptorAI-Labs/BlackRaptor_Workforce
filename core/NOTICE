@@ -1,0 +1,15 @@
+BlackRaptor Workforce — Core
+Copyright 2026 Tom Hanks / BlackRaptor AI
+
+Created by Tom Hanks (BlackRaptor AI), battle-tested in production and shared
+with the world. The shared dependency for the BlackRaptor Workforce teams — the
+cross-cutting `product-manager` and `evidence-auditor` agents and the
+`research-integrity` skill, auto-installed with the dev-team, council,
+marketing, and HW-engineering plugins.
+Source: https://github.com/BlackRaptorAI/blackraptor/tree/main/core
+
+Per the Apache License 2.0 (Section 4), this NOTICE file must be included
+with any copy, port, or derivative of this work. Please also keep a link
+back to the source repository on GitHub.
+
+Contact: GitHub issues and discussions on the source repository only.

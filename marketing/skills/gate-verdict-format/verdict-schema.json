@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Gate verdict block",
+  "x-schema-version": "2.0",
+  "x-version-note": "MAJOR bump 2026-08-07 (v1->v2): added the 'COULD NOT ASSESS' verdict value (blocking, reason-required) per AGENT-SPEC-v3 §7. The verdict schema is a declared interface (AGENT-SPEC §12.4); this is a coordinated major version across all plugins.",
+  "description": "R11: the single machine-parseable verdict every gate agent emits, fenced as a ```verdict code block, alongside its human-readable prose. Replaces the five incompatible vocabularies (APPROVE/CONDITIONS/BLOCK, READY/ACTIONS/BLOCK, PASS/NEEDS WORK, APPROVE/CHANGES, PASS/CONCERNS/FAIL) with one. The orchestrator's validator (validate_verdict.py) and the change-record-required CI check both parse it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["gate", "agent", "artifact", "verdict", "evidence", "confidence", "falsifier"],
+  "properties": {
+    "gate": {"type": "string", "description": "the gate this verdict fills, e.g. 'security', 'privacy', 'tests', 'review'"},
+    "agent": {"type": "string", "description": "the gate agent that produced it, e.g. 'security-architect'"},
+    "artifact": {"type": "string", "description": "what was reviewed — PR ref and/or file/diff range"},
+    "verdict": {"enum": ["PASS", "CONCERNS", "FAIL", "N/A", "COULD NOT ASSESS"], "description": "PASS = accept-eligible; CONCERNS = accept with the listed conditions met; FAIL = rework, or a §5 human risk-acceptance to overrule; N/A = gate does not apply (reason required); COULD NOT ASSESS = the gate ran but could not complete its assessment (timeout, context exhausted on a large artifact, or a required tool missing) — reason required; completion-auditor treats it as BLOCKING, never neutral"},
+    "evidence": {"type": "array", "items": {"type": "string", "pattern": "\\S"}, "minItems": 1, "description": "each item cites file:line or a concrete basis — no-evidence items are dropped; each must be non-blank (\\S), so a whitespace-only string does not pass as evidence"},
+    "confidence": {"enum": ["high", "medium", "low"]},
+    "falsifier": {"type": "string", "minLength": 1, "pattern": "\\S", "description": "the single fact or test that, if true, would flip this verdict — must be non-blank (\\S), not just spaces"},
+    "conditions": {"type": "array", "items": {"type": "string"}, "description": "specific, testable conditions to clear — REQUIRED (non-empty) when verdict is CONCERNS or FAIL"},
+    "reason": {"type": "string", "description": "one line of why — REQUIRED when verdict is N/A (an unexplained N/A is a rubber stamp) or COULD NOT ASSESS (what blocked the assessment)"}
+  },
+  "allOf": [
+    {"if": {"properties": {"verdict": {"enum": ["CONCERNS", "FAIL"]}}},
+     "then": {"required": ["conditions"], "properties": {"conditions": {"minItems": 1}}}},
+    {"if": {"properties": {"verdict": {"const": "N/A"}}},
+     "then": {"required": ["reason"]}},
+    {"if": {"properties": {"verdict": {"const": "COULD NOT ASSESS"}}},
+     "then": {"required": ["reason"]}}
+  ]
+}

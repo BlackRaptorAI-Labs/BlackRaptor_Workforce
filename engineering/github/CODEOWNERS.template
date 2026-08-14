@@ -1,0 +1,26 @@
+# CODEOWNERS — solo/small-team mode
+# Install to: .github/CODEOWNERS
+#
+# DESIGN: deliberately SPARSE. GitHub won't let a PR author approve their own
+# PR, so any path owned by a team containing only you is permanently
+# self-blocking. List ONLY Tier-3 paths, owned by {{SECOND_KEY_TEAM}} — a team
+# containing only your second approver (do NOT add yourself).
+#
+# Pair with branch protection: require PRs, required approvals = 0, require
+# review from Code Owners = ON. Verify with test PRs (see
+# docs/branch-protection-checklist.md). NO global "*" rule.
+
+# Protect the enforcement mechanism itself — keep these four.
+/.github/                       {{SECOND_KEY_TEAM}}
+/.claude/settings.json          {{SECOND_KEY_TEAM}}
+/.claude/hooks/                 {{SECOND_KEY_TEAM}}
+/.claude/skills/gate-verdict-format/   {{SECOND_KEY_TEAM}}   # the CR gate validator + schema
+
+# CUSTOMIZE: your Tier-3 paths (same list as the hook and the CI GATED list).
+# /src/auth/                    {{SECOND_KEY_TEAM}}
+# /db/migrations/               {{SECOND_KEY_TEAM}}
+# /src/remote-exec/             {{SECOND_KEY_TEAM}}
+# /src/regulated-domain/        {{SECOND_KEY_TEAM}}
+
+# Everything else is intentionally UNOWNED: merges on green CI plus your
+# signed Change Record (see docs/change-record-template.md).

@@ -1,0 +1,24 @@
+{
+  "name": "blackraptor-council",
+  "displayName": "BlackRaptor Workforce — Executive Council",
+  "version": "1.2.1",
+  "dependencies": [
+    "blackraptor-core"
+  ],
+  "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. An executive advisory council convened through a challenge protocol (sourced evidence, confidence labels, counter-case, voice-of-customer, 'what you lose'). Seats: gtm-strategy, pricing-strategy, finance, market-insight, ethics-governance, revenue, people-org, technology-strategy, fundraising-ir, growth-engine — convened by the main-session `council` skill, with the shared `product-manager` (via the auto-installed `blackraptor-core` pack) as the product/strategy anchor. Ships the `council` skill: say 'convene the council' (or /council) to run the whole protocol.",
+  "skills": "./skills/",
+  "author": {
+    "name": "BlackRaptor AI",
+    "url": "https://github.com/BlackRaptorAI"
+  },
+  "homepage": "https://github.com/BlackRaptorAI/blackraptor/tree/main/council",
+  "repository": "https://github.com/BlackRaptorAI/blackraptor",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agents",
+    "business",
+    "strategy",
+    "council",
+    "advisory"
+  ]
+}

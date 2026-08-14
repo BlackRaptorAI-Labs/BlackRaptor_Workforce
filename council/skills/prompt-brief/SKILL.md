@@ -1,0 +1,68 @@
+---
+name: prompt-brief
+description: >-
+  Use at the START of any non-trivial request to turn it into a buildable brief
+  before work begins — ask 2–4 clarifying questions, write a short brief (goal /
+  context / constraints / done-criteria), confirm it, then route. Clear small
+  asks pass straight through with zero friction; heavy asks escalate to
+  product-manager. Triggers: any incoming task whose goal or done-criteria are
+  not already explicit. The intake ladder for the Layer-0 Core contract.
+---
+
+# Prompt-brief — the intake ladder
+
+Three rungs. Match the ask to the lightest rung that fits; never add friction a
+small ask does not need.
+
+## Rung 1 — pass-through (the DEFAULT; the intake must earn its turn)
+
+**Redesign (order-11, measured): the intake is not free — asking costs a round-trip.
+It only pays off when it prevents ≥2 rounds of rework.** So pass straight through —
+no questions, no brief, do it directly — whenever you can **already state the
+done-criteria yourself** from the ask (fix this typo, rename X, "add a filtered CSV
+export", "size the 12V rail", and most concrete asks). Zero friction is the default,
+not the exception. A measured experiment found that firing the intake on asks whose
+done-criteria were already clear *added* turns without reducing rework — do not repeat it.
+
+## Rung 2 — prompt-brief (only when the intake will REPAY its turn)
+
+Run the intake **only when a clarification would materially change the deliverable
+AND you cannot state the done-criteria without it** — genuine ambiguity (multiple
+plausible scopes, an unstated format/constraint that flips the build, a decision
+whose success bar you can't write). Then:
+
+1. Ask the **fewest questions that resolve the ambiguity** (1–3, not a checklist) —
+   only what changes the deliverable. Honor `question-style` (`minimal` → ask ≤1).
+2. Write a **short brief**:
+   ```
+   ## Brief
+   - Goal:
+   - Context:
+   - Constraints:
+   - Done-criteria:   # the testable bar; becomes the completion-audit ruler
+   ```
+3. **User confirms** the brief (or corrects it).
+4. **Route** to the right specialist/skill and build.
+
+The **Done-criteria are the ruler**: the completion-audit gate audits the finished
+work against each done-criterion and cites them in its verdict. A brief with a
+blank or unstateable Done-criteria cannot be built — that is escalation trigger (c).
+
+## Rung 3 — escalate to product-manager
+
+Escalate (hand the ask to `product-manager` for a full problem statement +
+acceptance criteria) when **any** of these WRITTEN, TESTABLE triggers fires:
+
+- **(a) ≥2 specialists implied** — delivering it needs two or more distinct
+  specialist domains (e.g. schema + UI + auth).
+- **(b) irreversible action** — it deletes, migrates, deploys, publishes,
+  sends, charges, or otherwise cannot be cleanly undone.
+- **(c) no stateable done-criteria** — you cannot write a testable Done-criteria
+  line even after the clarifying questions.
+
+A near-miss (exactly one specialist, reversible, with a clear done-criteria)
+stays on Rung 2 — do not over-escalate.
+
+The trigger logic is scripted and unit-tested: `_eval/baseline/intake_triggers.py`
+(`classify()` decides pass-through / brief / escalate, and asserts each trigger
+fires on a positive case and holds on a near-miss).

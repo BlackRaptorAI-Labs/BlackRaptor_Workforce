@@ -1,0 +1,26 @@
+{
+  "name": "blackraptor-engineering",
+  "displayName": "BlackRaptor Workforce — Engineering",
+  "version": "1.4.1",
+  "dependencies": [
+    "blackraptor-core"
+  ],
+  "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. A governed software-engineering team: a process orchestrator, a principal architect, engineers, and blocking-gate reviewers (security, privacy, compliance, red-team), plus the advisory completion-auditor verification pass. Ships shared skills — excellence-pass, gate-verdict-format, enforcement-liveness, change-record, stride-review, owasp-llm-checklist, expand-contract-migration. Auto-pulls the `blackraptor-core` pack (shared `product-manager` and `evidence-auditor` agents + the `research-integrity` skill).",
+  "author": {
+    "name": "BlackRaptor AI",
+    "url": "https://github.com/BlackRaptorAI"
+  },
+  "homepage": "https://github.com/BlackRaptorAI/blackraptor/tree/main/engineering",
+  "repository": "https://github.com/BlackRaptorAI/blackraptor",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agents",
+    "development",
+    "governance",
+    "code-review",
+    "research-integrity",
+    "excellence-pass"
+  ],
+  "skills": "./skills/",
+  "commands": "./commands/"
+}

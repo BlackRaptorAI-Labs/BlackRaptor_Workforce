@@ -1,0 +1,41 @@
+{
+  "name": "blackraptor",
+  "owner": {
+    "name": "BlackRaptor AI",
+    "url": "https://github.com/BlackRaptorAI"
+  },
+  "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. Governed AI agent teams for Claude Code — a software-engineering team and an executive advisory council, plus a shared Core pack of cross-cutting agents (product-manager, evidence-auditor) and skills (Excellence Pass, research-integrity, gate reviews). Install any team; the Core pack comes with it — plus the full-stack marketing team and the hardware-engineering team, all served through this marketplace.",
+  "version": "1.4.1",
+  "plugins": [
+    {
+      "name": "blackraptor-engineering",
+      "displayName": "BlackRaptor Workforce — Engineering",
+      "source": "./engineering",
+      "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. A governed software-engineering team (architect, engineers, blocking-gate reviewers) routed by the process-only main-session engineering skill, plus shared skills. Auto-installs blackraptor-core (product-manager + evidence-auditor + research-integrity)."
+    },
+    {
+      "name": "blackraptor-council",
+      "displayName": "BlackRaptor Workforce — Executive Council",
+      "source": "./council",
+      "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. An executive advisory council convened through a challenge protocol — gtm/pricing/finance/market-insight/ethics-governance/revenue/people-org and more, via the main-session council skill, with the shared product-manager (auto-installed blackraptor-core) as the anchor."
+    },
+    {
+      "name": "blackraptor-marketing",
+      "displayName": "BlackRaptor Workforce — Marketing",
+      "source": "./marketing",
+      "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. A governed, full-stack marketing department (brand, naming/trademark, research, content, copy, creative, SEO/GEO, paid, social, email, video, competitive intel, pricing, analytics, campaign coordinator) + the compliance-claims-gate every external asset passes through. Auto-installs blackraptor-core. No autonomous sends, posts, or spend — agents draft, humans approve. Hosted in BlackRaptorAI/BlackRaptor_Agents_Marketing."
+    },
+    {
+      "name": "blackraptor-hardware",
+      "displayName": "BlackRaptor Workforce — Hardware Engineering",
+      "source": "./hardware",
+      "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. A governed hardware-engineering department + an adversarial design-review gate, conducted by the main-session hw-program skill (decision register, interfaces, PDR/CDR/MRR readiness). Ships the hw-operating-standard skill. Product-agnostic via per-program PROGRAM-CONTEXT.md. Auto-installs blackraptor-core. Agents design and analyze — humans make the irreversible calls. Hosted in BlackRaptorAI/BlackRaptor_Agents_HW_Engineering."
+    },
+    {
+      "name": "blackraptor-core",
+      "displayName": "BlackRaptor Workforce — Core",
+      "source": "./core",
+      "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. Cross-cutting agents shared by every team: product-manager and evidence-auditor, plus the research-integrity skill. Auto-installed as a dependency of all four packs — not installed directly."
+    }
+  ]
+}
