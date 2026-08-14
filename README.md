@@ -2,7 +2,7 @@
 
 **Currently in PRIVATE ALPHA — see [docs/ALPHA.md](docs/ALPHA.md).**
 
-![agents](https://img.shields.io/badge/agents-58-6E56CF) ![skills](https://img.shields.io/badge/skills-26-6E56CF) ![packs](https://img.shields.io/badge/packs-5-6E56CF) ![license](https://img.shields.io/badge/license-Apache--2.0-blue)
+![agents](https://img.shields.io/badge/agents-58-6E56CF) ![skills](https://img.shields.io/badge/skills-27-6E56CF) ![packs](https://img.shields.io/badge/packs-5-6E56CF) ![license](https://img.shields.io/badge/license-Apache--2.0-blue)
 
 **Specialist agent packs with read-only review gates that block work until it meets the standard.**
 
@@ -33,6 +33,24 @@ Installing either one pulls in **`blackraptor-core`** automatically. Then add, w
 /plugin install blackraptor-council@blackraptor
 ```
 
+## How to install, by situation
+
+- **Just you (user scope).** The two commands above install at the user level — available in every repo you open. CLI installs also appear in Cowork automatically; no separate step there.
+- **A whole team, standardized on one repo** — the way to standardize a team on one repo. Commit a `.claude/settings.json` so everyone who opens the repo gets the same packs:
+  ```json
+  {
+    "extraKnownMarketplaces": {
+      "blackraptor": { "source": { "source": "github", "repo": "BlackRaptorAI/blackraptor" } }
+    },
+    "enabledPlugins": {
+      "blackraptor-engineering@blackraptor": true,
+      "blackraptor-council@blackraptor": true
+    }
+  }
+  ```
+  Each collaborator still installs under their own GitHub auth.
+- **Vendored into a repo's `.claude/`** (no marketplace) — for the **Engineering and Marketing packs only**: run `./engineering/install.sh /path/to/repo` (and/or `./marketing/install.sh /path/to/repo`). Each appends one idempotent `@.claude/blackraptor-workforce.md` line to your `CLAUDE.md`; your existing content is preserved and both packs merge into that one file.
+
 ## The packs
 
 | Pack | id | Agents | What it is |
@@ -41,9 +59,9 @@ Installing either one pulls in **`blackraptor-core`** automatically. Then add, w
 | Executive Council | `blackraptor-council` | 10 | Executive advisory council convened through a challenge protocol (sourced evidence, counter-case, voice-of-customer). |
 | Marketing | `blackraptor-marketing` | 15 | Full-stack marketing department; every external-facing claim is routed to a separate claims-gate agent for review. |
 | Hardware Engineering | `blackraptor-hardware` | 9 | Hardware-engineering department + an adversarial design-review gate before any board spin, tooling, or purchase. |
-| Core | `blackraptor-core` | 2 | Shared `product-manager` + `evidence-auditor` and the `research-integrity` skill. Auto-installed with any team. |
+| Core | `blackraptor-core` | 2 | Shared `product-manager` + `evidence-auditor`, the `research-integrity` skill, and `workforce-doctor` (a read-only install health check). Auto-installed with any team. |
 
-**58 agents · 26 skills · 5 packs** across the marketplace.
+**58 agents · 27 skills · 5 packs** across the marketplace.
 
 ## How it works
 

@@ -39,7 +39,34 @@ You are one of a small number of invited testers. Please keep the repo and your 
    ```
    You should see the packs you installed, each `enabled`, plus `blackraptor-core`.
 
+**If anything seems off, run `workforce-doctor` and paste its output into your defect report.** It's a read-only health check (packs present, versions consistent, the marketing hook wired for your client) — say "run workforce-doctor" in a session.
+
 If anything in these four steps is confusing or fails — that itself is the most valuable thing to report (see §3, item 1).
+
+### How to install, by situation
+
+- **(a) Just you (user scope).** The two commands above (`marketplace add` + `plugin install`) install at the user level — they're available in every repo you open. CLI installs also show up in Cowork automatically; you don't install separately there.
+
+- **(b) A whole team, standardized on one repo (the way to standardize a team on one repo).** Commit a `.claude/settings.json` to the shared repo so everyone who opens it gets the same packs. *(This mechanism is under test in the alpha — see the checklist below.)*
+  ```json
+  {
+    "extraKnownMarketplaces": {
+      "blackraptor": { "source": { "source": "github", "repo": "BlackRaptorAI/blackraptor" } }
+    },
+    "enabledPlugins": {
+      "blackraptor-engineering@blackraptor": true,
+      "blackraptor-council@blackraptor": true
+    }
+  }
+  ```
+  Each collaborator still needs read access to the private repo (they install under their own GitHub auth).
+
+- **(c) Vendored into a repo's `.claude/` (no marketplace).** For a repo that should carry the agents directly, run the pack's `install.sh` — **available for the Engineering and Marketing packs only**:
+  ```
+  ./engineering/install.sh /path/to/your/repo
+  ./marketing/install.sh   /path/to/your/repo
+  ```
+  Each appends one idempotent `@.claude/blackraptor-workforce.md` line to your `CLAUDE.md` (your existing content is preserved; both packs merge into that one file).
 
 ---
 
@@ -56,6 +83,11 @@ Please spend your time roughly in this order. Items 1 and 2 are where we most ne
 4. **A real task end-to-end with the Engineering pack** — something you'd actually do, start to finish.
 5. **A Council session on a real business question** — convene the council on something you genuinely care about.
 6. **Docs & README clarity** — anything unclear, missing, or wrong.
+
+### Two specific checks we need confirmed
+
+- **Project-scope `settings.json` install (§1b).** At least **two testers**, please commit the `.claude/settings.json` block above to the **private** `BlackRaptorAI/blackraptor`-based workflow and confirm collaborators actually get the packs on opening the repo. Report exactly what happened (worked / partial / failed, and any prompt or error).
+- **Marketing hook in Cowork.** With the marketing pack installed, does the claims-gate hook **fire in a Cowork session** (not just the CLI)? Report **yes/no + the Cowork app version**.
 
 ---
 

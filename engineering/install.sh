@@ -33,7 +33,7 @@ if [ -e "$DEST/.claude/settings.json" ]; then
 else
   copy "$SRC/claude/settings.json" "$DEST/.claude/settings.json"
 fi
-for d in "$SRC"/claude/skills/*/; do
+for d in "$SRC"/skills/*/; do
   name="$(basename "$d")"; [ -d "$d" ] || continue
   # copy the WHOLE skill dir (SKILL.md + references/ + scripts like validate_verdict.py),
   # not just SKILL.md — otherwise a skill's referenced files never install.
@@ -41,7 +41,21 @@ for d in "$SRC"/claude/skills/*/; do
   cp -R "$d". "$DEST/.claude/skills/$name/"
   echo "  installed: .claude/skills/$name/ (full)"
 done
-for f in "$SRC"/claude/commands/*.md; do copy "$f" "$DEST/.claude/commands/$(basename "$f")"; done
+for f in "$SRC"/commands/*.md; do copy "$f" "$DEST/.claude/commands/$(basename "$f")"; done
+
+echo "[2b/5] Operating context -> .claude/blackraptor-workforce.md (+ CLAUDE.md @-import)"
+# CLAUDE.md integration (@-import — MEASURED to load on client 2.1.170+, ALPHA-2). The pack's operating
+# context lives at .claude/blackraptor-workforce.md as a MARKED SECTION so packs MERGE (engineering +
+# marketing can both vendor into one repo); the existing CLAUDE.md gets exactly ONE idempotent @-import line.
+if [ -f "$SRC/CLAUDE.md" ]; then
+  WF="$DEST/.claude/blackraptor-workforce.md"; touch "$WF"
+  if ! grep -qF "<!-- BEGIN blackraptor-engineering -->" "$WF"; then
+    { echo "<!-- BEGIN blackraptor-engineering -->"; sed 's|\${CLAUDE_PLUGIN_ROOT}/|.claude/|g' "$SRC/CLAUDE.md"; echo "<!-- END blackraptor-engineering -->"; } >> "$WF"
+  fi
+  touch "$DEST/CLAUDE.md"
+  grep -qF '@.claude/blackraptor-workforce.md' "$DEST/CLAUDE.md" || printf '\n@.claude/blackraptor-workforce.md\n' >> "$DEST/CLAUDE.md"
+  echo "  operating context imported via @.claude/blackraptor-workforce.md in CLAUDE.md"
+fi
 
 echo "[3/5] CI workflow + PR template -> .github/"
 copy "$SRC/github/change-record-required.yml" "$DEST/.github/workflows/change-record-required.yml"
