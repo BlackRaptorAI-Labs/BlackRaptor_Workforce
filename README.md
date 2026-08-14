@@ -59,7 +59,7 @@ Installing either one pulls in **`blackraptor-core`** automatically. Then add, w
 | Executive Council | `blackraptor-council` | 10 | Executive advisory council convened through a challenge protocol (sourced evidence, counter-case, voice-of-customer). |
 | Marketing | `blackraptor-marketing` | 15 | Full-stack marketing department; every external-facing claim is routed to a separate claims-gate agent for review. |
 | Hardware Engineering | `blackraptor-hardware` | 9 | Hardware-engineering department + an adversarial design-review gate before any board spin, tooling, or purchase. |
-| Core | `blackraptor-core` | 2 | Shared `product-manager` + `evidence-auditor`, the `research-integrity` skill, and `workforce-doctor` (a read-only install health check). Auto-installed with any team. |
+| Core | `blackraptor-core` | 2 | Shared `product-manager` + `evidence-auditor`, the `research-integrity` skill. Auto-installed with any team. |
 
 **58 agents · 27 skills · 5 packs** across the marketplace.
 

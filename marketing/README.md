@@ -1,6 +1,6 @@
 # BlackRaptor Workforce — Marketing Team
 
-A governed, full-stack **marketing department** for Claude: **15 specialist agents + 18 skills** (9 marketing + 9 shared Core), hub-and-spoke around a shared **Marketing
+A governed, full-stack **marketing department** for Claude: **15 specialist agents + 19 skills** (9 marketing + 10 shared Core), hub-and-spoke around a shared **Marketing
 Intelligence Core** context file that every agent reads before acting. Built by
 [BlackRaptor AI](https://github.com/BlackRaptorAI) as the marketing sibling of
 [blackraptor](https://github.com/BlackRaptorAI/blackraptor) (the

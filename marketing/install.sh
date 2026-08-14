@@ -59,5 +59,5 @@ find "$TARGET/.claude/agents" "$TARGET/.claude/skills" -name "*.md" -print0 |
     sed 's|\${CLAUDE_PLUGIN_ROOT}/|.claude/|g' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
   done
 
-echo "Installed: 15 marketing agents + 9 marketing skills + 9 shared Core skills (18 total) into $TARGET/.claude/"
+echo "Installed: 15 marketing agents + 9 marketing skills + 10 shared Core skills (19 total) into $TARGET/.claude/"
 echo "Next: open the repo in Claude Code and say \"set up the marketing context\"."
