@@ -12,6 +12,11 @@ The bridge is the shared dependency auto-installed with the dev-team, council,
 marketing, and HW-engineering plugins — it holds the cross-cutting agents and
 skills those teams share.
 
+## [1.0.1] — 2026-08-17
+
+### Fixed
+- Ships `workforce-doctor` to existing installs (prior release omitted the version bump). The skill was already committed to the pack, but the plugin version wasn’t bumped, so `claude plugin update` treated installs as current and never delivered it — this patch re-releases with a bumped version. Tracked in BlackRaptorAI/blackraptor#1.
+
 ## [1.0.0] — 2026-07-22
 
 ### Added

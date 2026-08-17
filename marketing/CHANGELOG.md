@@ -5,6 +5,10 @@
 
 # Changelog — BlackRaptor Agents Marketing Team
 
+## 1.1.3 — 2026-08-17
+
+- Ships `workforce-doctor` to existing installs (prior release omitted the version bump). The skill was already committed to the pack, but the plugin version wasn’t bumped, so `claude plugin update` treated installs as current and never delivered it — this patch re-releases with a bumped version. Tracked in BlackRaptorAI/blackraptor#1.
+
 ## 1.1.0 — 2026-07-23
 
 - **Pre-launch hygiene (2026-08-01):** all bundled skills carry `metadata.version: "1.1.0"`
