@@ -17,10 +17,32 @@ install before it wastes your time, and to attach a clean diagnosis to a defect 
 
 Work through these and collect anomalies as you go. Report **PASS** only if every check passes.
 
+0. **Snapshot freshness (Cowork / cloud sessions only).** A Cowork cloud session copies the
+   account's plugin cache to `.claude/plugins/synced/` **once at session start and never
+   re-syncs**. Everything the doctor reads there is a point-in-time snapshot, not the live
+   account state. Before any other check:
+   - Record the snapshot timestamp (the `synced/manifest.json` mtime, or its `lastUpdated`
+     field) and **state it in the report**.
+   - If the user is asking the doctor to prove a pack was **added or removed**, compare the
+     snapshot timestamp to when that change was made. If the snapshot **predates the change**,
+     the doctor MUST refuse to certify pack presence or absence: report
+     **STALE SNAPSHOT — CANNOT CERTIFY**, name the timestamp, and instruct the user to start a
+     fresh session and re-run. A stale run can report a pack PRESENT that was uninstalled an
+     hour earlier — a false negative on exactly the removal it is being asked to prove.
+   - Rule of thumb: pack add/remove is only provable from a session started **after** the change.
+   In a local (non-Cowork) CLI session this check is a no-op — note "local session, live plugin
+   state" and move on.
+
 1. **Installed packs + versions.** Run `claude plugin list`. Note each installed BlackRaptor pack
    (`blackraptor-engineering`, `blackraptor-council`, `blackraptor-marketing`, `blackraptor-hardware`,
    `blackraptor-core`) and its version and enabled/disabled state. Anomaly: a pack shows `disabled`,
    or a pack the user believes they installed is absent.
+   **Cowork caveat:** under a Cowork cloud session `claude plugin list` returns
+   "No plugins installed" **by design** — packs are synced, not CLI-installed, so an empty list
+   there is NOT data and must not be reported as an anomaly. In that case answer this check by
+   listing the pack directories under `.claude/plugins/synced/` and reading each pack's
+   `.claude-plugin/plugin.json` (and the `synced/manifest.json` account entries), subject to the
+   freshness rule in check 0.
 
 2. **Core dependency resolves.** Any team pack (`engineering`, `council`, `marketing`, `hardware`)
    must pull in **`blackraptor-core`**. If any team pack is installed but `blackraptor-core` is not
@@ -49,7 +71,11 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
 
 Emit one of:
 
-- **PASS** — list the packs and versions you confirmed, and the client version. One line each.
+- **PASS** — list the packs and versions you confirmed, the client version, and (in a Cowork
+  session) the snapshot timestamp. One line each.
+- **STALE SNAPSHOT — CANNOT CERTIFY** — the snapshot predates the change under test (check 0).
+  State the snapshot timestamp and tell the user to start a fresh session and re-run. Do not
+  report pack presence/absence as fact from a stale snapshot.
 - **ANOMALIES FOUND** — a numbered list. For each: what you checked, what you expected, what you
   found, and whether it is **blocking** (the pack won't load / work) or **cosmetic**. End with the
   single most likely fix (e.g. "reinstall `blackraptor-marketing`", "run `/plugin enable …`").
