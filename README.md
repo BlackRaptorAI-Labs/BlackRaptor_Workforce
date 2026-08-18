@@ -16,6 +16,8 @@ Five governed agent packs for Claude Code — Engineering, Executive Council, Ma
 
 Then install the packs you need (below). The **Core** pack auto-installs as a dependency of every team — you do not install it directly.
 
+**How to update your installed packs → [docs/UPDATING-YOUR-WORKFORCE.md](docs/UPDATING-YOUR-WORKFORCE.md).**
+
 ## Starter recipe
 
 Most people start here:
