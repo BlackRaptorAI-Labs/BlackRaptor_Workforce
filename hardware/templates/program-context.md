@@ -1,3 +1,4 @@
+<!-- TEMPLATE — not onboarded -->
 # PROGRAM-CONTEXT — <program name>
 
 *The program-specific context every Hardware team agent reads before starting work. Keep this file in the program's engineering folder, next to the decision register. Update it at every handoff — a stale context file misleads every agent that reads it. The agents themselves are product-agnostic; this file is where the product lives.*

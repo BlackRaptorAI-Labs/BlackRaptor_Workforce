@@ -5,6 +5,10 @@
 
 # Changelog — BlackRaptor Agents, HW Engineering Team
 
+## 1.2.3 — 2026-08-19
+
+- `hw-operating-standard` gains the standardized context trigger: before substantive work on a program, resolve its `PROGRAM-CONTEXT-<program>.md` at the **project root** per the resolution order; if missing or still the template, invoke the shared `context-onboarding` skill first (interviewing against the program-context template fields) and write the approved, dated file to the project root — never into the pack (R1–R3). The in-pack `templates/program-context.md` now carries a `<!-- TEMPLATE — not onboarded -->` marker.
+
 ## 1.2.2 — 2026-08-18
 
 - `workforce-doctor` no longer certifies pack presence/absence from a stale Cowork snapshot. A Cowork cloud session copies the account plugin cache to `.claude/plugins/synced/` once at session start and never re-syncs, so a run could report a pack PRESENT that was uninstalled after the session began. Adds **check 0 (snapshot freshness)**: in a Cowork session the doctor records and reports the snapshot timestamp and returns **STALE SNAPSHOT — CANNOT CERTIFY** when the snapshot predates the pack add/remove under test. Adds a check-1 caveat that an empty `claude plugin list` under Cowork is inert by design, not an anomaly. No-op in local CLI sessions.

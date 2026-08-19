@@ -18,6 +18,13 @@ Any non-trivial change: ≥2 dev specialists implied, a gated surface touched
 (auth / schema / infra / CI / AI-prompt path), or a change that needs a spec then
 build then review. Trivial one-file edits do not need the team — do them directly.
 
+**Context read-path.** Engineering keeps the project's **existing** context conventions (the repo's
+own docs / `PROGRAM-CONTEXT` / spec — engineering does not introduce a new company-context file).
+The Core `prompt-brief` intake runs the context precheck (Rung 0): resolve the project's context per
+the resolution order (project root → an explicit path the user names) before substantive work; if the
+change depends on company/project context the project does not yet record, `context-onboarding` can
+capture it to the project root.
+
 ## 2. Seat selection rule
 
 **Intake first (the ROSTER §6 hand-off).** Requirement intake runs through the Core `prompt-brief`

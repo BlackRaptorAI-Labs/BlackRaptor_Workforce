@@ -1,3 +1,4 @@
+<!-- TEMPLATE — not onboarded -->
 # Marketing Intelligence Core
 
 > **This file is the hub.** Every marketing agent and skill in this plugin reads
@@ -5,10 +6,11 @@
 > generic best practice, this file wins. Keep it current — a stale core produces
 > confident, wrong marketing.
 >
-> **This is the blank template.** Say **"set up the marketing context"** and the
-> `marketing-core` skill runs an onboarding interview and fills this in for your
-> company. Until it is filled in, agents must ask for the missing context rather
-> than inventing it.
+> **This is the blank template — it ships in the pack and a pack update overwrites it.** The
+> filled copy lives at your **project root** as `MARKETING-CONTEXT.md`, never inside the pack.
+> Say **"set up the marketing context"** (or "onboard") and the shared `context-onboarding`
+> skill runs the standardized interview and writes the dated result to your project root. Until
+> it exists, agents must ask for the missing context rather than inventing it.
 
 ## 1. Company & Product
 

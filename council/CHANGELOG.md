@@ -8,6 +8,11 @@
 All notable changes to the `blackraptor-council` plugin are recorded here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.2.4] — 2026-08-19
+
+### Changed
+- The council now grounds on `BUSINESS-CONTEXT.md` at your **project root** via the standardized resolution order; if it is missing or still the blank template, the council invokes the shared `context-onboarding` skill first (interviewing against the business-context template fields) and writes the approved, dated file to the project root — never into the pack (R1–R3). The in-pack `business-context` template now carries a `<!-- TEMPLATE — not onboarded -->` marker so "still template" is machine-checkable.
+
 ## [1.2.3] — 2026-08-18
 
 ### Fixed

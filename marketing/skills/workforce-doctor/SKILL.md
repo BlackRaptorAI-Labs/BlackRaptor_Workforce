@@ -67,12 +67,28 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
 5. **Client version.** Record `claude --version`. Note it in the report — hook-loading and
    marketplace behavior have varied across client versions.
 
+6. **Context onboarding (per pack).** For each installed pack that uses a context file, resolve it
+   per the documented order (current working / project root → an explicit path the user named) and
+   report one of three states:
+   - **ONBOARDED** — a filled context file is present, has **no** `<!-- TEMPLATE — not onboarded -->`
+     first-line marker, and carries a date stamp.
+   - **TEMPLATE** — the template marker is present (onboarding has not been run).
+   - **MISSING** — no context file found at the resolved location.
+   Expected file names at the project root: `BUSINESS-CONTEXT.md` (council), `MARKETING-CONTEXT.md`
+   (marketing), `PROGRAM-CONTEXT-<program>.md` (hardware); engineering uses the project's existing
+   convention. This check is **non-blocking / cosmetic**: report the state and, for TEMPLATE or
+   MISSING, recommend running `context-onboarding` — **never fail the install for it**. In a Cowork
+   session, check the connected project folder; if no project folder is connected, say so rather
+   than reporting MISSING.
+
 ## Report format
 
 Emit one of:
 
-- **PASS** — list the packs and versions you confirmed, the client version, and (in a Cowork
-  session) the snapshot timestamp. One line each.
+- **PASS** — list the packs and versions you confirmed, the client version, (in a Cowork
+  session) the snapshot timestamp, and each pack's context state from check 6
+  (ONBOARDED / TEMPLATE / MISSING). One line each. A TEMPLATE or MISSING context state is a
+  cosmetic note with a "run context-onboarding" recommendation — it does NOT downgrade a PASS.
 - **STALE SNAPSHOT — CANNOT CERTIFY** — the snapshot predates the change under test (check 0).
   State the snapshot timestamp and tell the user to start a fresh session and re-run. Do not
   report pack presence/absence as fact from a stale snapshot.

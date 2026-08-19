@@ -1,3 +1,4 @@
+<!-- TEMPLATE — not onboarded -->
 # BUSINESS-CONTEXT.md — Grounding for the Council
 
 > Copy this file to your project root as `BUSINESS-CONTEXT.md` and fill it

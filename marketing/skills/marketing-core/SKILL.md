@@ -17,10 +17,10 @@ The Marketing Intelligence Core is the hub of the marketing-team plugin. It prev
 
 ## Instructions
 
-1. Read `${CLAUDE_PLUGIN_ROOT}/context/marketing-context.md` in full before any marketing work.
-2. If the file's placeholder values do not match the user's actual company, run an onboarding interview: company/product, brand architecture, personas in priority order, GTM structure, voice standards, competitors, proof standards, and ethics guardrails. Rewrite the file with the answers.
-3. When any marketing agent produces output that contradicts the core, the core wins. Flag the contradiction to the user rather than silently proceeding.
-4. When new truth arrives (audited proof point, pricing change, new persona), update the file and date-stamp the edit.
+1. **Resolve the marketing context per the resolution order** before any marketing work: read `MARKETING-CONTEXT.md` at the project root the user is working in; else an explicit path the user names. The in-pack `${CLAUDE_PLUGIN_ROOT}/context/marketing-context.md` is only the blank **template** (first line `<!-- TEMPLATE — not onboarded -->`) — it is NEVER the live copy, and a pack update overwrites it. The filled context lives at the project root so pack updates cannot touch it.
+2. **If the project-root file is missing or still the template, invoke the shared `context-onboarding` skill first**, then read its result. That interview uses the marketing question set in `references/context-questions.md` (company/product, brand architecture, personas in priority order, GTM, voice, competitors, proof standards, ethics guardrails) and writes the approved, dated context to the project root — never into the pack.
+3. When any marketing agent produces output that contradicts the context, the context wins. Flag the contradiction to the user rather than silently proceeding.
+4. When new truth arrives (audited proof point, pricing change, new persona), do not silently rewrite: propose a diff to the context file, apply on approval, and re-date-stamp (per `context-onboarding` §7).
 5. Never remove or weaken the §6 hard gates without an explicit user instruction, and restate the risk when asked to.
 
 ## Maintenance cadence

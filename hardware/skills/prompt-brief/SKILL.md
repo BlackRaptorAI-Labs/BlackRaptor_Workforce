@@ -14,6 +14,16 @@ description: >-
 Three rungs. Match the ask to the lightest rung that fits; never add friction a
 small ask does not need.
 
+## Rung 0 — context precheck (before substantive work)
+
+Before doing substantive work for a pack, **resolve that pack's context file** per the
+resolution order (current working / project root → an explicit path the user names). If it is
+**missing or still a blank template** (first line `<!-- TEMPLATE — not onboarded -->`), invoke
+the **`context-onboarding`** skill first, then proceed. Trivial or context-free asks (a typo fix,
+a unit conversion, a one-off with no company/project dependency) skip this — it fires only when
+the work actually depends on knowing the company or project. This is an instruction, not a hard
+gate; `workforce-doctor` check 6 is the visibility backstop.
+
 ## Rung 1 — pass-through (the DEFAULT; the intake must earn its turn)
 
 **Redesign (order-11, measured): the intake is not free — asking costs a round-trip.

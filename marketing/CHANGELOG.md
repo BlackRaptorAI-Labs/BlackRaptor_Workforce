@@ -5,6 +5,10 @@
 
 # Changelog — BlackRaptor Agents Marketing Team
 
+## 1.1.5 — 2026-08-19
+
+- **Marketing context is now update-proof.** The filled context lives at your **project root** as `MARKETING-CONTEXT.md`; the in-pack `context/marketing-context.md` is a blank **template** only (now marked `<!-- TEMPLATE — not onboarded -->`), so a pack update can no longer overwrite your filled context (R1/R2). `marketing-core` resolves the project-root file per the standardized resolution order and, when it is missing or still the template, invokes the shared `context-onboarding` skill (R3) — which uses the new marketing question set (`marketing-core/references/context-questions.md`) and preserves the §6 hard-gate rules. Context updates now propose a diff rather than silently rewriting.
+
 ## 1.1.4 — 2026-08-18
 
 - `workforce-doctor` no longer certifies pack presence/absence from a stale Cowork snapshot. A Cowork cloud session copies the account plugin cache to `.claude/plugins/synced/` once at session start and never re-syncs, so a run could report a pack PRESENT that was uninstalled after the session began. Adds **check 0 (snapshot freshness)**: in a Cowork session the doctor records and reports the snapshot timestamp and returns **STALE SNAPSHOT — CANNOT CERTIFY** when the snapshot predates the pack add/remove under test. Adds a check-1 caveat that an empty `claude plugin list` under Cowork is inert by design, not an anomaly. No-op in local CLI sessions.

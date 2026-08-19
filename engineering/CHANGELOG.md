@@ -8,6 +8,11 @@
 All notable changes to the BlackRaptor Agents development team are recorded here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.4.4] — 2026-08-19
+
+### Changed
+- `dev-team` gains a context read-path note: engineering keeps the project's **existing** context conventions (no new company-context file), and the Core `prompt-brief` intake now runs the Rung-0 context precheck before context-dependent work (resolve the project's context per the resolution order; `context-onboarding` can capture it if the change needs context the project does not yet record) (R3, engineering read-path per spec §3.1).
+
 ## [1.4.3] — 2026-08-18
 
 ### Fixed

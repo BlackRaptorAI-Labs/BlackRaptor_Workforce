@@ -12,6 +12,13 @@ The bridge is the shared dependency auto-installed with the dev-team, council,
 marketing, and HW-engineering plugins — it holds the cross-cutting agents and
 skills those teams share.
 
+## [1.0.3] — 2026-08-19
+
+### Added
+- **`context-onboarding`** — a new shared Core skill (ships to all five packs): one standardized interview that teaches a pack your company/project before substantive work. Choice-first (questions / documents / mix), document-fed with per-entry provenance, clarifiers only for gaps and conflicts, approval before writing, and a dated file with a Sources section at your **project root** (never inside the pack, so pack updates cannot overwrite it). Opens with owner-ratified verbatim copy; later material produces proposed diffs, never silent rewrites (R5/R6).
+- **`prompt-brief`** gains a Rung-0 context precheck: before context-dependent work, resolve the pack's context file per the resolution order; missing or still-template ⇒ run `context-onboarding` first (R3).
+- **`workforce-doctor`** gains **check 6 — context onboarding**: reports each pack's context state ONBOARDED / TEMPLATE / MISSING. Non-blocking/cosmetic (R4).
+
 ## [1.0.2] — 2026-08-18
 
 ### Fixed
