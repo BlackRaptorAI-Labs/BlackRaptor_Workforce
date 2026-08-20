@@ -8,6 +8,11 @@
 All notable changes to the BlackRaptor Agents development team are recorded here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.4.5] — 2026-08-20
+
+### Added
+- Repo-native first-run experience (R10/R14): a bare repo triggers the welcome flow with the engineering technical question set (`dev-team/references/context-questions.md`) — the shared core block writes repo-root `BUSINESS-CONTEXT.md`, the technical set writes `CLAUDE.md`; a populated repo gets a "review and fill gaps" offer instead. Seven-dimension preference wire-up (R13) via the shared Core contract. Engineering stays project-scoped.
+
 ## [1.4.4] — 2026-08-19
 
 ### Changed

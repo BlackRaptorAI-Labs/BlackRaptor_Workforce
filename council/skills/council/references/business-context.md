@@ -1,6 +1,12 @@
 <!-- TEMPLATE — not onboarded -->
 # BUSINESS-CONTEXT.md — Grounding for the Council
 
+<!-- Onboarding order (R14): the shared CORE block (what it is · who it's for · stage · how money
+comes in · priorities · off-limits · role) is asked FIRST by context-onboarding and fills the
+matching fields below. The council EXTENSION only asks the REMAINING fields — it never re-asks core
+ground. -->
+
+
 > Copy this file to your project root as `BUSINESS-CONTEXT.md` and fill it
 > in before convening the Council. A generic council gives conventional
 > wisdom; a grounded one gives advice about *your* company. The

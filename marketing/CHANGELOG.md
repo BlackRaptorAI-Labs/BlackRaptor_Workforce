@@ -5,6 +5,10 @@
 
 # Changelog — BlackRaptor Agents Marketing Team
 
+## 1.1.6 — 2026-08-20
+
+- First-run welcome & interview experience (R7–R14) via the shared `context-onboarding` skill: welcome → path → shared core interview → marketing extension (brand/personas/GTM/voice/competitors/proof standards, reorganized to never re-ask core) → friendly settings round → closing summary → offer to start. The marketing question set is now an extension set that deepens core answers. Seven-dimension preference wire-up (R13) via the shared Core contract; §6 hard gates preserved.
+
 ## 1.1.5 — 2026-08-19
 
 - **Marketing context is now update-proof.** The filled context lives at your **project root** as `MARKETING-CONTEXT.md`; the in-pack `context/marketing-context.md` is a blank **template** only (now marked `<!-- TEMPLATE — not onboarded -->`), so a pack update can no longer overwrite your filled context (R1/R2). `marketing-core` resolves the project-root file per the standardized resolution order and, when it is missing or still the template, invokes the shared `context-onboarding` skill (R3) — which uses the new marketing question set (`marketing-core/references/context-questions.md`) and preserves the §6 hard-gate rules. Context updates now propose a diff rather than silently rewriting.

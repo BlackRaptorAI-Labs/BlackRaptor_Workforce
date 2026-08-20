@@ -1,25 +1,28 @@
 <!-- TEMPLATE — not onboarded -->
-# Marketing context — question set
+# Marketing context — extension question set
 
-The question set the `context-onboarding` interview uses for the marketing pack. Ask in priority
-order; skip anything the user's documents already answer (mark it `[doc: <filename>]`), clarify
-only gaps and conflicts. The answers populate the project-root `MARKETING-CONTEXT.md`.
+The marketing pack's EXTENSION set for the `context-onboarding` interview. The shared CORE block
+(what it is · who it's for · stage · how money comes in · priorities · off-limits · role) is asked
+FIRST and writes to `BUSINESS-CONTEXT.md`. These questions run AFTER core and must NEVER re-ask core
+ground — they DEEPEN it where marked. Answers populate the project-root `MARKETING-CONTEXT.md`. Ask
+in order; skip anything the documents already answer (mark `[doc: <filename>]`); clarify only gaps
+and conflicts.
 
-1. **Company / product** — what the company sells, to whom, the core promise, stage, and the one
-   pain the product removes.
-2. **Brand architecture** — master brand vs. sub-brands/products; how they relate; naming rules.
-3. **Personas, in priority order** — who the buyers/users are, ranked; for each: role, the job they
-   hire the product for, and what they must believe before they buy.
-4. **Go-to-market** — the motion (PLG / sales-led / channel), the primary demand and distribution
-   channels, and the sales cycle in broad strokes.
-5. **Voice & tone** — how the brand speaks; words and framings to use and to avoid.
-6. **Competitors** — the real alternatives (including "do nothing"), and where this product wins
-   and loses against each.
-7. **Proof standards** — what evidence a claim needs before it may be published (the bar the claims
-   gate enforces); which claims are already substantiated and which are aspirational.
-8. **Ethics guardrails** — the hard gates: claims that must never be made, regulated language,
-   audiences to protect. **Preserve these hard-gate rules; never weaken them during onboarding** —
-   restate the risk if asked to loosen one.
+1. **Brand architecture** — master brand vs. sub-brands/products; how they relate; naming rules.
+2. **Personas, in priority order** (deepens core "who it's for") — rank the buyers/users; for the top
+   ones, the job they hire the product for and what they must believe before they buy. Do not re-ask
+   who the users/payers are — carry that from core.
+3. **Go-to-market** (deepens core "how money comes in") — the motion (PLG / sales-led / channel),
+   the primary demand and distribution channels, sales cycle in broad strokes. Do not re-ask the
+   business model — carry it from core.
+4. **Voice & tone** — how the brand speaks; words and framings to use and to avoid.
+5. **Competitors** — the real alternatives (including "do nothing"); where this product wins and
+   loses against each.
+6. **Proof standards** (deepens core "off-limits") — the evidence a claim needs before it may be
+   published (the bar the claims gate enforces); which claims are already substantiated vs.
+   aspirational. Carry the regulatory/off-limits rules from core; here, make them marketing-specific.
+7. **Ethics guardrails / hard gates** — claims that must never be made, regulated language, audiences
+   to protect. **Preserve these hard-gate rules; never weaken them during onboarding** — restate the
+   risk if asked to loosen one.
 
-Conflicts between documents (e.g. two decks naming different primary personas) are flagged to the
-user to rule on, never silently resolved.
+Document-vs-document conflicts are flagged to the user to rule on, never silently resolved.

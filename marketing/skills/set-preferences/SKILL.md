@@ -29,14 +29,22 @@ DRY, and it applies everywhere without touching any agent body.
   is true. It cannot weaken the four Core commitments (nothing invented / hidden /
   half-done / unaccountable) or the provenance and standards rules.
 
-## The four preference dimensions
+## The seven preference dimensions
 
-| dimension | example values | effect |
-|---|---|---|
-| **reading level** | `8th-grade`, `plain`, `expert` | target readability of prose |
-| **verbosity** | `succinct` (cap ~120 words / answer), `normal`, `thorough` | length budget per answer |
-| **question style** | `minimal` (≤1 clarifying Q), `normal` (2–4), `ask-freely` | intake-ladder questioning (7.2) |
-| **checkpoint frequency** | `every-chunk`, `milestones`, `end-only` | how often to pause for confirmation |
+| dimension | key | values (default in **bold**) | effect |
+|---|---|---|---|
+| reading level | `reading-level` | **`plain`** / `technical` (also accepts `8th-grade`, `expert`) | target readability of prose (graded) |
+| verbosity | `verbosity` | **`brief`** (cap ~120 words / answer) / `detailed` (also accepts `succinct`, `normal`, `thorough`) | length budget per answer (graded) |
+| question style | `question-style` | **`ask`** / `assume-and-flag` | on mid-task ambiguity: stop and ask, or make a labeled ASSUMED assumption and continue |
+| checkpoint frequency | `checkpoint-frequency` | `frequent` / **`milestones`** | how often to pause for confirmation |
+| decisions grouping | `decisions-grouping` | **`one-at-a-time`** / `grouped` | how choices are brought to the user — honored in ALL interactions |
+| context-review cadence | `context-review-cadence` | **`quarterly`** / `at-launches` / `off` | in-session staleness reminder (R13.2); never out-of-session contact |
+| units | `units` | `metric` / `imperial` / **`both`** | measurement display; honored in the hardware pack (R13.3), inert elsewhere |
+
+Optional keys, written only when set: `role` (free text, from onboarding) · `declined` (list of
+dimensions the user declined to tune) · `offered` (list of dimensions offered once via
+observe-then-suggest). Safety gates, the claims gate, and approvals are NOT preferences and are not
+settable here.
 
 ## Process
 
@@ -50,15 +58,26 @@ DRY, and it applies everywhere without touching any agent body.
 
 ```
 # USER-PREFS — how to communicate with me (user-owned; never shipped)
-reading-level: 8th-grade        # 8th-grade | plain | expert
-verbosity: succinct             # succinct | normal | thorough
-question-style: minimal         # minimal | normal | ask-freely
-checkpoint-frequency: milestones # every-chunk | milestones | end-only
+reading-level: plain              # plain | technical
+verbosity: brief                  # brief | detailed
+question-style: ask               # ask | assume-and-flag
+checkpoint-frequency: milestones  # frequent | milestones
+decisions-grouping: one-at-a-time # one-at-a-time | grouped
+context-review-cadence: quarterly # quarterly | at-launches | off
+units: both                       # metric | imperial | both
+# optional, written only when set:
+# role: <free text>
+# declined: []
+# offered: []
 ```
 
 ## Conformance (how "honored" is checked)
 
-- **8th-grade mode** → prose scores **≤ grade 8** on a readability check
-  (Flesch–Kincaid). `succinct` → answers stay **within the word cap**.
-- The check is scripted: `_eval/baseline/prefs_conformance.py` grades a response
-  against a `USER-PREFS.md`. Conformance is measured, not asserted.
+- **Schema:** `_eval/baseline/prefs_conformance.py validate --prefs USER-PREFS.md` confirms all
+  seven required keys are present with allowed values, and that optional `role`/`declined`/`offered`
+  are well-formed when present. Schema validation proves the keys exist — not behavioral conformance.
+- **Behavioral (graded):** `reading-level: plain` → prose scores **≤ grade 10** (Flesch–Kincaid);
+  `verbosity: brief` → answers stay **within the word cap**. `prefs_conformance.py check` measures
+  these, not asserts them. The other five dimensions are honored by named mechanisms at their cited
+  file:line (units in hardware, cadence at the context-resolution step, decisions-grouping in every
+  interaction), demonstrated rather than FK/word-count graded.

@@ -12,6 +12,13 @@ The bridge is the shared dependency auto-installed with the dev-team, council,
 marketing, and HW-engineering plugins — it holds the cross-cutting agents and
 skills those teams share.
 
+## [1.0.4] — 2026-08-20
+
+### Added
+- **First-run welcome & interview experience (R7–R14).** `context-onboarding` now opens with a welcome (buttons "Set up now" / "Later"), runs a shared CORE interview block (seven topics) then the pack's extension set, states the effort up front, ends with a closing summary + an offer to start work, and can be deferred at any point with "Later" (partial save, resume later). Cross-pack reuse skips the core block when a business layer already exists.
+- **Preferences wired up (R13).** The Core contract's interaction-preferences directive goes from four honored dimensions to **seven** (reading level, verbosity, question style, checkpoint frequency, decisions grouping, context-review cadence, units) plus optional `role`/`declined`/`offered`; adds the in-session context-review reminder (R13.2) and the observe-then-suggest tuning rules (R13.4). The `set-preferences` skill and `prefs_conformance.py` (new `validate` mode) cover all seven keys.
+- `workforce-doctor` check 6 now reports the remaining UNKNOWN count for ONBOARDED files (R12e).
+
 ## [1.0.3] — 2026-08-19
 
 ### Added

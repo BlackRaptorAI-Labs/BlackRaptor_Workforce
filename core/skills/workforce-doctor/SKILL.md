@@ -71,7 +71,9 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    per the documented order (current working / project root → an explicit path the user named) and
    report one of three states:
    - **ONBOARDED** — a filled context file is present, has **no** `<!-- TEMPLATE — not onboarded -->`
-     first-line marker, and carries a date stamp.
+     first-line marker, and carries a date stamp. Also **count and report the remaining UNKNOWN
+     markers** in it (`UNKNOWN — user to provide` / `[unknown]`): a file with unknowns is still
+     ONBOARDED, but report e.g. "ONBOARDED (3 UNKNOWN left)" so the gaps stay visible (R12e).
    - **TEMPLATE** — the template marker is present (onboarding has not been run).
    - **MISSING** — no context file found at the resolved location.
    Expected file names at the project root: `BUSINESS-CONTEXT.md` (council), `MARKETING-CONTEXT.md`

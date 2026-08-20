@@ -42,7 +42,8 @@ plausible scopes, an unstated format/constraint that flips the build, a decision
 whose success bar you can't write). Then:
 
 1. Ask the **fewest questions that resolve the ambiguity** (1–3, not a checklist) —
-   only what changes the deliverable. Honor `question-style` (`minimal` → ask ≤1).
+   only what changes the deliverable. Honor `question-style`: `assume-and-flag` → prefer
+   making a labeled ASSUMED assumption over asking (ask ≤1); `ask` → stop and ask when unsure.
 2. Write a **short brief**:
    ```
    ## Brief

@@ -8,6 +8,11 @@
 All notable changes to the `blackraptor-council` plugin are recorded here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.2.5] — 2026-08-20
+
+### Added
+- First-run welcome & interview experience (R7–R14, via the shared `context-onboarding` skill): welcome → path choice → shared core interview → council extension (remaining business-context fields, never re-asking core) → friendly settings round → closing summary → offer to start. The seven-dimension preference wire-up (R13) rides the shared Core contract.
+
 ## [1.2.4] — 2026-08-19
 
 ### Changed

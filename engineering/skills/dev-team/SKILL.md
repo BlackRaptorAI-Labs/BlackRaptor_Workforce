@@ -18,12 +18,13 @@ Any non-trivial change: ≥2 dev specialists implied, a gated surface touched
 (auth / schema / infra / CI / AI-prompt path), or a change that needs a spec then
 build then review. Trivial one-file edits do not need the team — do them directly.
 
-**Context read-path.** Engineering keeps the project's **existing** context conventions (the repo's
-own docs / `PROGRAM-CONTEXT` / spec — engineering does not introduce a new company-context file).
-The Core `prompt-brief` intake runs the context precheck (Rung 0): resolve the project's context per
-the resolution order (project root → an explicit path the user names) before substantive work; if the
-change depends on company/project context the project does not yet record, `context-onboarding` can
-capture it to the project root.
+**Context read-path (repo-native, R10).** Engineering is project-scoped; context lives in the repo:
+`CLAUDE.md` (auto-loaded, technical) + `BUSINESS-CONTEXT.md` (business) + `USER-PREFS.md` at the repo
+root — update-proof by construction. The Core `prompt-brief` intake runs the Rung-0 context precheck
+at session start. A **bare repo** (no `CLAUDE.md`, no business context) ⇒ `context-onboarding` runs
+the full welcome flow with the engineering extension set (`references/context-questions.md`): the
+shared core block writes `BUSINESS-CONTEXT.md`, the technical set writes `CLAUDE.md`. A **populated
+repo** ⇒ no welcome; offer a short "review and fill gaps" pass. Same provenance/approval rules.
 
 ## 2. Seat selection rule
 

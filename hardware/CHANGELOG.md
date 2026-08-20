@@ -5,6 +5,10 @@
 
 # Changelog — BlackRaptor Agents, HW Engineering Team
 
+## 1.2.4 — 2026-08-20
+
+- First-run welcome & interview experience (R7–R14) via the shared `context-onboarding` skill. Adds the units display preference (R13.3): `hw-operating-standard` reads the `units` USER-PREFS key and presents quantities as metric / imperial / both (default) — display only, dimension checks unaffected. Seven-dimension preference wire-up (R13) via the shared Core contract.
+
 ## 1.2.3 — 2026-08-19
 
 - `hw-operating-standard` gains the standardized context trigger: before substantive work on a program, resolve its `PROGRAM-CONTEXT-<program>.md` at the **project root** per the resolution order; if missing or still the template, invoke the shared `context-onboarding` skill first (interviewing against the program-context template fields) and write the approved, dated file to the project root — never into the pack (R1–R3). The in-pack `templates/program-context.md` now carries a `<!-- TEMPLATE — not onboarded -->` marker.
