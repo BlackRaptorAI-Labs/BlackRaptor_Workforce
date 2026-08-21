@@ -41,6 +41,52 @@ for d in "$SRC"/skills/*/; do
   cp -R "$d". "$DEST/.claude/skills/$name/"
   echo "  installed: .claude/skills/$name/ (full)"
 done
+
+# --- R3 vendoring (D-02 BUNDLING, version-aware): merge the shared blackraptor-core into the flat
+# .claude/ so a vendored engineering install is SELF-CONTAINED (repo-native, no marketplace). Core is
+# read at install time from the sibling core/ dir ($SRC/../core) — the single source, NOT a duplicate
+# shipped in this pack (the "core-skill edit never touches a team pack" criterion holds). Version-aware:
+# copy core only if absent or OLDER; never downgrade a newer core; identical = no-op (multi-pack / re-run safe).
+CORE="$SRC/../core"
+if [ -d "$CORE" ]; then
+  CORE_VER=$(grep -m1 '"version"' "$CORE/.claude-plugin/plugin.json" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  MARK="$DEST/.claude/.blackraptor-core-version"
+  HAVE=$([ -f "$MARK" ] && cat "$MARK" || echo "")
+  if [ -z "$HAVE" ] || { [ "$HAVE" != "$CORE_VER" ] && [ "$(printf '%s\n%s\n' "$HAVE" "$CORE_VER" | sort -V | tail -1)" = "$CORE_VER" ]; }; then
+    mkdir -p "$DEST/.claude/agents" "$DEST/.claude/skills" "$DEST/.claude/hooks" "$DEST/.claude/docs"
+    cp "$CORE"/agents/*.md "$DEST/.claude/agents/" 2>/dev/null || true
+    for d in "$CORE"/skills/*/; do n="$(basename "$d")"; mkdir -p "$DEST/.claude/skills/$n"; cp -R "$d". "$DEST/.claude/skills/$n/"; done
+    [ -d "$CORE/hooks" ] && { cp -R "$CORE"/hooks/. "$DEST/.claude/hooks/"; chmod +x "$DEST/.claude/hooks/"*.sh 2>/dev/null || true; }
+    [ -d "$CORE/docs" ] && cp "$CORE"/docs/*.md "$DEST/.claude/docs/" 2>/dev/null || true
+    printf '%s\n' "$CORE_VER" > "$MARK"
+    # resolve ${CLAUDE_PLUGIN_ROOT}/ -> .claude/ across the vendored .claude/ tree (no plugin root here).
+    find "$DEST/.claude/agents" "$DEST/.claude/skills" -name '*.md' -print0 | while IFS= read -r -d '' f; do
+      sed 's|\${CLAUDE_PLUGIN_ROOT}/|.claude/|g' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+    done
+    # wire the two core UserPromptSubmit hooks into project settings so they FIRE (no plugin registration
+    # on the vendored path). Parse-safe merge (never clobbers an unparseable existing settings.json).
+    python3 - "$DEST/.claude/settings.json" <<'PY'
+import json, os, sys
+p = sys.argv[1]; d = {}
+if os.path.exists(p):
+    try: d = json.load(open(p))
+    except Exception:
+        print("  NOTE: .claude/settings.json is not parseable JSON — skipped auto-wiring the core hooks;"
+              " add UserPromptSubmit -> .claude/hooks/inject-onboarding-rule.sh + inject-claims-gate-rule.sh manually.")
+        sys.exit(0)
+h = d.setdefault("hooks", {}).setdefault("UserPromptSubmit", [])
+for s in ("inject-onboarding-rule.sh", "inject-claims-gate-rule.sh"):
+    c = ".claude/hooks/" + s
+    if not any(c in json.dumps(e) for e in h):
+        h.append({"hooks": [{"type": "command", "command": c}]})
+json.dump(d, open(p, "w"), indent=2)
+PY
+    echo "  bundled blackraptor-core $CORE_VER into .claude/ (was: ${HAVE:-absent}); core hooks wired into .claude/settings.json"
+  else
+    echo "  kept existing blackraptor-core $HAVE (>= $CORE_VER being installed; never downgraded)"
+  fi
+fi
+
 for f in "$SRC"/commands/*.md; do copy "$f" "$DEST/.claude/commands/$(basename "$f")"; done
 
 echo "[2b/5] Operating context -> .claude/blackraptor-workforce.md (+ CLAUDE.md @-import)"

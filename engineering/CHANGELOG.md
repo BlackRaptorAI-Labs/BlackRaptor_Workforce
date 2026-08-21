@@ -8,6 +8,11 @@
 All notable changes to the BlackRaptor Agents development team are recorded here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.4.6] — 2026-08-21
+
+### Changed — core consolidation (Release 3)
+- The shared core-doctrine skills are no longer duplicated into this pack; they install with the `blackraptor-core` dependency (a core-skill edit no longer touches this pack). Adds a roster-neutral change-record template + this pack's `seat-list.md` (the engineering gate roles → agents). No user-facing strings changed.
+
 ## [1.4.5] — 2026-08-20
 
 ### Added

@@ -79,6 +79,7 @@ checkpoint frequency, decisions grouping, context-review cadence, and units — 
 the optional `role` and the `declined`/`offered` tuning lists. Honor decisions
 grouping in ALL interactions, not just onboarding. This file is user-owned and
 local: it is never shipped, synced, or part of this package.
+Verbosity defaults to **brief** when unset or when no `USER-PREFS.md` exists; the user can dial up anytime.
 
 **Context-review reminder (in-session only).** At the context-resolution step you
 run at session start, also compare each resolved context file's date-stamp against

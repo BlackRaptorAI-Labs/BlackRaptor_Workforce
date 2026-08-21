@@ -5,6 +5,10 @@
 
 # Changelog — BlackRaptor Agents, HW Engineering Team
 
+## 1.2.5 — 2026-08-21
+
+- Core consolidation (Release 3): the shared core-doctrine skills are no longer duplicated into this pack; they install with the `blackraptor-core` dependency. Adds a roster-neutral change-record template + this pack's `seat-list.md` (hardware gate roles → agents: hw-design-reviewer, compliance-cert, reliability-dfr, manufacturing-dfm). No user-facing strings changed.
+
 ## 1.2.4 — 2026-08-20
 
 - First-run welcome & interview experience (R7–R14) via the shared `context-onboarding` skill. Adds the units display preference (R13.3): `hw-operating-standard` reads the `units` USER-PREFS key and presents quantities as metric / imperial / both (default) — display only, dimension checks unaffected. Seven-dimension preference wire-up (R13) via the shared Core contract.

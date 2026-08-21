@@ -8,6 +8,11 @@
 All notable changes to the `blackraptor-council` plugin are recorded here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.2.6] — 2026-08-21
+
+### Changed — core consolidation (Release 3)
+- The shared core-doctrine skills (contract, gates, onboarding, change-record, state-file v2, content-craft, the claims gate, etc.) are no longer duplicated into this pack — they install with the `blackraptor-core` dependency. A council-only install now also has its producer analysts (market-research / pricing / competitive-intel), which moved to Core. Adds a roster-neutral change-record template + this pack's `seat-list.md`. No user-facing strings changed.
+
 ## [1.2.5] — 2026-08-20
 
 ### Added

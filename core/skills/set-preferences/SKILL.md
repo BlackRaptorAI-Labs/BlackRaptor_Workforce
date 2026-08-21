@@ -50,7 +50,7 @@ settable here.
 
 1. **Read the current file** if it exists (`USER-PREFS.md`); otherwise start fresh.
 2. **Ask only for what is ambiguous** — if the user said "be more concise," set
-   `verbosity: succinct` and confirm; do not interrogate all four dimensions.
+   `verbosity: brief` and confirm; do not interrogate all seven dimensions.
 3. **Write the file** in the fixed format below. Overwrite cleanly; keep ≤10 lines.
 4. **Confirm** the change in one sentence and apply it immediately in your next reply.
 

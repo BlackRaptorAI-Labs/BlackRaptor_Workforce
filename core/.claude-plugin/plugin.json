@@ -1,7 +1,7 @@
 {
   "name": "blackraptor-core",
   "displayName": "BlackRaptor Workforce — Core",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. The shared Core pack: cross-cutting agents used by every team — `product-manager` (the end-to-end product owner bridging market demand and the build) and `evidence-auditor` (the adversarial gate for research, analysis, and evidence-based reporting) — plus the `research-integrity` methodology skill. Auto-installed as a dependency of all four packs (Engineering, Executive Council, Marketing, Hardware Engineering); you don't install it directly.",
   "skills": "./skills/",
   "author": {

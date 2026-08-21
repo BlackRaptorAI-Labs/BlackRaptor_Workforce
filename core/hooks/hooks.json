@@ -1,0 +1,8 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/inject-onboarding-rule.sh" } ] },
+      { "hooks": [ { "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/inject-claims-gate-rule.sh" } ] }
+    ]
+  }
+}

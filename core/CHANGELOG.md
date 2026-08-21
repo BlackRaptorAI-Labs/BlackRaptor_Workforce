@@ -12,6 +12,21 @@ The bridge is the shared dependency auto-installed with the dev-team, council,
 marketing, and HW-engineering plugins — it holds the cross-cutting agents and
 skills those teams share.
 
+## [1.0.5] — 2026-08-21
+
+### Changed — core consolidation (Release 3)
+- **Core-doctrine skills now live in Core only** and reach team packs via the `blackraptor-core` dependency (no more 5× duplicated copies; a core-skill edit no longer touches any team pack). The claims gate (skill + `claims-gate` agent + hook), `content-craft`, the BUSINESS-CONTEXT template, and the three producer analysts (`market-research-analyst`, `pricing-strategy-analyst`, `competitive-intel-analyst`) moved into Core — so every install is gated and has its producers by construction.
+
+### Added
+- **`clean-output`** — a new Core skill: keeps AI-attribution boilerplate and authoring-tool fingerprints out of delivered documents/commits. Hard boundary: it never removes the Claude text watermark or C2PA image credentials.
+- **`content-craft` extended** (now Core): a human-voice avoid-list (`references/ai-tells.md`, on-demand), a structure menu that auto-selects by deliverable type (Minto for analytical), rhythm rules, match-length-to-ask, and a refresh rule.
+- **state-file v2**: per-workstream `<slug>-state.md`, done-condition-first, ADR-disciplined decisions (immutable, supersede-not-edit), merge/tombstone rules, `STATE-INDEX.md`, and doctor staleness reporting.
+- **R15 welcome/onboarding trigger hook** (Core `UserPromptSubmit`): fires the first-run welcome even on a bare "hello", silent once onboarded, fail-open. workforce-doctor gains the hook-wiring check.
+- **Change-record template is roster-neutral** — it names gate ROLES; each team pack ships a `seat-list.md` (role→agent), guarded by a new `[SEAT]` check.
+
+### Changed
+- Interaction-preferences: verbosity now defaults to **brief** when unset (one contract line); the claims hook is a lean one-sentence pointer (full rule loads on demand). No user-facing strings changed.
+
 ## [1.0.4] — 2026-08-20
 
 ### Added

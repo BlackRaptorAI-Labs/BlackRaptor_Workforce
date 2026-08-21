@@ -5,6 +5,10 @@
 
 # Changelog — BlackRaptor Agents Marketing Team
 
+## 1.1.7 — 2026-08-21
+
+- Core consolidation (Release 3). The shared core-doctrine skills are no longer duplicated into this pack; they install with the `blackraptor-core` dependency. The **claims gate** (skill + agent + hook), **content-craft**, and the three **producer analysts** (market-research / pricing-strategy / competitive-intel) moved to Core — the claims gate now protects every install by construction, and marketing keeps its proof-standards / claims ledger in its register. Marketing roster is now **11 agents + 7 marketing skills**. Adds this pack's `seat-list.md`. No user-facing strings changed.
+
 ## 1.1.6 — 2026-08-20
 
 - First-run welcome & interview experience (R7–R14) via the shared `context-onboarding` skill: welcome → path → shared core interview → marketing extension (brand/personas/GTM/voice/competitors/proof standards, reorganized to never re-ask core) → friendly settings round → closing summary → offer to start. The marketing question set is now an extension set that deepens core answers. Seven-dimension preference wire-up (R13) via the shared Core contract; §6 hard gates preserved.

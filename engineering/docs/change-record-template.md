@@ -33,21 +33,23 @@ attached to it.
 
 ## 2. Gate decisions
 
-For each gate: run the named agent on the diff, read its verdict, decide, sign.
-"Agent verdict" is what the agent concluded; "My decision" is yours — they may
-differ, and when they do, §5 is mandatory.
+For each gate ROLE: run **your pack's agent for that role** (see your pack's `seat-list.md`,
+which maps each role to its agent or marks it `N/A`) on the diff, read its verdict, decide, sign.
+This template is **roster-neutral** — it names roles, not agents, so it is correct in every pack.
+"Agent verdict" is what the agent concluded; "My decision" is yours — they may differ, and when
+they do, §5 is mandatory.
 
-| Gate | Agent | Applies? | Agent verdict (PASS / FAIL / CONCERNS) | My decision (ACCEPT / ACCEPT-WITH-RISK / REWORK) | Initials + date |
+| Gate role | Your pack's seat (see `seat-list.md`) | Applies? | Agent verdict (PASS / FAIL / CONCERNS) | My decision (ACCEPT / ACCEPT-WITH-RISK / REWORK) | Initials + date |
 |---|---|---|---|---|---|
-| Security (auth/RBAC/tenant/remote-access) | security-architect | Yes / N/A: ___ | | | |
-| Privacy (PII, LLM data-flow, cross-border) | privacy-counsel | Yes / N/A: ___ | | | |
-| Compliance (SOC 2 / ISO control continuity, audit-trail writes) | compliance-officer | Yes / N/A: ___ | | | |
-| Domain (<regulated domain>) | domain-compliance | Yes / N/A: ___ | | | |
-| Schema (migrations) | data-engineer | Yes / N/A: ___ | | | |
-| Operational readiness (HITL on consequential/automated action; operability) | operational-readiness | Yes / N/A: ___ | | | |
-| UX (design system, interaction, a11y) | ux-designer | Yes / N/A: ___ | | | |
-| Quality (TDD followed, coverage thresholds) | qa-test-engineer | CI-enforced; note exceptions: ___ | | | |
-| Review (last gate before merge; conventions, routing) | code-reviewer | Yes / N/A: ___ | | | |
+| Security (auth/RBAC/tenant/remote-access) | `security` seat | Yes / N/A: ___ | | | |
+| Privacy (PII, LLM data-flow, cross-border) | `privacy` seat | Yes / N/A: ___ | | | |
+| Compliance (SOC 2 / ISO control continuity, audit-trail writes) | `compliance` seat | Yes / N/A: ___ | | | |
+| Domain (<regulated domain>) | `domain` seat | Yes / N/A: ___ | | | |
+| Schema (migrations) | `schema` seat | Yes / N/A: ___ | | | |
+| Operational readiness (HITL on consequential/automated action; operability) | `operational-readiness` seat | Yes / N/A: ___ | | | |
+| UX (design system, interaction, a11y) | `ux` seat | Yes / N/A: ___ | | | |
+| Quality (TDD followed, coverage thresholds) | `quality` seat | CI-enforced; note exceptions: ___ | | | |
+| Review (last gate before merge; conventions, routing) | `review` seat | Yes / N/A: ___ | | | |
 
 ## 3. Agent analysis (evidence)
 

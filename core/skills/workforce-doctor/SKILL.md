@@ -55,14 +55,18 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    dirs (`agents/`, `skills/`, and for a team pack a `CLAUDE.md`, `LICENSE`, `NOTICE`). Anomaly: a
    missing manifest, a name/version mismatch, or an empty `agents/` or `skills/`.
 
-4. **Marketing claims-review hook (only if `blackraptor-marketing` is installed).** Three checks:
-   - `marketing/hooks/hooks.json` is present.
-   - the injector script in `marketing/hooks/` is present **and executable** (`test -x`). A hook
-     the client cannot execute is a silently disabled rule.
-   - the marketing `plugin.json` does **NOT** declare `"hooks": "./hooks/hooks.json"`. On client
-     2.1.170+ `hooks/hooks.json` auto-loads by convention, so declaring it is a fatal
-     "Duplicate hooks file detected" load failure. If the key is present, that is a **blocking**
-     anomaly — the marketing pack will not load.
+4. **Core hooks wiring (R15.4; `blackraptor-core` is always installed).** Both always-on hooks live
+   in the CORE pack now — the welcome/onboarding trigger and the claims-gate pointer. Report whether
+   each is wired for the current client:
+   - `core/hooks/hooks.json` is present and lists TWO `UserPromptSubmit` entries.
+   - `core/hooks/inject-onboarding-rule.sh` (welcome/onboarding trigger) and
+     `core/hooks/inject-claims-gate-rule.sh` (claims-gate pointer) are both present **and executable**
+     (`test -x`). A hook the client cannot execute is a silently disabled rule.
+   - the core `plugin.json` does **NOT** declare a `"hooks"` key. On client 2.1.170+ `hooks/hooks.json`
+     auto-loads by convention, so declaring it is a fatal "Duplicate hooks file detected" load failure —
+     a **blocking** anomaly.
+   Report the wiring status for both hooks; a missing/non-executable hook means that rule won't
+   auto-fire (the in-skill R3/R7 triggers still apply as the backstop) — note it, non-blocking.
 
 5. **Client version.** Record `claude --version`. Note it in the report — hook-loading and
    marketplace behavior have varied across client versions.
@@ -82,6 +86,20 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    MISSING, recommend running `context-onboarding` — **never fail the install for it**. In a Cowork
    session, check the connected project folder; if no project folder is connected, say so rather
    than reporting MISSING.
+
+7. **State-file staleness (optional, report-only).** In the working project, look for
+   `<slug>-state.md` files (state-file v2). Any file with `status: active` whose `updated <date>` is
+   more than **30 days** old is flagged — "stale active state: finish it, pause it, or supersede it."
+   Non-blocking / cosmetic, like check 6; it keeps the state index honest without any scheduler. If no
+   state files exist, skip silently.
+
+8. **Vendored-core staleness (R3 / D-02c, only on a vendored install, report-only).** A vendored
+   (install.sh, non-marketplace) project carries the shared core bundled into `.claude/`, stamped with
+   `.claude/.blackraptor-core-version`. If that marker exists, read it and compare against the core
+   version the installed team pack expects (its `blackraptor-core` dependency / the version you can see
+   for core): if the vendored core is **older**, flag "stale vendored core `<found>` (< `<expected>`) —
+   re-run the pack's install.sh to refresh it." Non-blocking / cosmetic; skip silently if no marker
+   (marketplace installs resolve core through the dependency and have no marker).
 
 ## Report format
 

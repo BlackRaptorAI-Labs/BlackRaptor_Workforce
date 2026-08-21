@@ -50,6 +50,48 @@ else
   cp "$SRC/context/marketing-context.md" "$TARGET/.claude/context/marketing-context.md"
 fi
 
+# --- R3 vendoring (D-02 BUNDLING, version-aware): merge the shared blackraptor-core into the flat
+# .claude/ so this vendored install is SELF-CONTAINED (no marketplace). Core is read at install time
+# from the sibling core/ dir ($SRC/../core) — the single source, NOT a duplicate shipped in this pack
+# (the "core-skill edit never touches a team pack" criterion holds; bundling happens on the user's
+# machine). Version-aware: copy core only if absent or OLDER; never downgrade a newer core; identical =
+# no-op (safe for multi-pack vendoring into one .claude/ and for re-runs). The ${CLAUDE_PLUGIN_ROOT}
+# rewrite below covers the bundled core .md files too (they land before it runs).
+CORE="$SRC/../core"
+if [ -d "$CORE" ]; then
+  CORE_VER=$(grep -m1 '"version"' "$CORE/.claude-plugin/plugin.json" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  MARK="$TARGET/.claude/.blackraptor-core-version"
+  HAVE=$([ -f "$MARK" ] && cat "$MARK" || echo "")
+  if [ -z "$HAVE" ] || { [ "$HAVE" != "$CORE_VER" ] && [ "$(printf '%s\n%s\n' "$HAVE" "$CORE_VER" | sort -V | tail -1)" = "$CORE_VER" ]; }; then
+    cp "$CORE"/agents/*.md "$TARGET/.claude/agents/" 2>/dev/null || true
+    cp -R "$CORE"/skills/* "$TARGET/.claude/skills/"
+    mkdir -p "$TARGET/.claude/hooks"; [ -d "$CORE/hooks" ] && { cp -R "$CORE"/hooks/. "$TARGET/.claude/hooks/"; chmod +x "$TARGET/.claude/hooks/"*.sh 2>/dev/null || true; }
+    [ -d "$CORE/docs" ] && cp "$CORE"/docs/*.md "$TARGET/.claude/docs/" 2>/dev/null || true
+    printf '%s\n' "$CORE_VER" > "$MARK"
+    # Wire the two core UserPromptSubmit hooks into project settings so they FIRE on this vendored path
+    # (no plugin hook registration here). Safe JSON merge via python3; idempotent.
+    python3 - "$TARGET/.claude/settings.json" <<'PY'
+import json, os, sys
+p = sys.argv[1]; d = {}
+if os.path.exists(p):
+    try: d = json.load(open(p))
+    except Exception:
+        print("  NOTE: .claude/settings.json is not parseable JSON — skipped auto-wiring the core hooks;"
+              " add UserPromptSubmit -> .claude/hooks/inject-onboarding-rule.sh + inject-claims-gate-rule.sh manually.")
+        sys.exit(0)
+h = d.setdefault("hooks", {}).setdefault("UserPromptSubmit", [])
+for s in ("inject-onboarding-rule.sh", "inject-claims-gate-rule.sh"):
+    c = ".claude/hooks/" + s
+    if not any(c in json.dumps(e) for e in h):
+        h.append({"hooks": [{"type": "command", "command": c}]})
+json.dump(d, open(p, "w"), indent=2)
+PY
+    echo "note: bundled blackraptor-core $CORE_VER into .claude/ (was: ${HAVE:-absent}); core hooks wired into .claude/settings.json"
+  else
+    echo "note: kept existing blackraptor-core $HAVE (>= $CORE_VER being installed; never downgraded)"
+  fi
+fi
+
 # Vendored installs have no ${CLAUDE_PLUGIN_ROOT}; point references at .claude/.
 # Portable in-place rewrite: plain `sed` to a temp file (no `-i`), so it behaves
 # identically on BSD/macOS and GNU/Linux (the old `sed -i ''` errored on GNU sed
@@ -59,5 +101,5 @@ find "$TARGET/.claude/agents" "$TARGET/.claude/skills" -name "*.md" -print0 |
     sed 's|\${CLAUDE_PLUGIN_ROOT}/|.claude/|g' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
   done
 
-echo "Installed: 15 marketing agents + 9 marketing skills + 10 shared Core skills (19 total) into $TARGET/.claude/"
+echo "Installed: 11 marketing agents + 7 marketing skills + the bundled blackraptor-core (agents + skills + hooks) into $TARGET/.claude/ — self-contained."
 echo "Next: open the repo in Claude Code and say \"set up the marketing context\"."
