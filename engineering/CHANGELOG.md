@@ -8,6 +8,11 @@
 All notable changes to the BlackRaptor Agents development team are recorded here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.4.7] — 2026-08-21
+
+### Changed — Release 4 (technical-writer conform)
+- **`technical-writer`** conformed to the R16 spec. Tool set is now Read, Grep, Glob, Write, Bash (adds Bash for reading the repo as ground truth; drops Edit). Charter widened to READMEs, API references, module and architecture docs, and changelogs alongside the numbered as-built specs, with the code treated as ground truth (never invent an API or a flag). Wires in the `content-craft` skill (reference and spec docs select hierarchical-by-topic; how-to and runbook select chronological/step-by-step; Minto is not forced onto reference docs) and `standards-discipline` for any standard it cites; stays repo-native (R10). Description is em-dash-free.
+
 ## [1.4.6] — 2026-08-21
 
 ### Changed — core consolidation (Release 3)

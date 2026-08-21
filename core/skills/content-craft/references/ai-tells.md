@@ -1,7 +1,7 @@
 # AI tells — human-voice avoid-list (all packs)
 
 The combined avoid-list. Loaded on demand by `content-craft`; not inline in the skill and never in
-the Core contract (token discipline). ONE list, applied in every pack. **Refresh date: 2026-08-21**
+the Core contract (token discipline). ONE list, applied in every pack. **Refresh date: 2026-08-21 (§2.6 extended, R20)**
 — re-pull current tells quarterly (or when the writing agents' output starts showing a new tic); a
 frozen list decays (the 2026 tells below were missing from the first draft's pre-2026 sources).
 
@@ -44,13 +44,17 @@ forward…" · "Only time will tell…" · "The possibilities are endless…" ·
 me know if you have any questions!" · "Best of luck on your journey!" · "Happy [verb]-ing!" · the
 "Let me…" construction ("Let me explain / break this down / walk you through").
 
-## 2.6 False-candor openers (2026 tells — BAN HARD)
+## 2.6 False-candor & false-importance openers (2026 tells — BAN HARD)
 "I'll be straight with you" · "let me be honest" · "to be honest / honestly" · "in all honesty" ·
 "the honest truth" · "here's the thing" · "here's the deal" · "the truth is…" · "the reality is…" ·
-"look,…" · reflexive use of the adjective "honest". A phrase meant to SIGNAL candor, repeated every
-few paragraphs, reads as filler and erodes credibility — the opposite of its intent. (Extends
-Claude's base "avoid honestly/genuinely/straightforward" to the "honest" adjective + the
-straight-with-you family, in every pack.)
+"look,…" · reflexive use of the adjective "honest" · "one honest gap / one honest note / one honest
+thing / one honest caveat" · "it's worth getting exact / it's worth getting this right / worth
+getting right" · "worth noting" · "to be clear" · "the short version" · "the key thing". A phrase
+meant to SIGNAL candor OR importance, repeated every few paragraphs, reads as filler and quietly
+erodes credibility — the opposite of its intent. (Extends Claude's base "avoid
+honestly/genuinely/straightforward" to the "honest" adjective, the "one honest X" and "worth getting
+exact" families, and the straight-with-you family, in every pack. Owner catch 2026-08-21 — these
+appeared repeatedly in live oversight output.)
 
 ## 2.7 Sentence-construction tells (often a stronger tell than any word)
 "not just X, but Y" · "it's not about X, it's about Y" · "it's not X — it's Y" · "X is more than just

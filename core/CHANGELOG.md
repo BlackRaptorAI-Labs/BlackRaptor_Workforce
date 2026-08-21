@@ -12,6 +12,16 @@ The bridge is the shared dependency auto-installed with the dev-team, council,
 marketing, and HW-engineering plugins — it holds the cross-cutting agents and
 skills those teams share.
 
+## [1.0.6] — 2026-08-21
+
+### Added — Release 4 (writer agents + intake restate)
+- **`product-docs-writer`** — a new Core agent (model Sonnet) for user-facing product documentation: user guides, getting-started walkthroughs, help and FAQ, feature explainers, general product information. External-facing, so it is **gate-wired**: every deliverable routes through the isolated `claims-gate` agent before delivery (it never gates its own copy) and follows the `content-craft` avoid-list (the TWO-GATE rule). Lives in Core because it is invoked across engineering, hardware, marketing, and product management. Tools: Read, Grep, Glob, Write, WebSearch, WebFetch.
+- **`content-craft` avoid-list refresh** (`references/ai-tells.md`, §2.6): the false-candor / false-importance opener family now also catches the "one honest gap / note / thing / caveat" family, the "it's worth getting exact / getting this right" family, "worth noting", "to be clear", "the short version", and "the key thing" (owner catch from live oversight output). Refresh date bumped.
+
+### Changed — Release 4
+- **`prompt-brief` intake now authors the improved prompt.** On a non-trivial ask, after the clarifying questions the skill restates the request as a tightened, unambiguous prompt (a `## Restated prompt` block plus the short brief) and shows it for a single Approve-or-edit step before work begins (questions, then author, then approve or tweak, then run). Clear small asks still pass straight through with zero friction; honors `verbosity: brief`.
+- **Onboarding copy refresh** (`context-onboarding`): gate-cleared setup-choice, path-choice (replaces the prior path-choice string), and documents-path strings; the connector clause is guarded by "if you've already connected one." The W1 welcome is unchanged.
+
 ## [1.0.5] — 2026-08-21
 
 ### Changed — core consolidation (Release 3)

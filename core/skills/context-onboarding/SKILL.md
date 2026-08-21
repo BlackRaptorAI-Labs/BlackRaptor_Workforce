@@ -19,7 +19,7 @@ deferred.
 ## A. First-run detection & sequence (R7)
 
 **True first run** = the pack's context file is missing or still a template AND `USER-PREFS.md` is
-missing. Sequence: **W1 welcome → path choice (R6) → context interview (§C, core → extension) →
+missing. Sequence: **W1 welcome → path choice → context interview (§C, core → extension) →
 settings entry (§E) → closing summary → activation offer.**
 
 **Smart skipping (guaranteed by project-root storage):** context present but prefs missing ⇒ settings
@@ -27,11 +27,16 @@ only; prefs present but context missing ⇒ interview only; both present ⇒ nev
 
 ### W1 — welcome (owner-ratified verbatim; do not substitute any earlier draft; changes need owner sign-off)
 
-Open with exactly this, then show buttons **"Set up now" / "Later"**:
+Open with exactly this (UNCHANGED; the §5 ACCEPT-WITH-RISK item stays in force):
 
 > Welcome to BlackRaptor Workforce. To start out, let's tell the agents a little about your
 > business and/or project and how you like to work. It's a short setup now, and the team uses
 > it to give you better outcomes in the work that follows.
+
+Then ask the **setup choice** VERBATIM (buttons **"Set up now" / "Later"**; render `{team-name}`
+with the installing pack's name):
+
+> Would you like to do the {team-name} setup now, or come back to it later?
 
 ## B. Widgets & plain-text fallback (R8)
 
@@ -42,17 +47,24 @@ ships WITH its question text; open-ended answers stay in normal chat; one questi
 Canonical labels: welcome = **Set up now / Later**; path = **Interview me / Read my documents /
 Mix**; settings entry = **Use defaults / Customize**; approval = **Approve / Make changes**.
 
-## C. The interview — open with R6, then core, then extension
+## C. The interview — path choice, then core, then extension
 
-### C.0 — Open with this, VERBATIM (owner-ratified; do not edit without owner sign-off)
+### C.0 — Path choice, VERBATIM (gate-cleared SHIP 2026-08-21; buttons "Interview me" / "Read my documents" / "Mix")
 
-> I need to learn your business and/or project before the team can do good work. How would
-> you like to do this? I can interview you with questions and you type the answers, you can
-> point me at a folder or files and I'll do the reading, or we can mix both — documents
-> first, then I'll ask about whatever they don't cover. You can also add more material later
-> anytime.
+> How would you like me to learn about your business and/or project?
 
-Branch on the choice: **questions / documents / mix**. Never assume a folder exists.
+The three button labels carry the explanation (**Interview me / Read my documents / Mix**), so the
+prompt stays terse. Branch on the choice: **questions (Interview me) / documents / mix**. Never
+assume a folder exists. (This replaces the retired prose opener; its old byte-lock is retired.)
+
+On the **documents** path (or the documents phase of Mix), open VERBATIM (gate-cleared; the
+connector clause gates on "if you've already connected one" — keep that wording exactly):
+
+> Great. Let's start with documents. You can attach files here in the chat, name a folder
+> on your computer (I'll ask for access), or, if you've already connected one, point me at
+> a source like Google Drive, SharePoint, or ClickUp. Anything that describes the business
+> or project works well: a pitch deck, business plan, product overview, README, or website
+> copy.
 
 ### C.1 — Effort expectation (questions path, and the questions phase of Mix) — R12(f)
 

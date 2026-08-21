@@ -44,16 +44,24 @@ whose success bar you can't write). Then:
 1. Ask the **fewest questions that resolve the ambiguity** (1–3, not a checklist) —
    only what changes the deliverable. Honor `question-style`: `assume-and-flag` → prefer
    making a labeled ASSUMED assumption over asking (ask ≤1); `ask` → stop and ask when unsure.
-2. Write a **short brief**:
+2. **Author the improved prompt (R18).** Restate the user's ask as a tightened, unambiguous
+   prompt that folds in their answers — one tight paragraph in the user's own intent, ready to
+   run. Honor `verbosity: brief`: the restatement stays tight, never padded. Pair it with the
+   short brief:
    ```
+   ## Restated prompt
+   <the tightened, unambiguous ask, ready to run>
+
    ## Brief
    - Goal:
    - Context:
    - Constraints:
    - Done-criteria:   # the testable bar; becomes the completion-audit ruler
    ```
-3. **User confirms** the brief (or corrects it).
-4. **Route** to the right specialist/skill and build.
+3. **One approval step (questions → author → approve/tweak → run).** Show the restated prompt +
+   brief and let the user **Approve or edit** in a single motion. Do not re-ask after they
+   approve; if they tweak, take the tweak and run.
+4. **Route** to the right specialist/skill and build from the approved restatement.
 
 The **Done-criteria are the ruler**: the completion-audit gate audits the finished
 work against each done-criterion and cites them in its verdict. A brief with a
