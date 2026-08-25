@@ -3,7 +3,7 @@ name: prompt-brief
 description: >-
   Use at the START of any non-trivial request to turn it into a buildable brief
   before work begins — ask 2–4 clarifying questions, write a short brief (goal /
-  context / constraints / done-criteria), confirm it, then route. Clear small
+  context / audience / constraints / done-criteria), confirm it, then route. Clear small
   asks pass straight through with zero friction; heavy asks escalate to
   product-manager. Triggers: any incoming task whose goal or done-criteria are
   not already explicit. The intake ladder for the Layer-0 Core contract.
@@ -55,9 +55,18 @@ whose success bar you can't write). Then:
    ## Brief
    - Goal:
    - Context:
+   - Audience:       # who reads/executes the output; written to their register
    - Constraints:
    - Done-criteria:   # the testable bar; becomes the completion-audit ruler
    ```
+
+   **Audience is part of the ask.** Every prose deliverable names who will read and act on it
+   (owner, GM, CFO, engineer, regulator) and is written in that reader's register; the
+   done-criteria inherit it ("executable by the named audience without further explanation").
+   Infer the audience when the ask makes it obvious and label the inference ASSUMED; ask only
+   when it is genuinely ambiguous AND the answer would change the writing — the standard Rung-2
+   test. Never add an audience question to a Rung-1 pass-through ask (the order-11 friction
+   finding stands).
 3. **One approval step (questions → author → approve/tweak → run).** Show the restated prompt +
    brief and let the user **Approve or edit** in a single motion. Do not re-ask after they
    approve; if they tweak, take the tweak and run.

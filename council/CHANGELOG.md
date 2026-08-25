@@ -8,6 +8,50 @@
 All notable changes to the `blackraptor-council` plugin are recorded here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.3.0] — 2026-08-24
+
+### Added — two new seats (roster 10 → 12)
+- **`coo` — Chief Operating Officer.** Added a COO (Chief Operating Officer) seat to the Executive Council. The council lacked an operations role, so we added one. Execution sequencing, operating cadence, unit-level P&L discipline, who-does-what-by-when. Function-defined; industry comes from the context file or the prompt like every other seat. The `council` skill names ops-heavy asks (turnarounds, operating cadence, unit economics, fix-vs-close calls) as explicit COO triggers.
+- **`chair` — Chair / Chief of Staff.** Runs the convening, forces the disagreement onto the table, synthesizes without averaging, and hands the human **one decision at a time** with each branch's trade-off named. Carries no domain vote. The `council` skill routes final synthesis through it as a second dispatch, after the domain seats report.
+- **Both seats are advisory only.** Neither may execute. `growth-engine` remains the sole executing seat, under human-in-the-loop approval; `ethics-governance` retains standing to BLOCK, and the chair surfaces a block unresolved rather than balancing it away.
+
+### Changed — C-suite titles (display names; slugs unchanged)
+Eight council seats now answer to conventional C-suite display names and a ninth, the chair,
+runs the convening; three seats
+(`pricing-strategy`, `fundraising-ir`, `growth-engine`) keep slug-only naming. **No slug
+changed.** Slugs remain the load-bearing identifiers (`COUNCIL.md` §7) and every existing
+reference keeps working. Titles are carried in `COUNCIL.md` §5, the pack and skill
+descriptions, and docs; a request naming a title resolves to its slug. The individual seat
+descriptions keep their slug wording.
+
+The nine named council seats (eight C-suite titles plus the Chair), then the Core-pack CPO
+anchor, which is not one of the 12:
+
+| Title | Seat (slug) |
+|---|---|
+| CFO — Chief Financial Officer | `finance` |
+| CRO — Chief Revenue Officer | `revenue` |
+| CHRO — Chief HR Officer | `people-org` |
+| CTO — Chief Technology Officer | `technology-strategy` |
+| General Counsel | `ethics-governance` |
+| CMO — Market Truth | `market-insight` |
+| CMO — GTM Strategy | `gtm-strategy` |
+| COO — Chief Operating Officer | `coo` *(new)* |
+| Chair / Chief of Staff | `chair` *(new)* |
+| CPO — Chief Product Officer | `product-manager` *(Core pack)* |
+
+- Two seats cover the CMO function: `market-insight` (what is true of the market) and `gtm-strategy` (how we go at it). Asking for "the CMO" convenes both unless the ask names one.
+- **No CEO seat:** the user is the CEO. There is no CIO seat and no CSO seat. Asking for a CEO says so and convenes `chair` instead.
+
+### Changed — pricing authority moves to the CPO
+- `pricing-strategy` no longer claims to be "the only seat that owns the price metric" or to "make the pricing decision". It **authors the pricing strategy and analysis** with `gtm-strategy`, `finance`, and `market-insight`; the **final pricing decision belongs to `product-manager` (CPO)**. The seat states its recommendation as a recommendation, names the margin floor and willingness-to-pay evidence it rests on, and records the delta if the CPO decides otherwise.
+- `COUNCIL.md` §4 (co-decisions) updated to match: pricing is co-built, then decided by the CPO.
+
+### Migration
+No action required. Slugs, `subagent_type` values, and existing references are unchanged; this
+release is additive plus display-name and authority-text changes. Installs that pinned seat
+slugs keep working as-is.
+
 ## [1.2.6] — 2026-08-21
 
 ### Changed — core consolidation (Release 3)

@@ -8,7 +8,7 @@ description: >
   match-length-to-ask, plus the evidence-based writing/technical/visual craft references. Every team
   writes, so it lives in core.
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
 ---
 
 # Content Craft Standards
@@ -79,7 +79,11 @@ a small ask into an essay.
 ## 6. Universal rules
 1. Ground in the relevant context first (marketing: the Marketing Intelligence Core + only cleared
    claims; other packs: the project's context file). Every stat cited.
-2. One asset, one job: define audience, single idea, intended action before drafting.
+2. One asset, one job: define audience, single idea, intended action before drafting. Take the
+   audience from the brief's Audience line when one exists; when none exists, infer it, state it
+   in one line at the top of the draft, and write every ratio, threshold, and instruction in that
+   reader's working language (for an operator: dollars and daily actions, not basis points and
+   NPV).
 3. Draft → self-edit against §1–§4 and the matching craft reference → **external-facing marketing
    copy routes through the isolated claims-gate** → deliver with the checklist result noted.
 4. Never ship the first draft; the second pass cuts 20–30% and swaps generic claims for specific ones.

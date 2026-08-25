@@ -1,6 +1,6 @@
 ---
 name: council
-description: Convene the Executive Advisory Council on a business decision, strategy question, or company-building problem. Use when the user says "convene the council", "ask the council", "run this past the council", "/council", or wants tough, balanced, multi-perspective advice on product, market, pricing, finance, go-to-market, technology, people, ethics, or fundraising.
+description: Convene the Executive Advisory Council on a business decision, strategy question, or company-building problem. Use when the user says "convene the council", "ask the council", "run this past the council", "/council", or wants tough, balanced, multi-perspective advice on product, market, pricing, finance, go-to-market, operations, technology, people, ethics, or fundraising. Eight seats answer to C-suite titles (CFO, CRO, CHRO, CTO, COO, General Counsel, the two CMO seats) via the roster mapping; the chair closes the convening with one decision.
 ---
 
 # Convene the Executive Advisory Council
@@ -29,18 +29,43 @@ Then **frame the decision as one crisp question** and label it one-way or two-wa
 
 ## 2. Seat selection rule
 
-Pick the **2–4 seats** whose domains the decision actually turns on (see
-`references/COUNCIL.md` for the roster). **Minimum set = 3** for any consequential
-decision. Co-decision rule: pricing → include finance + gtm-strategy + market-insight;
-channel → gtm + revenue; raise size/timing → fundraising-ir + finance. Ethics has
-standing on any decision and is added whenever a stakeholder or honesty question exists.
+Pick the **2–4 domain seats** whose domains the decision actually turns on (see
+`references/COUNCIL.md` for the 12-seat roster and its C-suite title mapping).
+**Minimum set = 3** for any consequential decision. Co-decision rule: pricing →
+include pricing-strategy + finance + gtm-strategy + market-insight, and route the
+**final call to `product-manager` (CPO)**; channel → gtm + revenue; raise size/timing →
+fundraising-ir + finance. Ethics has standing on any decision and is added whenever a
+stakeholder or honesty question exists.
+
+**Dispatch `coo` on any ops-heavy ask.** The seat exists to give execution questions a real
+seat to go to, which the roster previously lacked. Convene it when the decision turns on
+*execution rather than strategy*:
+
+- turnarounds, restructurings, and fix-vs-close calls on an underperforming unit
+- operating cadence, sequencing, and who-does-what-by-when
+- unit-level P&L, cost structure, throughput, capacity, or staffing levels
+- multi-site / multi-unit operations, and any "good plan, never executed" risk
+
+If an ask names operations, execution, sequencing, or unit economics and `coo` is not
+in the selected set, that is a selection error — add it.
+
+**Seats resolve by title as well as slug.** A request naming a C-suite title (CFO, CRO,
+CHRO, CTO, General Counsel, CMO, COO, CPO) resolves through the mapping table in
+`references/COUNCIL.md` §5 to the seat's slug. "The CMO" convenes **both** `market-insight`
+and `gtm-strategy` unless the ask clearly names one. There is no CEO seat — the user is
+the CEO; if asked for one, say so and convene `chair` instead.
 
 ## 3. Dispatch instruction
 
-**In a SINGLE message, spawn each selected seat as a separate subagent** (Agent tool,
+**In a SINGLE message, spawn each selected DOMAIN seat as a separate subagent** (Agent tool,
 `subagent_type` = the seat) so they run concurrently and independently. Do not run them
 in sequence; do not let one seat see another's draft. Each gets the framed question +
 the grounded context, nothing more.
+
+**`chair` is the exception, and it goes last.** It reads the domain seats' verdicts, so it
+cannot run in the concurrent wave — dispatch it as a **second, separate call** once every
+domain seat has reported (see §5). The chair never dispatches anything itself; dispatch
+lives here in the main session (P1/P2).
 
 ## 4. Context each specialist receives (and must NOT receive)
 
@@ -51,10 +76,20 @@ second dispatch that passes drafts stripped of authorship.
 
 ## 5. Synthesis rule
 
+**Route the close through `chair`.** Once every domain seat has reported, dispatch `chair`
+with all their verdicts. It forces the disagreement onto the table, synthesizes
+without averaging, and returns **ONE decision** for the user with each branch's trade-off
+named. The chair holds no domain vote and never resolves a seat's call for it.
+
 **Synthesize, do not average.** Present: where seats agree, where they disagree and
 **why**, the strongest case each way, each seat's mandatory **"What You Lose"**, and the
 open questions. Never blend two verdicts into a false consensus; preserve dissent
-verbatim. Close by reminding the user the decision and its ownership are theirs.
+verbatim. Report the chair's single decision as the close — if you find yourself handing
+the user a menu of decisions, the chair's job was not finished. Close by reminding the
+user the decision and its ownership are theirs.
+
+If `chair` is unavailable, synthesize in the main session under these same rules, and say
+the chair gate was not run (§7 — degrade, don't dangle).
 
 ## 6. Closing gate
 

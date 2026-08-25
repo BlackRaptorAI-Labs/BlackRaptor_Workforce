@@ -1,11 +1,11 @@
 {
   "name": "blackraptor-council",
   "displayName": "BlackRaptor Workforce — Executive Council",
-  "version": "1.2.6",
+  "version": "1.3.0",
   "dependencies": [
     "blackraptor-core"
   ],
-  "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. An executive advisory council convened through a challenge protocol (sourced evidence, confidence labels, counter-case, voice-of-customer, 'what you lose'). Seats: gtm-strategy, pricing-strategy, finance, market-insight, ethics-governance, revenue, people-org, technology-strategy, fundraising-ir, growth-engine — convened by the main-session `council` skill, with the shared `product-manager` (via the auto-installed `blackraptor-core` pack) as the product/strategy anchor. Ships the `council` skill: say 'convene the council' (or /council) to run the whole protocol.",
+  "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. An executive advisory council convened through a challenge protocol (sourced evidence, confidence labels, counter-case, voice-of-customer, 'what you lose'). 12 seats, eight of them answering to C-suite names (a ninth, the chair, runs the convening): coo (COO), chair (Chair/Chief of Staff), finance (CFO), revenue (CRO), people-org (CHRO), technology-strategy (CTO), ethics-governance (General Counsel), market-insight and gtm-strategy (the two CMO seats), plus pricing-strategy, fundraising-ir, and growth-engine. They are convened by the main-session council skill, with the shared product-manager (CPO, via the auto-installed blackraptor-core pack) as the product/strategy anchor and the final pricing decision. The chair closes the convening with one decision, and the COO covers ops-heavy asks. There is no CEO seat: you are the CEO. Ships the `council` skill: say 'convene the council' (or /council) to run the whole protocol.",
   "skills": "./skills/",
   "author": {
     "name": "BlackRaptor AI",

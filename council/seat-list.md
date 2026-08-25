@@ -6,7 +6,7 @@ gated code changes; the software gates below are exercised by the engineering pa
 - compliance: ethics-governance (has standing to BLOCK on legal/ethics/data-use)
 - domain: ethics-governance
 - schema: N/A: no schema changes
-- operational-readiness: N/A: no operational surface
+- operational-readiness: coo (execution sequencing, operating cadence, unit-level P&L discipline; advisory — the council still runs no operational surface of its own)
 - ux: N/A
 - quality: N/A: no code to test
-- review: ethics-governance (closing gate on any decision with a stakeholder/honesty dimension)
+- review: ethics-governance (closing gate on any decision with a stakeholder/honesty dimension; standing to BLOCK) + chair (closes the convening and hands up ONE decision; carries no domain vote and cannot overrule a block)

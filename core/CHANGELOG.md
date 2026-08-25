@@ -12,6 +12,16 @@ The bridge is the shared dependency auto-installed with the dev-team, council,
 marketing, and HW-engineering plugins — it holds the cross-cutting agents and
 skills those teams share.
 
+## [1.0.7] — 2026-08-24
+
+### Added — audience is part of the ask
+- `prompt-brief`: the Rung-2 brief template gains an **Audience** line ("who reads/executes the output; written to their register"), and the done-criteria inherit it: "executable by the named audience without further explanation". Audience is inferred and labeled ASSUMED when the ask makes it obvious; it is asked only when the audience is ambiguous and the answer would change the writing. Rung-1 pass-through asks gain no new question.
+- `content-craft` (1.2.0 → **1.3.0**): §6 rule 2 now takes the audience from the brief's Audience line when one exists; when none exists, it infers the audience, states it in one line at the top of the draft, and writes every ratio, threshold, and instruction in that reader's working language (for an operator: dollars and daily actions, not basis points and NPV).
+
+### Changed — product management holds the final pricing decision
+- `product-manager` is now titled **Product Manager (CPO)** and holds the final pricing decision. Pricing strategy is *co-built*: the marketing/pricing capability brings willingness-to-pay, packaging, and competitive benchmarks; the economics capability brings margin floors and CAC/payback ceilings; product brings the value thesis and the customer job. Co-building the strategy does not mean co-deciding the price. The CPO decides, and records what went in, what was decided, and what would change it.
+- Charter constraints are explicit: the CPO does not ship a price below a demonstrated margin floor, and does not overrule willingness-to-pay evidence without stating in writing what it is betting instead.
+
 ## [1.0.6] — 2026-08-21
 
 ### Added — Release 4 (writer agents + intake restate)

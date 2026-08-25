@@ -82,8 +82,12 @@ dissent and a human signature on consequential calls.
 
 ## 4. Co-decisions (never decided in a silo)
 
-- **Pricing** — owned by `pricing-strategy`; co-decided with `gtm-strategy`,
-  `finance`, and `market-insight`.
+- **Pricing** — strategy authored by `pricing-strategy` with `gtm-strategy`,
+  `finance` (margin floors, CAC/payback ceilings), and `market-insight`
+  (willingness-to-pay); the **final pricing decision belongs to
+  `product-manager` (CPO)**, made from that co-built recommendation. Co-built
+  is not co-decided: the CPO decides, and records the inputs and what would
+  change the call.
 - **Channels** — designed by `gtm-strategy` (executed by `revenue` when
   staged); co-decided with `pricing-strategy`, `finance` (CAC/payback
   ceilings), and `market-insight` (segment → channel), constrained by
@@ -100,8 +104,9 @@ unknown, not by org-chart completeness.
 
 | Stage | Seats |
 |---|---|
-| Start (core) | the `council` skill (main session), `product-manager`, `market-insight`, `pricing-strategy`, `finance`, `ethics-governance` |
+| Start (core) | the `council` skill (main session), `chair`, `product-manager`, `market-insight`, `pricing-strategy`, `finance`, `ethics-governance` |
 | Market approach | `gtm-strategy` |
+| Operations carry the risk | `coo` (stage as soon as execution — sequencing, cadence, unit-level P&L — is the binding constraint rather than strategy) |
 | Channels live with real spend | `revenue`, `growth-engine`, `technology-strategy` (stage earlier if data/tooling decisions loom — growth-engine's integrated-data prerequisite depends on it) |
 | Scale | `people-org`; Channels & Partnerships seat if partner-led |
 | ~6–9 months before a raise | `fundraising-ir` |
@@ -109,6 +114,45 @@ unknown, not by org-chart completeness.
 `growth-engine` is the only executor (it spends money and publishes claims);
 it runs under human-in-the-loop approval and `ethics-governance` review.
 `ethics-governance` has standing to block — a voice, not a checkbox.
+`coo` and `chair` are **advisory only**: the COO sequences and assigns but
+never executes, and the chair closes the meeting but dispatches nothing and
+carries no domain vote.
+
+### Display names for the same seats
+
+The seats below answer to these names in prose, deliverables, and conversation.
+**The slugs are unchanged and remain the load-bearing identifiers** (§7) — a
+request naming a title resolves to its slug.
+
+**C-suite titles (8):**
+
+| Title | Seat (slug) |
+|---|---|
+| CFO — Chief Financial Officer | `finance` |
+| CRO — Chief Revenue Officer | `revenue` |
+| CHRO — Chief HR Officer | `people-org` |
+| CTO — Chief Technology Officer | `technology-strategy` |
+| General Counsel | `ethics-governance` |
+| CMO — Market Truth | `market-insight` |
+| CMO — GTM Strategy | `gtm-strategy` |
+| COO — Chief Operating Officer | `coo` |
+
+**Convening role (not a C-suite title):**
+
+| Title | Seat (slug) |
+|---|---|
+| Chair / Chief of Staff | `chair` |
+
+**Core-pack anchor (not one of the 12 council seats):**
+
+| Title | Seat (slug) |
+|---|---|
+| CPO — Chief Product Officer | `product-manager` (Core pack) |
+
+There is deliberately **no CEO seat — the human is the CEO** — and no CIO and
+no CSO. The CMO function is carried by two seats, not one: `market-insight`
+(what is true of the market) and `gtm-strategy` (how we go at it). Ask for
+"the CMO" and both are convened unless the ask clearly names one.
 
 ## 6. Grounding (required setup)
 

@@ -5,7 +5,7 @@
     "url": "https://github.com/BlackRaptorAI"
   },
   "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. Governed AI agent teams for Claude Code — a software-engineering team and an executive advisory council, plus a shared Core pack of cross-cutting agents (product-manager, evidence-auditor) and skills (Excellence Pass, research-integrity, gate reviews). Install any team; the Core pack comes with it — plus the full-stack marketing team and the hardware-engineering team, all served through this marketplace.",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "plugins": [
     {
       "name": "blackraptor-engineering",
@@ -17,7 +17,7 @@
       "name": "blackraptor-council",
       "displayName": "BlackRaptor Workforce — Executive Council",
       "source": "./council",
-      "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. An executive advisory council convened through a challenge protocol — gtm/pricing/finance/market-insight/ethics-governance/revenue/people-org and more, via the main-session council skill, with the shared product-manager (auto-installed blackraptor-core) as the anchor."
+      "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. A 12-seat executive advisory council runs the challenge protocol. Eight seats answer to conventional C-suite names: COO, CFO, CRO, CHRO, CTO, General Counsel, and two CMO seats. A ninth, the Chair / Chief of Staff, runs the convening. They convene through the main-session council skill, anchored by the shared product-manager (CPO), auto-installed with blackraptor-core. The chair closes the convening with one decision. There is no CEO seat: you are the CEO."
     },
     {
       "name": "blackraptor-marketing",
