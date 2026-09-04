@@ -4,8 +4,8 @@ The change-record template (core) names gate ROLES; this maps each to this pack'
 - privacy: privacy-counsel
 - compliance: compliance-officer
 - domain: domain-compliance
-- schema: data-engineer
+- schema: schema-reviewer
 - operational-readiness: operational-readiness
 - ux: ux-designer
-- quality: qa-test-engineer
+- quality: test-auditor
 - review: code-reviewer

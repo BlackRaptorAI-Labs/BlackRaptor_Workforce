@@ -13,9 +13,9 @@ Product-agnostic: each program supplies its own `PROGRAM-CONTEXT.md` (template
 included). The design doctrine is baked into every seat: **the least expensive
 device that functions in its conditions for its design life** — cost is a
 requirement with the same standing as performance, over-design is a reviewable
-defect, datasheets are ground truth, worst-case not typical. Built on the
-**Agent Operating Standard v2** (the Excellence Pass), with the full standard
-behind every rule included in `hw-engineering/docs/`.
+defect, datasheets are ground truth, worst-case not typical. Built on
+**BlackRaptor's internal Agent Operating Standard** (the Excellence Pass), with
+the full standard behind every rule included in `hw-engineering/docs/`.
 
 ## Install
 
@@ -50,9 +50,9 @@ behind every rule included in `hw-engineering/docs/`.
 ## The core pattern
 
 For anything that gates a board spin, tooling commitment, purchase, or external
-commitment: **producer → hw-design-reviewer → revise**. Testing showed this
-pairing outperforms any single agent, because self-review can't catch the
-producer's own blind spots.
+commitment: **producer → hw-design-reviewer → revise**. The pairing exists
+because self-review cannot catch the producer's own blind spots — an
+independent reviewer is the point, not an optimisation.
 
 ## Market grounding (the shared bridge)
 

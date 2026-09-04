@@ -20,7 +20,7 @@ designed to reinforce the platform's existing spec-driven workflow
 > `change-record-template.md` (the audit artifact), and `AGENT-RETROS.md` +
 > `agent-evals/` (the improvement loop).
 
-## The roster (22 dev agents + the `dev-team` orchestration skill) — shipped by this development-team plugin; the Council's 10 seats are a separate plugin you install alongside, and the shared bridge's 2 agents are a separate, auto-installed dependency (the dev plugin declares only `blackraptor-core` as a dependency, not the council)
+## The roster (24 dev agents + the `dev-team` orchestration skill) — shipped by this development-team plugin; the Council's 12 seats are a separate plugin you install alongside, and the shared bridge's 2 agents are a separate, auto-installed dependency (the dev plugin declares only `blackraptor-core` as a dependency, not the council)
 
 
 > The full group — development team + Executive Advisory Council — is
@@ -33,7 +33,7 @@ designed to reinforce the platform's existing spec-driven workflow
    discipline, collaboration working sessions, challenge-discipline enforcement,
    Change-Record assembly. No content authority. (The `dev-orchestrator` **agent**
    was retired at 5.9, 2026-08-10; orchestration moved to this main-session skill — P1/P2.)
-1. `principal-architect` — the architecture authority: authors design specs and owns the architecture standard (charter §Architecture ownership): world-class/industry-standard design, features incorporated into the architecture rather than bolted on, integration-ready seams for home-built and external software, secure-by-architecture, customer-serving architecture, outcome fidelity from group decision + human approval to shipped system. Collaborates as a member; reviewable like any specialist. (Orchestration duties moved to the `dev-team` skill.)
+1. `principal-architect` — the architecture authority: authors design specs and owns the architecture standard (charter §Architecture ownership): /industry-standard design, features incorporated into the architecture rather than bolted on, integration-ready seams for home-built and external software, secure-by-architecture, customer-serving architecture, outcome fidelity from group decision + human approval to shipped system. Collaborates as a member; reviewable like any specialist. (Orchestration duties moved to the `dev-team` skill.)
 2. `security-architect` — threat models; blocking on auth/remote-access/tenant.
 
 **Pod 2 · Product & Design**
@@ -44,11 +44,11 @@ designed to reinforce the platform's existing spec-driven workflow
 5. `backend-engineer` — the cloud/server tier (API, core services, jobs).
 6. `edge-agent-engineer` — the edge/device tier (on-device agents).
 7. `frontend-engineer` — React 19 web-ui.
-8. `data-engineer` — the data tier (message bus, time-series store, schema + migrations); owns the schema gate.
+8. `data-engineer` — the data tier (message bus, time-series store, schema + migrations). Authors migrations; the schema GATE is `schema-reviewer` (2.0.0 — a seat does not gate what it authors).
 9. `ai-ml-engineer` — Claude/RAG/anomaly; heuristic-fallback discipline.
 
 **Pod 4 · Quality**
-10. `qa-test-engineer` — TDD discipline + coverage gates.
+10. `qa-test-engineer` — TDD discipline; designs the test strategy and writes tests. The quality GATE is `test-auditor` (2.0.0 — a seat does not gate what it authors).
 11. `code-reviewer` — commit/PR/CODEOWNERS/CI gate before merge.
     - `completion-auditor` — the **completion-audit gate** (opus): independent verifier that re-derives ground truth from git/gh before "done/merged/green" is claimed; invoke before reporting completion. Counted as a dev GATE agent in ROSTER §9, `verify.sh` `GATE_AGENTS`, `[4l]`, and the gate-enforcement-map. (Wired into the roster 2026-07-31.)
     - `evidence-auditor` — shared bridge agent; the adversarial gate for research/analysis/evidence before a finding is trusted or published. Advisory. (Wired 2026-07-31.)
@@ -123,20 +123,17 @@ Two deliberate tiering notes (2026-07-06):
 
 
 **Tier → output-quality discipline (2026-07-20).** The model tier also sets how
-hard the **Excellence Pass** (`.claude/skills/excellence-pass`) is enforced —
-because a 4-task × 3-model side-by-side test found the quality gap between tiers
-lived almost entirely in five behaviors the top tier does by default and the
-others skip unless told. Mapping: **the top tier** (`principal-architect`) — the
-five behaviors are largely default; the skill is a checklist backstop.
-**`opus`** (gates + deep judgment) — near-parity; latitude, but still
-run the verify/independent-cross-check/second-order checks. **`sonnet`**
-(builders + everyday) — strong on core, but the observed gap is concentrated in
-exactly the hidden-input-contract, independent-cross-check, and quantified-
-counterfactual checks: they run the Excellence Pass as an **explicit,
-confirmable checklist** and, before delivering, list three ways the output
-could be wrong and check each. This is how the stronger model's default
-behaviors are transferred to the others (instructions can't transfer capability,
-but they transfer the process). See `agent-operating-standard.md`.
+hard the **Excellence Pass** (`.claude/skills/excellence-pass`) is enforced. The
+five behaviors it names are the same for every seat; what changes is whether
+they are left to judgment or written as a checklist that must be visibly
+completed. Mapping: **the top tier** (`principal-architect`) and **`opus`**
+(gates + deep judgment) — latitude, with the verify / independent-cross-check /
+second-order checks still run. **`sonnet`** (builders + everyday) — the
+Excellence Pass as an **explicit, confirmable checklist**, giving particular
+weight to the hidden-input-contract, independent-cross-check and quantified-
+counterfactual checks and, before delivering, listing three ways the output
+could be wrong and checking each. Instructions cannot transfer capability, but
+they can require the process. See `agent-operating-standard.md`.
 **Least-privilege tool permissions.** Agents get only the tools their role
 needs (convention: read-only reviewers get `Read, Grep, Glob` [+`WebSearch/
 WebFetch` for research]; only builders get `Write, Edit, Bash`). Audited
@@ -500,8 +497,9 @@ claims are proven by machines; unverifiable claims get challenged.
   behavior, say so and verify — never assert from memory.
 - **Customer-experience north star (TH, 2026-07-18).** The whole team builds
   for the customer, in this order of proof: the product does what customers
-  *need and want*; it is *easy to use*; every feature *works as expected,
-  every time*. The outcome we are engineering is world-class experience that
+  *need and want*; it is *easy to use*; and a feature that does not work as
+  expected is treated as a defect rather than an acceptable variance. This is
+  the bar we hold ourselves to, not a claim about the current defect rate. The outcome we are engineering is experience that
   earns **loyalty to the product, loyalty to the brand and company, and a
   willingness to spend money with us** — loyalty is the lagging indicator of
   features that simply work. Mechanically: every spec states its customer
@@ -545,3 +543,7 @@ record that underpins the regulated output. Regulatory specifics evolve and are
 jurisdiction- and market-dependent; verify against primary sources / a qualified
 specialist before
 relying on them.
+
+---
+
+Validated against `claude-opus-4-8` as of 2026-09-02.

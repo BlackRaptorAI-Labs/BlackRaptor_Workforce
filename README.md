@@ -2,9 +2,18 @@
 
 **Currently in PRIVATE ALPHA — see [docs/ALPHA.md](docs/ALPHA.md).**
 
-![agents](https://img.shields.io/badge/agents-58-6E56CF) ![skills](https://img.shields.io/badge/skills-27-6E56CF) ![packs](https://img.shields.io/badge/packs-5-6E56CF) ![license](https://img.shields.io/badge/license-Apache--2.0-blue)
+> **2.0.0 — breaking change.** Gate verdict blocks now use one schema: `confidence` is an integer 0–10
+> (it was `high`/`medium`/`low`), a cited `standards[]` is required, and `N/A` is no longer a verdict —
+> a Change Record carrying old-shape blocks fails validation until its blocks are re-emitted.
+> Two engineering gates join the roster (`schema-reviewer`, `test-auditor`), and a Stop hook now
+> validates verdict blocks as they are written (disable with `BR_VERDICT_HOOK=off`).
+> Gates are strict by design: `CONCERNS` with conditions is the common verdict on sound work,
+> and `PASS` is not the default.
+> **Upgrading → [docs/UPDATING-YOUR-WORKFORCE.md](docs/UPDATING-YOUR-WORKFORCE.md).**
 
-**Specialist agent packs with read-only review gates that block work until it meets the standard.**
+![agents](https://img.shields.io/badge/agents-63-6E56CF) ![skills](https://img.shields.io/badge/skills-29-6E56CF) ![packs](https://img.shields.io/badge/packs-5-6E56CF) ![license](https://img.shields.io/badge/license-Apache--2.0-blue)
+
+**Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written.**
 
 Five governed agent packs for Claude Code — Engineering, Executive Council, Marketing, Hardware Engineering, and a shared Core — that hold AI-assisted work to a professional standard through named review gates, cited standards, and machine-checkable verdicts. Agents advise, draft, and review; humans decide.
 
@@ -57,13 +66,13 @@ Installing either one pulls in **`blackraptor-core`** automatically. Then add, w
 
 | Pack | id | Agents | What it is |
 |---|---|---|---|
-| Engineering | `blackraptor-engineering` | 22 | Governed software-engineering team: architect, engineers, and blocking-gate reviewers (security, privacy, compliance, red-team) + the advisory completion-auditor. |
-| Executive Council | `blackraptor-council` | 10 | Executive advisory council convened through a challenge protocol (sourced evidence, counter-case, voice-of-customer). |
-| Marketing | `blackraptor-marketing` | 15 | Full-stack marketing department; every external-facing claim is routed to a separate claims-gate agent for review. |
+| Engineering | `blackraptor-engineering` | 24 | Governed software-engineering team: architect, engineers, and blocking-gate reviewers (security, privacy, compliance, red-team) + the advisory completion-auditor. |
+| Executive Council | `blackraptor-council` | 12 | Executive advisory council convened through a challenge protocol (sourced evidence, counter-case, voice-of-customer). |
+| Marketing | `blackraptor-marketing` | 11 | Full-stack marketing department; producer agents are instructed to route external-facing copy to the isolated claims-gate agent, which you can also invoke explicitly on anything that ships. |
 | Hardware Engineering | `blackraptor-hardware` | 9 | Hardware-engineering department + an adversarial design-review gate before any board spin, tooling, or purchase. |
-| Core | `blackraptor-core` | 2 | Shared `product-manager` + `evidence-auditor`, the `research-integrity` skill. Auto-installed with any team. |
+| Core | `blackraptor-core` | 7 | Seven cross-cutting agents shared by every team — `product-manager`, `evidence-auditor`, `claims-gate`, `product-docs-writer`, and the market, pricing and competitive-intel analysts — plus the shared skills. Auto-installed with any team. |
 
-**58 agents · 27 skills · 5 packs** across the marketplace.
+**63 agents · 29 skills · 5 packs** across the marketplace.
 
 ## How it works
 

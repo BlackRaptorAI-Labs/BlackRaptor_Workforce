@@ -35,7 +35,7 @@ gated-path PRs without one.
    the "My decision" column or the signature block yourself — the human types
    those. If a decision overrules an agent FAIL, §5 (risk acceptance) is
    mandatory.
-6. **Fill §4** (CI links, coverage numbers, {{SECOND_APPROVER}} approval link for Tier 3).
+6. **Fill §4** (CI links, coverage numbers, and for Tier 3 the second approver's approval link — the second person named in the repo's CODEOWNERS for the touched path, never the change's author).
 7. **Emergency changes:** if this is a retroactive CR for an emergency merge,
    mark Emergency = YES and complete §6 with the bypass details.
 

@@ -1,3 +1,61 @@
+## Corrections — 3 Sep 2026
+
+The pre-release claims gate for 2.0.0 found published statements this pack could not
+substantiate. They are retracted or qualified here rather than edited out of the entries below,
+which stay as written.
+
+- **Retracted: the model-gap study.** Several surfaces cited "a small-N, non-blind model-gap study
+  recorded in the maintainers' test-battery dossier" and reported findings from it — that Sonnet's
+  gaps concentrated in the Excellence Pass checks, that Opus was at near-parity, that a
+  4-task x 3-model side-by-side test established which behaviours separate the tiers. **No such
+  record exists** in the dossier, in `_eval/`, or anywhere else. Every statement resting on it is
+  removed across the operating standard, the `excellence-pass` skill, the per-tier notes and the
+  shared output-quality lines carried by individual agents. The five Excellence Pass checks
+  themselves are unchanged and stand on being cheap, self-evidently good practice — which is the
+  only claim now made for them.
+- **Corrected: the release validation stamp.** Its basis line said the "agent-trigger eval sets"
+  were run for this release. They were not: T-A is deferred to Phase 3. The stamp now names only
+  what ran — T-C gate liveness on the 20-artifact seeded-defect corpus (n=3, before and after,
+  2026-09-02) and the agent-behaviour eval set (19 sets / 53 scenarios, 2026-09-03), both on
+  `claude-opus-4-8` under Claude Code 2.1.258 — and says plainly that T-A was not run.
+- **Corrected: hand-typed seat counts removed from the pack manifests.** The council manifests said
+  "12 seats, eight of them answering to C-suite names". The seats and their names are unchanged;
+  the counts are gone, and `verify.sh [MAN]` now fails the build if one reappears in a manifest.
+
+## 2.0.0 — 2026-09-02 — Seat verdicts join the workforce vocabulary
+
+**BREAKING: the gate verdict block changed shape** (see the Core changelog for the full v3 diff).
+
+- **COUNCIL.md gains §3a, "Seat verdict".** Every seat now closes with `PASS | CONCERNS | BLOCK |
+  COULD NOT ASSESS`, a confidence as an **integer n/10**, and a named falsifier. `BLOCK` maps to
+  `FAIL` wherever a machine reads the verdict. `COULD NOT ASSESS` is blocking, never a polite
+  abstention, and the chair may not resolve a convening by averaging it away.
+- **The four numbers seats — `finance`, `pricing-strategy`, `coo`, `revenue` — gain `Bash`** for
+  arithmetic and model computation (no file output). Their figures carry the script and inputs and
+  are re-executed by a context that did not produce them before they are used.
+- `chair` drops `WebSearch` and `WebFetch`, which it never used. A grant nobody exercises is a false
+  capability claim.
+- `ethics-governance` now emits the machine verdict block, with `COULD NOT ASSESS`.
+- Spreadsheet and chart tooling references are guarded: where the helper skill is not present in the
+  session, the underlying rule is stated and applied directly.
+
+**The verdict block's optional fields now say when to omit them.** Two fields were specified so that a truthful answer
+could not validate, and the live `Stop` hook sent those blocks back:
+
+- **`reason`** was shown in every gate's inline template, so gates emitted it blank on verdicts that
+  do not carry it. It is now absent from the template, and the rule is stated under it: present only
+  on `COULD NOT ASSESS`, omit the key entirely otherwise, never blank.
+- **`standards[].verified`** is a required `YYYY-MM-DD` checked at the issuing body, so a standard a
+  gate could not reach had no valid date to pair with `access: "not reached"`. Gates are now told
+  to cite the secondary source they did reach with the date they checked it, or to leave the
+  designation out of the array and carry `["none: practice applied: <x>"]`, or — where the verdict
+  truly rests on a text they could not read — to return `COULD NOT ASSESS` with a `reason`.
+
+Neither the schema nor the hook changed; the instructions the gates read did.
+
+Validated against `claude-opus-4-8` as of 2026-09-02.
+
+
 ## 2026-08-13 — Renamed & consolidated
 - **Plugin id:** `blackraptor-council` (unchanged). Dependency `blackraptor-bridge` → **`blackraptor-core`**.
 - **Repo:** moved from `BlackRaptorAI/BlackRaptor_Agents` (`council/`) into the consolidated **`BlackRaptorAI/blackraptor`** (`council/`). Product line: **BlackRaptor Workforce** (displayName "Executive Council").

@@ -74,7 +74,7 @@ Follow `${CLAUDE_PLUGIN_ROOT}/COUNCIL.md` §3 exactly: executive summary; steelm
 evidence with confidence levels (High / Medium / Low, with the source class
 named); recommendation; **What You Lose**; what would change my mind.
 
-**Modeling discipline.** Apply the `xlsx` skill's rules to any sizing spreadsheet built from your analysis (auditable formulas over hardcoded numbers) — you deliver the analysis; a downstream writer renders the file.
+**Modeling discipline.** If an `xlsx` skill is available in the session, apply its rules to any sizing spreadsheet built from your analysis; if not, apply the rule directly — auditable formulas over hardcoded numbers. You deliver the analysis; a downstream writer renders the file.
 
 <!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim) -->
 ## Operating contract
@@ -140,7 +140,11 @@ Never present an Assumed number in the same visual register as a Measured one.
 
   MEASURED   — produced by executing, testing, or observing. State the method.
   CITED      — from a named retrievable source. Give source, date, location.
-  COMPUTED   — derived from stated inputs by a stated method.
+  COMPUTED   — derived from stated inputs by a stated method. Carries its
+               script (path or inline) and its inputs. Not final until a
+               context that did not produce it re-executes it and records
+               who, when, and match or mismatch beside the figure. A figure
+               without script and inputs is ESTIMATED.
   ESTIMATED  — modelled. State the uncertainty band. Never a point value.
   ASSUMED    — chosen without evidence. The reader must challenge it.
 

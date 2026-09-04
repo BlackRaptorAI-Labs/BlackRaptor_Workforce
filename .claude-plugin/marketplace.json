@@ -4,38 +4,38 @@
     "name": "BlackRaptor AI",
     "url": "https://github.com/BlackRaptorAI"
   },
-  "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. Governed AI agent teams for Claude Code — a software-engineering team and an executive advisory council, plus a shared Core pack of cross-cutting agents (product-manager, evidence-auditor) and skills (Excellence Pass, research-integrity, gate reviews). Install any team; the Core pack comes with it — plus the full-stack marketing team and the hardware-engineering team, all served through this marketplace.",
-  "version": "1.5.0",
+  "description": "Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written. Governed AI agent teams for Claude Code — a software-engineering team and an executive advisory council, plus a shared Core pack of cross-cutting agents (product-manager, evidence-auditor) and skills (Excellence Pass, research-integrity, gate reviews). Install any team; the Core pack comes with it — plus the full-stack marketing team and the hardware-engineering team, all served through this marketplace.",
+  "version": "2.0.0",
   "plugins": [
     {
       "name": "blackraptor-engineering",
       "displayName": "BlackRaptor Workforce — Engineering",
       "source": "./engineering",
-      "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. A governed software-engineering team (architect, engineers, blocking-gate reviewers) routed by the process-only main-session engineering skill, plus shared skills. Auto-installs blackraptor-core (product-manager + evidence-auditor + research-integrity)."
+      "description": "Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written. A governed software-engineering team (architect, engineers, blocking-gate reviewers) routed by the process-only main-session engineering skill, plus shared skills. Auto-installs blackraptor-core (product-manager + evidence-auditor + research-integrity)."
     },
     {
       "name": "blackraptor-council",
       "displayName": "BlackRaptor Workforce — Executive Council",
       "source": "./council",
-      "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. A 12-seat executive advisory council runs the challenge protocol. Eight seats answer to conventional C-suite names: COO, CFO, CRO, CHRO, CTO, General Counsel, and two CMO seats. A ninth, the Chair / Chief of Staff, runs the convening. They convene through the main-session council skill, anchored by the shared product-manager (CPO), auto-installed with blackraptor-core. The chair closes the convening with one decision. There is no CEO seat: you are the CEO."
+      "description": "Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written. An executive advisory council runs the challenge protocol. Its seats answer to conventional C-suite names: COO, CFO, CRO, CHRO, CTO, General Counsel, and two CMO seats. A ninth, the Chair / Chief of Staff, runs the convening. They convene through the main-session council skill, anchored by the shared product-manager (CPO), auto-installed with blackraptor-core. The chair closes the convening with one decision. There is no CEO seat: you are the CEO."
     },
     {
       "name": "blackraptor-marketing",
       "displayName": "BlackRaptor Workforce — Marketing",
       "source": "./marketing",
-      "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. A governed, full-stack marketing department (brand, naming/trademark, research, content, copy, creative, SEO/GEO, paid, social, email, video, competitive intel, pricing, analytics, campaign coordinator) + the compliance-claims-gate every external asset passes through. Auto-installs blackraptor-core. No autonomous sends, posts, or spend — agents draft, humans approve. Hosted in BlackRaptorAI/BlackRaptor_Agents_Marketing."
+      "description": "Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written. A governed, full-stack marketing department (brand, naming/trademark, content, copy, creative, SEO/GEO, paid, social, email, video, analytics) + the compliance-claims-gate every external asset passes through. Auto-installs blackraptor-core. No autonomous sends, posts, or spend — agents draft, humans approve. Hosted in BlackRaptorAI/BlackRaptor_Agents_Marketing."
     },
     {
       "name": "blackraptor-hardware",
       "displayName": "BlackRaptor Workforce — Hardware Engineering",
       "source": "./hardware",
-      "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. A governed hardware-engineering department + an adversarial design-review gate, conducted by the main-session hw-program skill (decision register, interfaces, PDR/CDR/MRR readiness). Ships the hw-operating-standard skill. Product-agnostic via per-program PROGRAM-CONTEXT.md. Auto-installs blackraptor-core. Agents design and analyze — humans make the irreversible calls. Hosted in BlackRaptorAI/BlackRaptor_Agents_HW_Engineering."
+      "description": "Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written. A governed hardware-engineering department + an adversarial design-review gate, conducted by the main-session hw-program skill (decision register, interfaces, PDR/CDR/MRR readiness). Ships the hw-operating-standard skill. Product-agnostic via per-program PROGRAM-CONTEXT.md. Auto-installs blackraptor-core. Agents design and analyze — humans make the irreversible calls. Hosted in BlackRaptorAI/BlackRaptor_Agents_HW_Engineering."
     },
     {
       "name": "blackraptor-core",
       "displayName": "BlackRaptor Workforce — Core",
       "source": "./core",
-      "description": "Specialist agent packs with read-only review gates that block work until it meets the standard. Cross-cutting agents shared by every team: product-manager and evidence-auditor, plus the research-integrity skill. Auto-installed as a dependency of all four packs — not installed directly."
+      "description": "Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written. The shared Core pack, auto-installed with every other pack. The cross-cutting agents: `product-manager` (the end-to-end product owner), `evidence-auditor` (the adversarial gate on research and evidence), `claims-gate` (the isolated gate on external-facing copy), `product-docs-writer`, and the market-research, pricing-strategy and competitive-intel analysts — plus the fourteen doctrine skills every pack depends on: research-integrity, content-craft, excellence-pass, prompt-brief, state-file, change-record, gate-verdict-format, compliance-claims-gate, customer-promise, enforcement-liveness, standards-discipline, context-onboarding, set-preferences and clean-output. Ships the verdict validator and the Stop hook that enforces it, so every gate's verdict is machine-checked on the live path."
     }
   ]
 }

@@ -8,6 +8,66 @@ including ours — so unless you've switched auto-update on for the BlackRaptor 
 updates won't reach you on their own. Either way, a new pack version won't appear in a
 conversation that's already running. This page shows you how to update, on both surfaces.
 
+## 2.0.0 — what changed, and what you must update
+
+**2.0.0 is a breaking release across all five packs.** Nothing you have installed stops working,
+but two things you may have written yourself will need updating.
+
+**Gates are strict by design.** `CONCERNS` with a list of conditions is the common verdict on sound work — `PASS` is not the default and a `CONCERNS` is not a sign something is wrong with your change. Read the conditions, meet the ones that matter, and record the decision.
+
+### 1. The gate verdict block changed shape
+
+If you keep Change Records, the machine `verdict` blocks in them are now validated against a new
+schema and **existing blocks will fail** until re-emitted. What changed:
+
+| Field | Was | Is |
+|---|---|---|
+| `confidence` | `"high"` / `"medium"` / `"low"` | an **integer 0-10** |
+| `standards` | did not exist | **required** — each entry gives the designation, edition, clause, how you reached the text, and the date you verified it; or the single literal `"none: practice applied: <x>"` |
+| `evidence` | an array of strings | a **string** |
+| `verdict` | included `N/A` | `N/A` **removed** — a gate that does not apply emits no block, and the Change Record row carries the N/A |
+
+You do not need to rewrite old records unless CI re-validates them. New reviews produce the new
+shape automatically. If you copied the Change Record template into your repo, take the updated one.
+
+### 2. A new Stop hook validates gate verdicts in your session
+
+Core now ships a `Stop` hook. When a turn dispatched a gate agent, the turn does not end until that
+gate's verdict block validates. Before this, the validator only ever ran in a CI workflow you had to
+install yourself — so on a marketplace install nothing checked the contract at all.
+
+**If it gets in your way, turn it off:** set `BR_VERDICT_HOOK=off` in your environment. When
+disabled, the hook writes one line to stderr. Interactive sessions show it; `claude -p` does not
+surface hook stderr, so on that path check the `BR_VERDICT_HOOK` variable instead. It fails open on its own
+errors and never blocks the same turn twice.
+
+### 3. Two gate seats moved (Engineering pack)
+
+A gate that can edit what it judges is not a gate, so two seats were split:
+
+- **Schema sign-off** moved from `data-engineer` to the new read-only **`schema-reviewer`**.
+- **Test/coverage sign-off** moved from `qa-test-engineer` to the new read-only **`test-auditor`**.
+
+`data-engineer` and `qa-test-engineer` are unchanged as producers and keep their tools. **If you
+dispatch gates by name, update those two call sites.** `seat-list.md` in the pack is already updated.
+
+### 4. Some seats can now run their own arithmetic
+
+The four hardware analysis seats and the four council numbers seats now hold `Bash` (the hardware
+seats also hold `Write`, restricted to the program's `sim/` directory). Every figure they compute
+carries its script and inputs and is **re-executed by a context that did not produce it** before it
+is used. If your workflow assumed these seats were read-only, they are not any more — the write
+target is charter-restricted, but the grant is real.
+
+### 5. The retired-claims list moved (Marketing pack)
+
+`claims-gate` no longer carries the banned-claims list in its body; it reads **§4b of your
+`MARKETING-CONTEXT.md`**. If you maintain that file, add the §4a/§4b tables from the template — the
+gate returns COULD NOT ASSESS for the retired-claims check if it cannot find the register, rather
+than guessing.
+
+---
+
 ## The one rule to remember
 
 **A session keeps the pack versions it started with.** Updating doesn't retroactively change a

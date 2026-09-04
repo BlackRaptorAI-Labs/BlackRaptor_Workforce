@@ -40,8 +40,27 @@
 
 ## 4. Approved External Claims (the ONLY cleared claims)
 
-List every claim cleared for external use, verbatim, with its evidence status.
-Anything not on this list is not cleared. Date the list.
+Two tables. Anything absent from the first is not cleared; anything in the second is banned outright.
+The claims gate reads both. Date the list and name an owner per row — an undated claims register is
+how a claim that was true last quarter ships this quarter.
+
+### 4a. Cleared claims
+
+| Claim (verbatim, as it may be published) | Evidence status | Proof standard it must meet | Date cleared | Owner |
+|---|---|---|---|---|
+| <the exact wording> | measured / cited / attested / customer-stated | <what would substantiate it, e.g. "a third-party report naming the scope and date"> | YYYY-MM-DD | <role> |
+
+### 4b. Retired and banned claims (hard BLOCK)
+
+Claims that were once used, or are commonly reached for, and must never ship again. The claims gate
+BLOCKS any copy that asserts one in substance, however it is reworded.
+
+| Claim | Why it is banned | Proof standard that would be needed | Date retired | Owner |
+|---|---|---|---|---|
+| "fewer tokens than plain Claude" (or any cheaper/less-compute-than-a-single-chat framing) | Contradicted by our own measurement: a multi-agent run spends token MULTIPLES of a single chat. The standing always-on roster tax alone was measured at 11,628 tokens per turn for a full install. | A like-for-like measured comparison on the same task set, published with its method | 2026-08-07 | marketing owner |
+| "only truth" / "never wrong" | Unearnable by any system. | none — not assertable | 2026-08-07 | marketing owner |
+| "no hallucination" / "cannot hallucinate" | Unearnable by any system. | none — not assertable | 2026-08-07 | marketing owner |
+| "fewer interactions" / "less rework per deliverable" as a MEASURED value claim | Measured and earned, but owner-HELD pending ride-along conditions and outside counsel. Earned is not cleared to assert. | Owner release, then only in the narrowed conditions-met wording | 2026-08-11 | owner |
 
 ## 5. Voice
 

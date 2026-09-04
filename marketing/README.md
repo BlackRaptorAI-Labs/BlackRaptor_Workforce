@@ -11,11 +11,11 @@ Every charter carries the BlackRaptor **customer-experience north star** (the
 customer must need it, find it easy, and get exactly what they were promised —
 trust, loyalty, and willingness to spend are the measures) and the
 **excellence-pass** output-quality discipline (never ship a first draft). Each
-role is written as a 20+-year practitioner and encodes named,
-verifiable methodology — Dillman survey design, Kohavi trustworthy
+role is written as a 20+-year practitioner and draws on
+published methodology — Dillman survey design, Kohavi trustworthy
 experimentation, IPA/Binet & Field creative effectiveness, Ehrenberg-Bass
-distinctive assets, Made to Stick / Ogilvy / NN-g writing craft — cited, not
-invented.
+distinctive assets, Made to Stick / Ogilvy / NN-g writing craft — cited as
+sources, not an endorsement by or affiliation with their authors.
 
 ## Install
 
@@ -89,13 +89,13 @@ Adding AI agents to a fragmented marketing stack amplifies the fragmentation: a
 content agent that can't see analytics, an SEO agent that doesn't know brand
 voice, and a publishing agent with no strategic context each run confidently
 within an incomplete frame. Here, one file — `context/marketing-context.md` —
-holds personas, phasing, voice, approved claims, and hard ethics gates. Every
-agent reads it first; external-facing claims are routed to the separate
-`claims-gate` **agent** for review. That review is **guaranteed** on the
-`marketing-campaign` workflow's mandatory dispatch step; for ad-hoc single
-assets it is **best-effort** (an always-on rule on the plugin's hook + the
-`compliance-claims-gate` skill + producer descriptions), not an automatic
-screen of everything.
+holds personas, phasing, voice, approved claims, and hard ethics gates. Agents
+are instructed to read it first, and producer agents are instructed to route
+external-facing copy to the isolated `claims-gate` **agent**. The
+`marketing-campaign` workflow carries a dispatch step for that review, and the
+`compliance-claims-gate` skill and the producer descriptions carry the same
+instruction. None of that is a mechanical screen, so invoke the gate explicitly
+on anything that ships.
 
 ## Hard rules baked in
 

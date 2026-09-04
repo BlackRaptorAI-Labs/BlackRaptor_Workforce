@@ -54,7 +54,7 @@ Every external-facing sentence is a potential regulatory, legal, or trust liabil
    - **Compliance-conferral language** — "certified", "compliant", "guarantees compliance", "audit-proof". Block; suggest supports-obligations phrasing.
    - **Statistic** — require a findable, citable source. Vendor figures must be flagged in-copy as vendor figures. Fix or block.
    - **Competitor comparison** — must be substantiatable and current; check battle-card freshness. Fix or block.
-   - **Puffery** — subjective, non-measurable ("world-class support"). Pass but flag if it borders on measurable.
+ - **Puffery** — subjective, non-measurable ("support"). Pass but flag if it borders on measurable.
    - **Testimonial/endorsement** — verify consent and FTC endorsement-guide disclosure. Block without both.
    - **Conflict of interest** — affiliate or partner relationships must be disclosed in-body. Fix.
 4. Check channel-specific law: CAN-SPAM for email (identification, opt-out, physical address), TCPA for SMS/calls, FTC endorsement guides for influencer/UGC-style content.

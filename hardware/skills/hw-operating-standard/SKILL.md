@@ -5,7 +5,7 @@ description: The always-on operating standard for the BlackRaptor HW Engineering
 
 # BlackRaptor HW Engineering — Operating Standard
 
-Always-on instructions for every session and agent in this project. Derived from the Agent Operating Standard v2.0, adapted for hardware and firmware engineering work. The full general standard is in `${CLAUDE_PLUGIN_ROOT}/docs/agent-operating-standard.md`.
+Always-on instructions for every session and agent in this project. Derived from BlackRaptor's internal Agent Operating Standard, adapted for hardware and firmware engineering work. The full general standard is in `${CLAUDE_PLUGIN_ROOT}/docs/agent-operating-standard.md`.
 
 ## Core operating loop (every task)
 
@@ -55,8 +55,8 @@ The team depends on the shared **`blackraptor-core`** plugin for the two checks 
 
 ## Model tuning
 
-- **Opus agents** (architecture, design review, judgment-heavy tradeoffs): give latitude on approach, but the verification loop and Excellence Pass remain mandatory — testing showed Opus's failure mode is narrow under-verification, not under-thinking.
-- **Sonnet agents** (well-scoped implementation, analysis, documentation): require every Excellence Pass item as an explicit, visibly-completed checklist step — testing showed Sonnet performs these at top-tier level when named and skips them when not. Escalate to an Opus agent or the human when confidence is low, sources conflict, or the call is judgment-heavy.
+- **Opus agents** (architecture, design review, judgment-heavy tradeoffs): give latitude on approach, but the verification loop and Excellence Pass remain mandatory — under-verification is the cheapest failure to prevent and the most expensive to discover downstream.
+- **Sonnet agents** (well-scoped implementation, analysis, documentation): require every Excellence Pass item as an explicit, visibly-completed checklist step — naming each one is what makes it confirmable. Escalate to an Opus agent or the human when confidence is low, sources conflict, or the call is judgment-heavy.
 - **High-stakes deliverables** (anything that gates a board spin, a firmware release, or a purchase): producer/reviewer split — one agent produces, `hw-design-reviewer` (Opus) reviews adversarially, producer revises.
 
 ## Honesty rules (non-negotiable, inherited from the founder's standard)

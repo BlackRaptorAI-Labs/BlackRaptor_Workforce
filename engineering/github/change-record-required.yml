@@ -15,6 +15,15 @@
 #   When agent reviews later run in CI, add a second job here that invokes the
 #   relevant agent per matched gate and appends its verdict to the CR file.
 #   This check's contract (CR file must exist) does not change.
+#
+# 2.0.0 (2026-09-02): this file is now BUILT from _source/engineering-extras/github/ in the golden
+#   source and byte-checked against the port by verify.sh [EX]; edit it there, never here in a
+#   checkout. The verdict validation below already covered every CR file the PR adds or modifies
+#   (listFiles -> status !== 'removed' -> validate_verdict.py --require), and that behaviour is
+#   unchanged — but the SCHEMA it enforces moved to v3: `confidence` is an integer 0-10 (was
+#   high|medium|low), `standards[]` is required and each entry carries how the text was reached and
+#   when it was verified, `evidence` is a string, and `N/A` is no longer a verdict value. A CR
+#   carrying v2-shaped blocks will now fail this check until the blocks are re-emitted.
 
 name: change-record-required
 

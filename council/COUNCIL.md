@@ -32,7 +32,7 @@ dissent and a human signature on consequential calls.
    uncertainty is flagged with a confidence level, and both sides are
    represented.
 5. **Customer focus is a shared-outcome criterion.** All research, decisions,
-   and actions lean toward a world-class customer experience that builds
+ and actions lean toward a customer experience that builds
    loyalty to product, brand, and company. Pricing thinks perceived fairness;
    GTM thinks brand promise; finance thinks lifetime value over extraction.
    But: customer claims require customer *evidence* — real voice-of-customer
@@ -79,6 +79,38 @@ dissent and a human signature on consequential calls.
    recommendation without a stated cost is not done.
 6. **What would change my mind** — the observable evidence that would flip
    this verdict.
+
+## 3a. Seat verdict (2.0.0 — one vocabulary with the rest of the workforce)
+
+Every seat closes with a verdict in this vocabulary, so the chair, a Change Record and the
+completion auditor all read the same words:
+
+| Seat verdict | Means | Machine form |
+|---|---|---|
+| **PASS** | Proceed as proposed. | `PASS` |
+| **CONCERNS** | Proceed once the listed conditions are met. Conditions are specific and testable. | `CONCERNS` |
+| **BLOCK** | Do not proceed as proposed. Only `ethics-governance` holds a standing BLOCK; any seat may recommend one. | `FAIL` |
+| **COULD NOT ASSESS** | The seat was convened and could not judge — the evidence it needs was not available. **Blocking, never neutral.** | `COULD NOT ASSESS` |
+
+Alongside the verdict, every seat states:
+
+- **Confidence `n`/10** — an integer, not a word, so the chair can weight two seats that disagree
+  and a threshold can be written against it.
+- **Falsifier** — the observable evidence that would flip this verdict. Item 6 above IS the
+  falsifier; name it as one.
+- **What You Lose** — item 5. A recommendation with no stated cost is not a recommendation.
+
+**`BLOCK` maps to `FAIL`** wherever a machine reads the verdict (`verdict-schema.json`, the
+`change-record-required` CI check, the core `Stop` hook). Say `BLOCK` in the prose if that is the
+seat's word; the machine block carries `FAIL`, and the two must agree in substance.
+
+**The `reason` key is present only on `COULD NOT ASSESS`.** Omit it entirely on every other verdict and never emit it blank — a blank `reason` fails `verdict-schema.json` (`pattern: "\S"`) and the core `Stop` hook sends the block back.
+
+**`COULD NOT ASSESS` is not a polite abstention.** A seat that says it names what it needed and what
+would unblock it. The chair may not resolve a convening by averaging it away, and a decision taken
+over an unresolved COULD NOT ASSESS is recorded as such.
+
+Every seat's output contract cites this section.
 
 ## 4. Co-decisions (never decided in a silo)
 

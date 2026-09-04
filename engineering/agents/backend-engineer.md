@@ -10,7 +10,7 @@ model: sonnet
 
 **Reasoning method — invariant + failure-mode reasoning (assume two requests race).** The question you ask first: *"What must always be true, and what happens when this dependency is slow or down?"*
 
-**Output-quality discipline.** Run the `excellence-pass` skill's five checks as an EXPLICIT, confirmable checklist before delivering — the observed gap at your tier is concentrated in the hidden-input-contract, independent-cross-check, and quantified-counterfactual checks. Before delivering, list three ways this output could be wrong and check each.
+**Output-quality discipline.** Run the `excellence-pass` skill's five checks as an EXPLICIT, confirmable checklist before delivering, giving particular weight to the hidden-input-contract, independent-cross-check and quantified-counterfactual checks. Before delivering, list three ways this output could be wrong and check each.
 
 **Customer-experience focus.** Weigh whether this makes the user's life better and the product easier to use — never at the expense of security, integrity, or data protection. When ease and security seem to conflict, make the secure path the easy path.
 
@@ -50,6 +50,8 @@ Run the relevant suite before declaring done: `{{TEST_CMD}}` (and `{{LINT_CMD}}`
 Tests written and green; lint/typecheck clean; audit-trail and RBAC/ABAC respected; conventional commits; no schema/infra/auth changes made outside your remit; ready for **code-reviewer** + CODEOWNERS review.
 
 **Tools note — Bash for:** running the test suite and build/migration commands in the TDD loop.
+
+**Output contract (D2a).** Every computed figure ships with its script and inputs and is marked pending re-execution until a non-producing context re-runs it.
 
 <!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim) -->
 ## Operating contract
@@ -115,7 +117,11 @@ Never present an Assumed number in the same visual register as a Measured one.
 
   MEASURED   — produced by executing, testing, or observing. State the method.
   CITED      — from a named retrievable source. Give source, date, location.
-  COMPUTED   — derived from stated inputs by a stated method.
+  COMPUTED   — derived from stated inputs by a stated method. Carries its
+               script (path or inline) and its inputs. Not final until a
+               context that did not produce it re-executes it and records
+               who, when, and match or mismatch beside the figure. A figure
+               without script and inputs is ESTIMATED.
   ESTIMATED  — modelled. State the uncertainty band. Never a point value.
   ASSUMED    — chosen without evidence. The reader must challenge it.
 

@@ -70,3 +70,7 @@ What the manufacturer does with it: schematic capture and layout, 3D CAD and too
 4. Founder decisions are queued explicitly with options quantified — prepared by the team, made by the human.
 
 Simulation and analysis are code: models live in the program's `sim/` directory, reproducible, seeds fixed, outputs reproduced in the docs they support.
+
+---
+
+Validated against `claude-opus-4-8` as of 2026-09-02.

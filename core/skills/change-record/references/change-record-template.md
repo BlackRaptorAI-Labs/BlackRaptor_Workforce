@@ -4,8 +4,12 @@
 USAGE
   1. Copy this file to docs/change-records/CR-YYYYMMDD-<slug>.md IN THE SAME PR
      as the change. The change-record-required CI check looks for it there.
-  2. Fill every section. Gates that don't apply: mark N/A with one line of why.
+  2. Fill every section. Gates that don't apply: mark N/A in the Applies? column
+     with one line of why, and paste NO verdict block for them — `N/A` stopped
+     being a verdict value in schema v3, so a gate that did not run emits nothing.
      An unexplained N/A is the rubber stamp an auditor looks for.
+     A gate that ran and could not finish is COULD NOT ASSESS, which is BLOCKING —
+     it is not the same as N/A and must not be recorded as one.
   3. This file IS the audit evidence that the control operated. Write it for a
      stranger reading it in 18 months.
 
@@ -39,13 +43,13 @@ This template is **roster-neutral** — it names roles, not agents, so it is cor
 "Agent verdict" is what the agent concluded; "My decision" is yours — they may differ, and when
 they do, §5 is mandatory.
 
-| Gate role | Your pack's seat (see `seat-list.md`) | Applies? | Agent verdict (PASS / FAIL / CONCERNS) | My decision (ACCEPT / ACCEPT-WITH-RISK / REWORK) | Initials + date |
+| Gate role | Your pack's seat (see `seat-list.md`) | Applies? | Agent verdict (PASS / CONCERNS / FAIL / COULD NOT ASSESS) | My decision (ACCEPT / ACCEPT-WITH-RISK / REWORK) | Initials + date |
 |---|---|---|---|---|---|
 | Security (auth/RBAC/tenant/remote-access) | `security` seat | Yes / N/A: ___ | | | |
 | Privacy (PII, LLM data-flow, cross-border) | `privacy` seat | Yes / N/A: ___ | | | |
 | Compliance (SOC 2 / ISO control continuity, audit-trail writes) | `compliance` seat | Yes / N/A: ___ | | | |
 | Domain (<regulated domain>) | `domain` seat | Yes / N/A: ___ | | | |
-| Schema (migrations) | `schema` seat | Yes / N/A: ___ | | | |
+| Schema (migrations, expand/contract, lock impact) | `schema` seat | Yes / N/A: ___ | | | |
 | Operational readiness (HITL on consequential/automated action; operability) | `operational-readiness` seat | Yes / N/A: ___ | | | |
 | UX (design system, interaction, a11y) | `ux` seat | Yes / N/A: ___ | | | |
 | Quality (TDD followed, coverage thresholds) | `quality` seat | CI-enforced; note exceptions: ___ | | | |
@@ -62,7 +66,7 @@ CI check parses and validates it.**
 <details><summary>security-architect</summary>
 
 ```verdict
-{"gate":"security","agent":"security-architect","artifact":"PR #___ / <files>","verdict":"___","evidence":["file:line — basis"],"confidence":"high","falsifier":"the one fact that would flip this"}
+{"gate":"security","agent":"security-architect","artifact":"PR #___ / <files>","verdict":"___","confidence":0,"falsifier":"the one fact that would flip this","evidence":"file:line — basis","standards":["none: practice applied: ___"]}
 ```
 
 (prose analysis here)
@@ -71,7 +75,7 @@ CI check parses and validates it.**
 <details><summary>privacy-counsel</summary>
 
 ```verdict
-{"gate":"privacy","agent":"privacy-counsel","artifact":"PR #___","verdict":"___","evidence":["file:line — basis"],"confidence":"high","falsifier":"..."}
+{"gate":"privacy","agent":"privacy-counsel","artifact":"PR #___","verdict":"___","confidence":0,"falsifier":"...","evidence":"file:line — basis","standards":["none: practice applied: ___"]}
 ```
 
 (prose analysis here)

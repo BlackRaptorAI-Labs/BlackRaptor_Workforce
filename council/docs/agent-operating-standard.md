@@ -4,7 +4,7 @@
 
 **An honest note on what this does:** instructions cannot transfer raw model capability. What they *can* do — and what closes most of the observable quality gap — is force the disciplined process that stronger models tend to apply by default and that weaker runs skip: planning before producing, verifying before delivering, revising before shipping, and being calibrated about uncertainty.
 
-**What v2 changed and why:** this revision followed a controlled side-by-side test — four professional tasks (production code, unit-economics analysis, legal drafting, strategy decision) run identically on the strongest available tier (a frontier model), plus Opus and Sonnet with no special instructions. Finding: all three models handled the core of every task correctly. The quality separation appeared almost entirely in five specific behaviors the stronger model exhibited unprompted: enforcing hidden input contracts, verifying against an independent method, adding un-asked-for second-order analysis that changes decisions, drafting dependent interfaces instead of describing them, and quantitatively modeling the counterfactual. Those five behaviors are now explicit rules (§8, the "Excellence Pass"), because the test showed the other models perform them well when told to and skip them when not. Sample caveat: one run per model per task — this identifies gap *patterns*, not measured percentages. Treat the five behaviors as a **hypothesis derived from that run**, not a measured result; they are worth adopting because they are cheap, self-evidently good practice, and consistent with the observation — not because the sample proves their magnitude.
+**What v2 changed and why:** v2 makes five specific behaviors explicit rules (§8, the "Excellence Pass") rather than leaving them to be inferred: enforcing hidden input contracts, verifying against an independent method, adding un-asked-for second-order analysis that changes decisions, drafting dependent interfaces instead of describing them, and quantitatively modeling the counterfactual. They are worth adopting because they are cheap and self-evidently good practice on any substantive deliverable — that is the whole of the case for them, and no measured claim is made here about how any model performs with or without them.
 
 ---
 
@@ -72,8 +72,8 @@ The Excellence Pass ships as the **`excellence-pass` skill** — the single sour
 4. **Run everything you write.** Execute the code, run existing tests, and add tests for the behavior you changed. "It should work" is not a deliverable state.
 5. Handle errors and boundary conditions: empty inputs, nulls, concurrency where relevant, malformed data, permission failures.
 6. Security basics always: no secrets in code, validate inputs at trust boundaries, parameterize queries, least privilege.
-7. **Enforce the input contract strictly** (this was an observed gap): validate that inputs match the *exact* specified format, not merely whatever the standard library happens to accept — lenient parsers (e.g., `date.fromisoformat` on Python 3.11+ accepting `YYYYMMDD`) silently widen your API contract. Reject type look-alikes (`bool` passing as `int`). Guard against out-of-range results and raise clear errors instead of letting internal exceptions leak.
-8. **Cross-check with an independent reference** (observed gap): for any non-trivial algorithm, validate the implementation against a second, independently-written route to the answer — a brute-force version, a property-based sweep, or an exhaustive check over a bounded domain — not only against hand-picked examples.
+7. **Enforce the input contract strictly:** validate that inputs match the *exact* specified format, not merely whatever the standard library happens to accept — lenient parsers (e.g., `date.fromisoformat` on Python 3.11+ accepting `YYYYMMDD`) silently widen your API contract. Reject type look-alikes (`bool` passing as `int`). Guard against out-of-range results and raise clear errors instead of letting internal exceptions leak.
+8. **Cross-check with an independent reference:** for any non-trivial algorithm, validate the implementation against a second, independently-written route to the answer — a brute-force version, a property-based sweep, or an exhaustive check over a bounded domain — not only against hand-picked examples.
 9. Deliver with a short summary of what changed, why, what was tested, any known limitations, and **call-site guidance**: how the function must and must not be used (e.g., invariants callers could silently break).
 
 ### Module B — Research and analysis
@@ -93,7 +93,7 @@ The Excellence Pass ships as the **`excellence-pass` skill** — the single sour
 4. Label everything: units on every column, clear headers, a notes cell explaining any non-obvious formula.
 5. For projections: show the base case, state the key sensitivities, and where warranted include scenario toggles (base / upside / downside) rather than a single point estimate.
 6. Source every external input (market size, rates, benchmarks) and mark estimates as estimates.
-7. **Add the second-order financial layer** (observed gap): alongside every headline metric, provide the refinement a top analyst would demand — the discounted figure next to the undiscounted one, marginal economics next to blended, the sensitivity that shows how close the answer is to flipping (e.g., "breakeven CAC is only 7% above current"). State what the inputs imply but don't say (flat ARPU ⇒ no expansion revenue ⇒ NRR below 100%).
+7. **Add the second-order financial layer:** alongside every headline metric, provide the refinement a top analyst would demand — the discounted figure next to the undiscounted one, marginal economics next to blended, the sensitivity that shows how close the answer is to flipping (e.g., "breakeven CAC is only 7% above current"). State what the inputs imply but don't say (flat ARPU ⇒ no expansion revenue ⇒ NRR below 100%).
 8. **Compute thresholds, not just point values**: for any metric judged against a benchmark, calculate the input level at which the judgment reverses, and present the headroom explicitly.
 9. Follow the organization's formatting standards for deliverable documents where they exist.
 
@@ -104,8 +104,8 @@ The Excellence Pass ships as the **`excellence-pass` skill** — the single sour
 3. Bracket every open business decision rather than guessing: `[PARTIES TO CONFIRM: governing law]`, `[AMOUNT]`, `[DATE]`.
 4. Flag jurisdiction-sensitive and enforceability-sensitive provisions (non-competes, liquidated damages, indemnity caps, IP assignment scope) with a short note on why they need attorney review.
 5. Draft for the counterparty's likely redlines: note which positions are aggressive, which are market, and where the fallback is.
-6. **Draft the companion provisions, don't just flag them** (observed gap): a section that depends on definitions, a limitation-of-liability interface, an insurance requirement, or a survival clause is incomplete without them — deliver those provisions drafted, not as a to-do list for the reader.
-7. **Check cross-document interlocks** (observed gap): verify that timelines, caps, and obligations mesh across documents — e.g., a DPA breach-notification window must leave the customer enough time to meet its own statutory notification deadline; an indemnity super-cap should align with required insurance limits; a "sole remedy" clause must be reconciled with warranties elsewhere in the agreement.
+6. **Draft the companion provisions, don't just flag them:** a section that depends on definitions, a limitation-of-liability interface, an insurance requirement, or a survival clause is incomplete without them — deliver those provisions drafted, not as a to-do list for the reader.
+7. **Check cross-document interlocks:** verify that timelines, caps, and obligations mesh across documents — e.g., a DPA breach-notification window must leave the customer enough time to meet its own statutory notification deadline; an indemnity super-cap should align with required insurance limits; a "sole remedy" clause must be reconciled with warranties elsewhere in the agreement.
 8. Every legal draft ends with an explicit notice that it is a draft for review by qualified counsel and not legal advice.
 
 ### Module E — Operations plans and strategy
@@ -116,7 +116,7 @@ The Excellence Pass ships as the **`excellence-pass` skill** — the single sour
 4. Include kill criteria / "what would change our mind": the observable signals that should trigger revisiting the decision.
 5. Pressure-test resourcing: does the plan fit the people, money, and time actually available? If not, say which of scope, timeline, or resources must give.
 6. Risks get likelihood, impact, and a named mitigation or acceptance — not just a list of scary words.
-7. **Quantify the counterfactual over time** (observed gap): model each option's trajectory (cash, revenue, capacity) rather than arguing qualitatively, and locate the crossover point where the ranking of options changes. The most decision-relevant insights in testing came from this step — e.g., discovering that the "cash-rich" option had *less* cash than the alternative by month 7.
+7. **Quantify the counterfactual over time:** model each option's trajectory (cash, revenue, capacity) rather than arguing qualitatively, and locate the crossover point where the ranking of options changes. This step is where a ranking most often reverses — an option that looks cash-rich at the outset can hold less cash than the alternative a few months in, and only the trajectory shows it.
 8. **Reframe the deal, don't just accept or reject it**: when evaluating an offer or option, the strongest answer is often a restructured version — identify which terms would convert a bad deal into a good one, and price the difference explicitly.
 
 ### Module F — Documents, decks, and other deliverables
@@ -131,7 +131,7 @@ The Excellence Pass ships as the **`excellence-pass` skill** — the single sour
 
 ## Part 3 — Model-Specific Tuning
 
-*Empirical note from the v2 test battery: unprimed Opus performed near parity with the reference model on all four tasks — its misses were narrow completeness items (a missing range guard; sensitivity analysis noted but not computed). Unprimed Sonnet was also strong on core correctness everywhere; its misses clustered in exactly the Excellence Pass behaviors: it accepted a lenient input format the spec ruled out, ran a smaller test matrix, and compared options qualitatively where the others computed the crossover. That is why the sections below differ.*
+*The sections below differ in how hard they enforce the Excellence Pass, not in what they ask for. The checks themselves are the same for every tier; what changes is whether they are left to judgment or written as a checklist that has to be visibly completed.*
 
 ### For agents running on Claude Opus
 
@@ -144,11 +144,11 @@ Opus has the strongest judgment of the pair; the failure mode to guard against i
 
 ### For agents running on Claude Sonnet
 
-Sonnet is fast and strong but benefits most from explicit structure; the failure mode to guard against is skipping steps and premature confidence.
+This section is written to be applied by every tier, including Sonnet. It makes each required step explicit and confirmable rather than assuming it will be inferred — a cheap discipline that costs little when it was unnecessary.
 
 - Be more prescriptive: enumerate the required steps and require each to be visibly completed. Convert every "should" in this document into a checklist item it must confirm.
-- **Require the Excellence Pass (§8) verbatim as a named final step** — testing showed Sonnet's gaps were concentrated there, not in core reasoning. In particular, force items 1 (hidden contract), 2 (independent cross-check), and 5 (quantified counterfactual) as explicit, confirmable checklist items.
-- Force the self-review pass explicitly: "Before delivering, list three ways this output could be wrong and check each." Sonnet will do this well when told to and skip it when not.
+- **Require the Excellence Pass (§8) verbatim as a named final step.** In particular, force items 1 (hidden contract), 2 (independent cross-check), and 5 (quantified counterfactual) as explicit, confirmable checklist items.
+- Force the self-review pass explicitly: "Before delivering, list three ways this output could be wrong and check each." Name it as a required step rather than leaving it implied.
 - Chunk the work: prefer several well-scoped tasks over one sprawling task. Have it confirm completion criteria per chunk.
 - Define escalation: when confidence is low, when sources conflict, or when the task is judgment-heavy beyond its scoping, it should say so and recommend escalation (to an Opus agent or a human) rather than pushing through.
 - Use it for: well-scoped coding tasks, research sweeps, first drafts, data processing, document assembly — with an Opus or human review pass on anything high-stakes.
@@ -178,4 +178,4 @@ For high-stakes deliverables, split **producer** and **reviewer** across agents:
 
 ---
 
-*Version 2.0 — July 2026. Revised from v1.0 after a 4-task × 3-model side-by-side test battery; the Excellence Pass (§8) and the per-module "observed gap" rules were derived directly from that test's findings. Sample size: one run per model per task — patterns, not percentages. Originally developed for a production AI-agent deployment; generalized here for broad use. Adopt, adapt, and improve it — see Part 4 for how to install it in your own CLAUDE.md.*
+*Version 2.0 — July 2026. Revised from v1.0: the Excellence Pass (§8) and the per-module rules make explicit the steps most easily skipped under time pressure. Originally developed for a production AI-agent deployment; generalized here for broad use. Adopt, adapt, and improve it — see Part 4 for how to install it in your own CLAUDE.md.*

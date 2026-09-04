@@ -1,6 +1,6 @@
 # BlackRaptor Workforce — Hardware Engineering: Operating Standard
 
-Always-on instructions for every session and agent in this project. Derived from the Agent Operating Standard v2.0, adapted for hardware and firmware engineering work. The full general standard is in `${CLAUDE_PLUGIN_ROOT}/docs/agent-operating-standard.md`.
+Always-on instructions for every session and agent in this project. Derived from BlackRaptor's internal Agent Operating Standard, adapted for hardware and firmware engineering work. The full general standard is in `${CLAUDE_PLUGIN_ROOT}/docs/agent-operating-standard.md`.
 
 ## Core operating loop (every task)
 
@@ -49,8 +49,8 @@ The team depends on the shared **`blackraptor-core`** plugin for the two checks 
 
 ## Model tuning
 
-- **Opus agents** (architecture, design review, judgment-heavy tradeoffs): give latitude on approach, but the verification loop and Excellence Pass remain mandatory — testing showed Opus's failure mode is narrow under-verification, not under-thinking.
-- **Sonnet agents** (well-scoped implementation, analysis, documentation): require every Excellence Pass item as an explicit, visibly-completed checklist step — testing showed Sonnet performs these at top-tier level when named and skips them when not. Escalate to an Opus agent or the human when confidence is low, sources conflict, or the call is judgment-heavy.
+- **Opus agents** (architecture, design review, judgment-heavy tradeoffs): give latitude on approach, but the verification loop and Excellence Pass remain mandatory — under-verification is the cheapest failure to prevent and the most expensive to discover downstream.
+- **Sonnet agents** (well-scoped implementation, analysis, documentation): require every Excellence Pass item as an explicit, visibly-completed checklist step — naming each one is what makes it confirmable. Escalate to an Opus agent or the human when confidence is low, sources conflict, or the call is judgment-heavy.
 - **High-stakes deliverables** (anything that gates a board spin, a firmware release, or a purchase): producer/reviewer split — one agent produces, `hw-design-reviewer` (Opus) reviews adversarially, producer revises.
 
 ## Honesty rules
@@ -121,7 +121,11 @@ Never present an Assumed number in the same visual register as a Measured one.
 
   MEASURED   — produced by executing, testing, or observing. State the method.
   CITED      — from a named retrievable source. Give source, date, location.
-  COMPUTED   — derived from stated inputs by a stated method.
+  COMPUTED   — derived from stated inputs by a stated method. Carries its
+               script (path or inline) and its inputs. Not final until a
+               context that did not produce it re-executes it and records
+               who, when, and match or mismatch beside the figure. A figure
+               without script and inputs is ESTIMATED.
   ESTIMATED  — modelled. State the uncertainty band. Never a point value.
   ASSUMED    — chosen without evidence. The reader must challenge it.
 

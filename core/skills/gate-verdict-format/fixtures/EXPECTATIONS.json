@@ -1,0 +1,12 @@
+{
+  "invalid-concerns-no-conditions.md": "FAIL",
+  "invalid-evidence-array.md": "FAIL",
+  "invalid-extra-key.md": "FAIL",
+  "invalid-missing-falsifier.md": "FAIL",
+  "invalid-na-verdict.md": "FAIL",
+  "invalid-standards-uncited.md": "FAIL",
+  "invalid-word-confidence.md": "FAIL",
+  "valid-cna.md": "PASS",
+  "valid-concerns-spaced-cna-vocab.md": "PASS",
+  "valid-pass.md": "PASS"
+}

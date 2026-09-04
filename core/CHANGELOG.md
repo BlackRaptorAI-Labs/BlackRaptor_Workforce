@@ -1,3 +1,79 @@
+## Corrections — 3 Sep 2026
+
+The pre-release claims gate for 2.0.0 found published statements this pack could not
+substantiate. They are retracted or qualified here rather than edited out of the entries below,
+which stay as written.
+
+- **Retracted: the model-gap study.** Several surfaces cited "a small-N, non-blind model-gap study
+  recorded in the maintainers' test-battery dossier" and reported findings from it — that Sonnet's
+  gaps concentrated in the Excellence Pass checks, that Opus was at near-parity, that a
+  4-task x 3-model side-by-side test established which behaviours separate the tiers. **No such
+  record exists** in the dossier, in `_eval/`, or anywhere else. Every statement resting on it is
+  removed across the operating standard, the `excellence-pass` skill, the per-tier notes and the
+  shared output-quality lines carried by individual agents. The five Excellence Pass checks
+  themselves are unchanged and stand on being cheap, self-evidently good practice — which is the
+  only claim now made for them.
+- **Corrected: the release validation stamp.** Its basis line said the "agent-trigger eval sets"
+  were run for this release. They were not: T-A is deferred to Phase 3. The stamp now names only
+  what ran — T-C gate liveness on the 20-artifact seeded-defect corpus (n=3, before and after,
+  2026-09-02) and the agent-behaviour eval set (19 sets / 53 scenarios, 2026-09-03), both on
+  `claude-opus-4-8` under Claude Code 2.1.258 — and says plainly that T-A was not run.
+- **Corrected: the verdict-hook kill switch.** The upgrade guide said the hook "prints one line to
+  stderr when disabled, so you can always tell whether it is on". Measured behaviour: interactive
+  sessions show that line, `claude -p` does not surface hook stderr. On that path, check the
+  `BR_VERDICT_HOOK` variable instead.
+- **Corrected: hand-typed roster counts removed from the pack manifests.** A manifest described the
+  Core pack as "seven cross-cutting agents". Counts now come from the built tree only, and
+  `verify.sh [MAN]` fails the build if one reappears in a manifest.
+
+## 2.0.0 — 2026-09-02 — One verdict contract, live enforcement
+
+**BREAKING: the gate verdict block changed shape.** `verdict-schema.json` moves to v3 and any
+existing Change Record carrying a v2 block will fail validation until its blocks are re-emitted.
+
+- `confidence` is an **integer 0-10**, replacing `high|medium|low`. A threshold can be written
+  against a number; it could not be written against a word.
+- `standards[]` is **new and required**. Each entry carries the designation, edition, clause, how
+  the text was reached, and the date it was verified at the issuing body — or the single literal
+  `"none: practice applied: <x>"`. The specification asked for a Standards line for a year and the
+  schema had no field for it, so nothing enforced it.
+- **`N/A` is removed** from the verdict vocabulary. A gate that does not apply now emits no block;
+  the Change Record row carries the N/A and its reason.
+- `evidence` is a string (it was an array). The validator names the v2 shape explicitly rather than
+  failing on a bare type error.
+
+**NEW: the validator now runs on the live path.** A `Stop` hook ships in Core: when a turn dispatched
+a gate agent, the turn does not end until that gate's verdict block validates. Previously
+`validate_verdict.py` ran only in a CI template a user had to install into their own repository, so
+on a marketplace install nothing enforced the contract at all. Kill switch: set `BR_VERDICT_HOOK=off`
+to disable it for a session — it prints one line to stderr when disabled, so it is never silently
+off. It fails OPEN on its own errors and never blocks a turn twice.
+
+- `validate_verdict.py --self-test` runs a 10-fixture suite covering each failure mode.
+- `claims-gate` no longer carries the retired-claims list in its body; it reads §4b of the Marketing
+  Intelligence Core, which now has a real schema (claim, why retired, proof standard, date, owner).
+- `compliance-claims-gate`, `gate-verdict-format` and the `change-record` template updated to v3.
+- The three cross-pack analysts now guard every Marketing-pack path: with the pack installed they
+  read it, without it they proceed from `BUSINESS-CONTEXT.md` and label the method ASSUMED. On a
+  Core-only install those paths previously dangled.
+
+**The verdict block's optional fields now say when to omit them.** Two fields were specified so that a truthful answer
+could not validate, and the live `Stop` hook sent those blocks back:
+
+- **`reason`** was shown in every gate's inline template, so gates emitted it blank on verdicts that
+  do not carry it. It is now absent from the template, and the rule is stated under it: present only
+  on `COULD NOT ASSESS`, omit the key entirely otherwise, never blank.
+- **`standards[].verified`** is a required `YYYY-MM-DD` checked at the issuing body, so a standard a
+  gate could not reach had no valid date to pair with `access: "not reached"`. Gates are now told
+  to cite the secondary source they did reach with the date they checked it, or to leave the
+  designation out of the array and carry `["none: practice applied: <x>"]`, or — where the verdict
+  truly rests on a text they could not read — to return `COULD NOT ASSESS` with a `reason`.
+
+Neither the schema nor the hook changed; the instructions the gates read did.
+
+Validated against `claude-opus-4-8` as of 2026-09-02.
+
+
 ## 2026-08-13 — Renamed & consolidated
 - **Plugin id:** `blackraptor-bridge` → **`blackraptor-core`**. Now the auto-installed dependency of all four packs (Engineering, Executive Council, Marketing, Hardware Engineering).
 - **Repo:** moved from `BlackRaptorAI/BlackRaptor_Agents` (`bridge/`) into the consolidated **`BlackRaptorAI/blackraptor`** (`core/`). Product line: **BlackRaptor Workforce**.

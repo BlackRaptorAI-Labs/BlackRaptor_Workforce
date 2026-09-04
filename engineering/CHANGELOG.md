@@ -1,3 +1,76 @@
+## Corrections — 3 Sep 2026
+
+The pre-release claims gate for 2.0.0 found published statements this pack could not
+substantiate. They are retracted or qualified here rather than edited out of the entries below,
+which stay as written.
+
+- **Retracted: the model-gap study.** Several surfaces cited "a small-N, non-blind model-gap study
+  recorded in the maintainers' test-battery dossier" and reported findings from it — that Sonnet's
+  gaps concentrated in the Excellence Pass checks, that Opus was at near-parity, that a
+  4-task x 3-model side-by-side test established which behaviours separate the tiers. **No such
+  record exists** in the dossier, in `_eval/`, or anywhere else. Every statement resting on it is
+  removed across the operating standard, the `excellence-pass` skill, the per-tier notes and the
+  shared output-quality lines carried by individual agents. The five Excellence Pass checks
+  themselves are unchanged and stand on being cheap, self-evidently good practice — which is the
+  only claim now made for them.
+- **Corrected: the release validation stamp.** Its basis line said the "agent-trigger eval sets"
+  were run for this release. They were not: T-A is deferred to Phase 3. The stamp now names only
+  what ran — T-C gate liveness on the 20-artifact seeded-defect corpus (n=3, before and after,
+  2026-09-02) and the agent-behaviour eval set (19 sets / 53 scenarios, 2026-09-03), both on
+  `claude-opus-4-8` under Claude Code 2.1.258 — and says plainly that T-A was not run.
+- **Retracted: the roster statistics in the entries below.** "Roster 24 → 25", "Roster 23 → 24",
+  "Dev roster 20 → 24" and "16-agent governed team" were hand-typed counts with no record tying
+  them to the tree at those releases, and one is internally inconsistent (20 → 24 names three
+  agents, not four). Treat them as approximate historical notes, not counts. The current roster is
+  read from the built tree: **24 engineering agents at 2.0.0**.
+- **Retracted: "Verified with a path-guard test harness."** No test report is reachable for that
+  claim. The Tier-3 path guard ships and its hook is in the tree; what is withdrawn is the
+  assertion that a verification run demonstrated it.
+
+## 2.0.0 — 2026-09-02 — Two new read-only gates, one verdict contract
+
+**BREAKING: the gate verdict block changed shape** (see the Core changelog for the full v3 diff).
+Existing Change Records carrying v2 blocks fail validation until re-emitted.
+
+**BREAKING: two gate seats moved.** A gate that can edit what it judges is not a gate, and two seats
+were doing both jobs:
+
+- **`schema-reviewer`** (new, read-only, opus) takes the schema seat. `data-engineer` still authors
+  migrations and keeps its tools; it no longer signs them off.
+- **`test-auditor`** (new, read-only, opus) takes the quality seat. `qa-test-engineer` still designs
+  the strategy and writes tests; it no longer audits its own coverage.
+- `seat-list.md` is updated. If you route gates by seat name, this changes who you dispatch.
+- `security-operations` drops its gate claim — no Change Record role routed to it.
+
+**Tool grants now match the charters.** Seats told to compute get the tools to compute (D2), and
+every computed figure carries its script and inputs and is re-executed by a context that did not
+produce it before it is used (D2a). `technical-writer` trades `Bash` for `Edit`, matching the roster.
+
+`[4k]` in the build verifier is extended to catch the inverse of what it caught before: a body that
+says run / script / compute programmatically / write the file / `sim/` while the grant lacks the
+tool it needs, an unused `Write` or `Edit`, and a `Bash` grant with no re-execution clause.
+
+The `change-record-required` workflow, CODEOWNERS and PR templates, and the Tier-3 protection hook
+are now BUILT from the golden source and byte-checked against what ships, instead of being
+hand-maintained in the repository.
+
+**The verdict block's optional fields now say when to omit them.** Two fields were specified so that a truthful answer
+could not validate, and the live `Stop` hook sent those blocks back:
+
+- **`reason`** was shown in every gate's inline template, so gates emitted it blank on verdicts that
+  do not carry it. It is now absent from the template, and the rule is stated under it: present only
+  on `COULD NOT ASSESS`, omit the key entirely otherwise, never blank.
+- **`standards[].verified`** is a required `YYYY-MM-DD` checked at the issuing body, so a standard a
+  gate could not reach had no valid date to pair with `access: "not reached"`. Gates are now told
+  to cite the secondary source they did reach with the date they checked it, or to leave the
+  designation out of the array and carry `["none: practice applied: <x>"]`, or — where the verdict
+  truly rests on a text they could not read — to return `COULD NOT ASSESS` with a `reason`.
+
+Neither the schema nor the hook changed; the instructions the gates read did.
+
+Validated against `claude-opus-4-8` as of 2026-09-02.
+
+
 ## 2026-08-13 — Renamed & consolidated
 - **Plugin id:** `blackraptor-dev-team` → **`blackraptor-engineering`**. Dependency `blackraptor-bridge` → **`blackraptor-core`**.
 - **Repo:** moved from `BlackRaptorAI/BlackRaptor_Agents` (`development/`) into the consolidated **`BlackRaptorAI/blackraptor`** (`engineering/`). Product line: **BlackRaptor Workforce**. Layout normalized (skills at `./skills/`, commands at `./commands/`).

@@ -6,8 +6,7 @@ description: >-
   verified, before delivery. Load for any substantive work product (code,
   analysis, model, legal draft, ops/strategy plan). Triggers: "before I
   deliver", "final quality pass", "excellence pass", any high-stakes
-  deliverable. Especially valuable for lower-tier (e.g. sonnet) agents, whose
-  observed gap concentrates in exactly these checks.
+  deliverable. Written to be applied by every tier, including sonnet.
 ---
 
 # The Excellence Pass
@@ -59,7 +58,7 @@ the full pass. Do not turn trivial tasks into checklist theater.
    (In testing, the most decision-relevant insights came from this step — e.g.
    the "cash-rich" option having *less* cash by month 7.)
 
-## Domain-specific "observed gaps" (apply the ones that fit the task)
+## Domain-specific checks (apply the ones that fit the task)
 
 - **Code** — enforce the input contract strictly (reject look-alikes, guard
   out-of-range, raise clear errors, don't let a lenient stdlib widen your API);
@@ -89,17 +88,15 @@ the full pass. Do not turn trivial tasks into checklist theater.
 
 ## Model-tier note (how hard to enforce, per tier)
 
-Set this to your own roster. The pattern that held in testing:
+Set this to your own roster. How hard to enforce, by tier:
 
 - **Top tier (your strongest model — e.g. the orchestration/architecture and
-  deep-judgment/gate seats):** these behaviors are largely default. The skill
-  is a checklist backstop, not a script; the residual gap is narrow
-  completeness (a missing range guard; a sensitivity noted but not *computed*),
-  so keep the latitude but still run checks 1, 2, and 3.
-- **Everyday build tier (e.g. sonnet):** strong on core correctness; the
-  observed gap is concentrated in EXACTLY checks 1 (hidden contract), 2
-  (independent cross-check), and 5 (quantified counterfactual). Run the pass as
-  an explicit, confirmable checklist — and before delivering, list three ways
+  deep-judgment/gate seats):** treat the skill as a checklist backstop rather
+  than a script — keep the latitude, but still run checks 1, 2, and 3.
+- **Everyday build tier (e.g. sonnet):** run the pass as an explicit,
+  confirmable checklist, giving particular weight to checks 1 (hidden
+  contract), 2 (independent cross-check), and 5 (quantified counterfactual)
+  — and before delivering, list three ways
   the output could be wrong and check each.
 
 If your deployment has access to a stronger frontier model than `opus`, the

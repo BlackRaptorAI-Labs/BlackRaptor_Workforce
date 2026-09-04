@@ -1,3 +1,64 @@
+## Corrections — 3 Sep 2026
+
+The pre-release claims gate for 2.0.0 found published statements this pack could not
+substantiate. They are retracted or qualified here rather than edited out of the entries below,
+which stay as written.
+
+- **Retracted: the model-gap study.** Several surfaces cited "a small-N, non-blind model-gap study
+  recorded in the maintainers' test-battery dossier" and reported findings from it — that Sonnet's
+  gaps concentrated in the Excellence Pass checks, that Opus was at near-parity, that a
+  4-task x 3-model side-by-side test established which behaviours separate the tiers. **No such
+  record exists** in the dossier, in `_eval/`, or anywhere else. Every statement resting on it is
+  removed across the operating standard, the `excellence-pass` skill, the per-tier notes and the
+  shared output-quality lines carried by individual agents. The five Excellence Pass checks
+  themselves are unchanged and stand on being cheap, self-evidently good practice — which is the
+  only claim now made for them.
+- **Corrected: the release validation stamp.** Its basis line said the "agent-trigger eval sets"
+  were run for this release. They were not: T-A is deferred to Phase 3. The stamp now names only
+  what ran — T-C gate liveness on the 20-artifact seeded-defect corpus (n=3, before and after,
+  2026-09-02) and the agent-behaviour eval set (19 sets / 53 scenarios, 2026-09-03), both on
+  `claude-opus-4-8` under Claude Code 2.1.258 — and says plainly that T-A was not run.
+- **Qualified: "Marketing context is now update-proof."** The mechanism is real — your filled
+  context lives at the project root and the pack ships only the template, so an update cannot
+  overwrite it. "-proof" claims more than the mechanism delivers; read it as "an update does not
+  overwrite your filled context".
+- **Corrected: the specialist list in the pack manifest.** It named 14 domains (15 in the
+  marketplace entry) while the pack ships **11** agents — market research, competitive intel and
+  pricing moved to Core at the rename. The list now matches what ships.
+
+## 2.0.0 — 2026-09-02 — The claims register becomes data
+
+**BREAKING: the gate verdict block changed shape** (see the Core changelog for the full v3 diff).
+
+- **The retired-claims list moved out of the `claims-gate` body and into the Marketing Intelligence
+  Core, §4b**, with a real schema: the claim, why it was retired, the proof standard that would be
+  needed to revive it, the date, and an owner. The gate reads the register and quotes the row in its
+  verdict instead of carrying a hardcoded list. §4a gains the same shape for cleared claims.
+- If the Core file is unreachable, the gate returns `COULD NOT ASSESS` for the retired-claims check
+  rather than guessing the list.
+- `copywriter`, `creative-director` and `video-creative-producer` previously pointed at
+  `content-craft` references through the Marketing plugin root, where they could never resolve —
+  `content-craft` ships in Core. They now name the Core skill.
+- `social-community-manager`'s human-approval rule no longer cites a Core section number that does
+  not exist; it states the rule.
+
+**The verdict block's optional fields now say when to omit them.** Two fields were specified so that a truthful answer
+could not validate, and the live `Stop` hook sent those blocks back:
+
+- **`reason`** was shown in every gate's inline template, so gates emitted it blank on verdicts that
+  do not carry it. It is now absent from the template, and the rule is stated under it: present only
+  on `COULD NOT ASSESS`, omit the key entirely otherwise, never blank.
+- **`standards[].verified`** is a required `YYYY-MM-DD` checked at the issuing body, so a standard a
+  gate could not reach had no valid date to pair with `access: "not reached"`. Gates are now told
+  to cite the secondary source they did reach with the date they checked it, or to leave the
+  designation out of the array and carry `["none: practice applied: <x>"]`, or — where the verdict
+  truly rests on a text they could not read — to return `COULD NOT ASSESS` with a `reason`.
+
+Neither the schema nor the hook changed; the instructions the gates read did.
+
+Validated against `claude-opus-4-8` as of 2026-09-02.
+
+
 ## 2026-08-13 — Renamed & consolidated
 - **Plugin id:** `blackraptor-marketing` (unchanged). Dependency `blackraptor-bridge` → **`blackraptor-core`**.
 - **Repo:** moved from `BlackRaptorAI/BlackRaptor_Agents_Marketing` into the consolidated **`BlackRaptorAI/blackraptor`** (`marketing/`). Product line: **BlackRaptor Workforce**.
@@ -48,7 +109,7 @@ First public release.
   (claude plugin validate: 0 errors) and uplifted to the BlackRaptor operating
   standard:
   - **Team banner** on every charter (Marketing Team, golden-source pointer).
-  - **Who you are** — 20+-year world-class practitioner identity per role
+  - **Who you are** — 20+-year senior practitioner identity per role
     (voice, not evidence).
   - **Customer-experience north star** — binding, shared with every BlackRaptor
     team (need/want → ease → works-as-expected → trust, loyalty,

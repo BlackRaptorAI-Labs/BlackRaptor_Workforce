@@ -57,7 +57,41 @@ def _type_ok(val, jtype):
         return isinstance(val, list)
     if jtype == "object":
         return isinstance(val, dict)
+    if jtype == "integer":
+        # bool is a subclass of int in Python; `true` is not a confidence score.
+        return isinstance(val, int) and not isinstance(val, bool)
     return True
+
+
+def _standards_item_errs(item, idx, i):
+    """schema v3 `standards[]`: either the literal no-standard string, or a full citation.
+
+    A designation with no access and no verification date is a memory, not a citation — the whole
+    point of the field. Both branches are checked here because the hand-rolled validator does not
+    implement oneOf generically."""
+    if isinstance(item, str):
+        if re.match(r"^none: practice applied: \S", item):
+            return []
+        return [f"block {idx}: standards[{i}] string must read "
+                f"'none: practice applied: <the practice>', got {item!r}"]
+    if not isinstance(item, dict):
+        return [f"block {idx}: standards[{i}] must be a citation object or the "
+                f"'none: practice applied: ...' string"]
+    errs = []
+    required = ("designation", "edition", "clause", "access", "verified")
+    for k in required:
+        if k not in item:
+            errs.append(f"block {idx}: standards[{i}] missing '{k}' "
+                        f"(a designation without {k} is not a citation)")
+        elif not isinstance(item[k], str) or not item[k].strip():
+            errs.append(f"block {idx}: standards[{i}].{k} must be a non-blank string")
+    for k in item:
+        if k not in required:
+            errs.append(f"block {idx}: standards[{i}] unknown key '{k}'")
+    v = item.get("verified")
+    if isinstance(v, str) and v.strip() and not re.match(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$", v):
+        errs.append(f"block {idx}: standards[{i}].verified must be YYYY-MM-DD, got {v!r}")
+    return errs
 
 
 def validate_block(obj, idx, schema):
@@ -99,6 +133,15 @@ def validate_block(obj, idx, schema):
                 for i in v:
                     if isinstance(i, str) and re.search(ipat, i) is None:
                         errs.append(f"block {idx}: every {k}[] item must match /{ipat}/ (e.g. non-blank — a whitespace-only string is not evidence)")
+        if spec.get("type") == "integer":
+            lo, hi = spec.get("minimum"), spec.get("maximum")
+            if lo is not None and v < lo:
+                errs.append(f"block {idx}: {k} must be >= {lo}, got {v}")
+            if hi is not None and v > hi:
+                errs.append(f"block {idx}: {k} must be <= {hi}, got {v}")
+        if k == "standards" and isinstance(v, list):
+            for i, item in enumerate(v):
+                errs.extend(_standards_item_errs(item, idx, i))
         if spec.get("type") == "string":
             ml = spec.get("minLength")
             if ml is not None and len(v) < ml:
@@ -113,10 +156,12 @@ def validate_block(obj, idx, schema):
         c = obj.get("conditions")
         if not isinstance(c, list) or len(c) == 0:
             errs.append(f"block {idx}: verdict {v} requires a non-empty conditions[] (array)")
-    if v == "N/A" and not obj.get("reason"):
-        errs.append(f"block {idx}: verdict N/A requires a one-line 'reason'")
-    if v == "COULD NOT ASSESS" and not obj.get("reason"):
-        errs.append(f"block {idx}: verdict COULD NOT ASSESS requires a one-line 'reason' (what blocked the assessment)")
+    if v in ("COULD_NOT_ASSESS", "COULD NOT ASSESS") and not obj.get("reason"):
+        errs.append(f"block {idx}: verdict {v} requires a one-line 'reason' "
+                    f"(what blocked the assessment, and what would unblock it)")
+    if v == "N/A":
+        errs.append(f"block {idx}: 'N/A' is not a verdict in schema v3. A gate that does not apply "
+                    f"emits no verdict block; the Change Record row carries the N/A and its reason.")
 
     # anti-rubber-stamp: reject the unmodified CR-template placeholder strings
     for field in ("artifact", "falsifier"):
@@ -124,18 +169,62 @@ def validate_block(obj, idx, schema):
         if isinstance(val, str) and val.strip() in TEMPLATE_PLACEHOLDERS:
             errs.append(f"block {idx}: {field} is an unfilled template placeholder ('{val}')")
     ev = obj.get("evidence")
-    if isinstance(ev, list):
-        for e in ev:
-            if isinstance(e, str) and e.strip() in TEMPLATE_PLACEHOLDERS:
-                errs.append(f"block {idx}: evidence item is an unfilled template placeholder ('{e}')")
+    if isinstance(ev, str) and ev.strip() in TEMPLATE_PLACEHOLDERS:
+        errs.append(f"block {idx}: evidence is an unfilled template placeholder ('{ev}')")
+    elif isinstance(ev, list):
+        # schema v2 shipped evidence as an array. Name the migration rather than failing on a
+        # bare type error, so a stale gate body gets a fixable message.
+        errs.append(f"block {idx}: evidence must be a string in schema v3 (it was an array in v2) "
+                    f"— join the citations into one line")
     return errs
+
+
+def self_test():
+    """Run the fixture set. A validator nobody tests is a claim, not a control.
+
+    fixtures/EXPECTATIONS.json records the intended outcome per fixture; every valid fixture must
+    pass and every invalid one must fail. A silently-loosened rule shows up here as a fixture that
+    stopped failing."""
+    fx = SCHEMA_PATH.parent / "fixtures"
+    exp_path = fx / "EXPECTATIONS.json"
+    if not exp_path.exists():
+        print("FATAL: no fixtures/EXPECTATIONS.json", file=sys.stderr)
+        return 2
+    expectations = json.loads(exp_path.read_text())
+    schema = load_schema()
+    bad = 0
+    for name in sorted(expectations):
+        want = expectations[name]
+        text = (fx / name).read_text()
+        errs = []
+        for i, raw in enumerate(FENCE.findall(text), 1):
+            try:
+                obj = json.loads(raw)
+            except json.JSONDecodeError as e:
+                errs.append(f"block {i}: invalid JSON ({e})")
+                continue
+            errs.extend(validate_block(obj, i, schema))
+        got = "FAIL" if errs else "PASS"
+        ok = (got == want)
+        bad += 0 if ok else 1
+        print(f"  {'ok  ' if ok else 'BAD '} {name:<42} want {want:<4} got {got}")
+        if not ok:
+            for e in errs:
+                print(f"         {e}")
+        elif want == "FAIL":
+            print(f"         caught: {errs[0]}")
+    print(f"\n  {len(expectations) - bad}/{len(expectations)} fixtures behaved as expected")
+    return 1 if bad else 0
 
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     flags = {a for a in sys.argv[1:] if a.startswith("--")}
+    if "--self-test" in flags:
+        return self_test()
     if not args:
-        print("usage: validate_verdict.py <file.md> [--require] [--json]", file=sys.stderr)
+        print("usage: validate_verdict.py <file.md> [--require] [--json] | --self-test",
+              file=sys.stderr)
         return 2
     schema = load_schema()
     text = Path(args[0]).read_text()

@@ -22,9 +22,10 @@ fundraising call. Turn adversarial scrutiny UP on one-way (hard-to-reverse) door
 First **ground the council** (resolution order): read `BUSINESS-CONTEXT.md` at the project
 root the user is working in; else an explicit path they name. If it is **missing or still the
 blank template** (first line `<!-- TEMPLATE — not onboarded -->`), invoke the shared
-`context-onboarding` skill first — it runs the standardized interview against the fields in
-`references/business-context.md` and writes the approved, dated `BUSINESS-CONTEXT.md` to the
-project root (never into the pack). Never invent context.
+`context-onboarding` skill first — it runs the standardized interview against the field list it
+bundles at `references/business-context.md` (in THAT skill's directory, not this one) and writes the
+approved, dated `BUSINESS-CONTEXT.md` to the project root (never into the pack). Never invent
+context.
 Then **frame the decision as one crisp question** and label it one-way or two-way.
 
 ## 2. Seat selection rule

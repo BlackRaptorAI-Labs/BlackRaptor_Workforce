@@ -1,29 +1,94 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Gate verdict block",
-  "x-schema-version": "2.0",
-  "x-version-note": "MAJOR bump 2026-08-07 (v1->v2): added the 'COULD NOT ASSESS' verdict value (blocking, reason-required) per AGENT-SPEC-v3 §7. The verdict schema is a declared interface (AGENT-SPEC §12.4); this is a coordinated major version across all plugins.",
-  "description": "R11: the single machine-parseable verdict every gate agent emits, fenced as a ```verdict code block, alongside its human-readable prose. Replaces the five incompatible vocabularies (APPROVE/CONDITIONS/BLOCK, READY/ACTIONS/BLOCK, PASS/NEEDS WORK, APPROVE/CHANGES, PASS/CONCERNS/FAIL) with one. The orchestrator's validator (validate_verdict.py) and the change-record-required CI check both parse it.",
+  "x-schema-version": "3.0",
+  "x-version-note": "MAJOR bump 2026-09-02 (v2->v3), AGENT-SPEC-v3 §7 / BUILD-ORDER-v4 D1. THREE BREAKING CHANGES. (1) `confidence` is an INTEGER 0-10, replacing the high|medium|low enum, so a Change Record and the completion auditor can set a threshold on it — you cannot write `confidence >= 7` against a word. (2) `standards[]` is new and REQUIRED: a gate that invokes a designation now records how it reached it and when it verified it, or states plainly that no standard governs the review. Spec §7 required a Standards line for a year and the schema had no field for it, so it was never enforced. (3) `N/A` is removed from the verdict vocabulary: a gate that does not apply emits no verdict block, and the Change Record row carries the N/A. `evidence` becomes a single string. The verdict schema is a declared interface (AGENT-SPEC §12.4); this is a coordinated major version across all five plugins, shipping as 2.0.0.",
+  "description": "The single machine-parseable verdict every gate agent emits, fenced as a ```verdict code block alongside its human-readable prose. validate_verdict.py enforces it, the change-record-required CI check shells out to that validator, and the core Stop hook runs it over every gate result in a live session.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["gate", "agent", "artifact", "verdict", "evidence", "confidence", "falsifier"],
+  "required": ["gate", "agent", "artifact", "verdict", "evidence", "confidence", "falsifier", "standards"],
   "properties": {
-    "gate": {"type": "string", "description": "the gate this verdict fills, e.g. 'security', 'privacy', 'tests', 'review'"},
-    "agent": {"type": "string", "description": "the gate agent that produced it, e.g. 'security-architect'"},
-    "artifact": {"type": "string", "description": "what was reviewed — PR ref and/or file/diff range"},
-    "verdict": {"enum": ["PASS", "CONCERNS", "FAIL", "N/A", "COULD NOT ASSESS"], "description": "PASS = accept-eligible; CONCERNS = accept with the listed conditions met; FAIL = rework, or a §5 human risk-acceptance to overrule; N/A = gate does not apply (reason required); COULD NOT ASSESS = the gate ran but could not complete its assessment (timeout, context exhausted on a large artifact, or a required tool missing) — reason required; completion-auditor treats it as BLOCKING, never neutral"},
-    "evidence": {"type": "array", "items": {"type": "string", "pattern": "\\S"}, "minItems": 1, "description": "each item cites file:line or a concrete basis — no-evidence items are dropped; each must be non-blank (\\S), so a whitespace-only string does not pass as evidence"},
-    "confidence": {"enum": ["high", "medium", "low"]},
-    "falsifier": {"type": "string", "minLength": 1, "pattern": "\\S", "description": "the single fact or test that, if true, would flip this verdict — must be non-blank (\\S), not just spaces"},
-    "conditions": {"type": "array", "items": {"type": "string"}, "description": "specific, testable conditions to clear — REQUIRED (non-empty) when verdict is CONCERNS or FAIL"},
-    "reason": {"type": "string", "description": "one line of why — REQUIRED when verdict is N/A (an unexplained N/A is a rubber stamp) or COULD NOT ASSESS (what blocked the assessment)"}
+    "gate": {
+      "type": "string",
+      "pattern": "\\S",
+      "description": "the gate role this verdict fills, e.g. 'security', 'privacy', 'schema', 'quality', 'review'"
+    },
+    "agent": {
+      "type": "string",
+      "pattern": "\\S",
+      "description": "the gate agent that produced it, e.g. 'security-architect'"
+    },
+    "artifact": {
+      "type": "string",
+      "pattern": "\\S",
+      "description": "what was reviewed — PR ref and/or file/diff range"
+    },
+    "verdict": {
+      "enum": ["PASS", "CONCERNS", "FAIL", "COULD_NOT_ASSESS", "COULD NOT ASSESS"],
+      "description": "PASS = accept-eligible. CONCERNS = accept once the listed conditions are met. FAIL = rework, or a documented human risk-acceptance to overrule. COULD_NOT_ASSESS = the gate ran but could not complete its assessment (timeout, context exhausted on a large artifact, a required input absent) — BLOCKING, never neutral: without it a review that could not be performed is indistinguishable from a pass. The canonical machine form is COULD_NOT_ASSESS; the spaced form is accepted because that is how it reads in prose and in every gate body, and a live Stop hook must never block a gate over a space. N/A is NOT a verdict: a gate that does not apply emits no block at all, and the Change Record row carries the N/A with its reason."
+    },
+    "confidence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "how strongly the evidence supports this verdict, 0-10. An integer so thresholds are expressible. Not a probability, and not a measure of how thorough the review felt."
+    },
+    "falsifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S",
+      "description": "the single fact or test that, if true, would flip this verdict. Non-blank. A verdict nobody can refute is an opinion."
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S",
+      "description": "the concrete basis — file:line, the quoted text, or the measurement. Non-blank."
+    },
+    "standards": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Every standard, statute or specification this verdict rests on, or a single literal 'none: practice applied: <x>' when no external standard governs the review. A designation with no access and no verification date is a memory, not a citation.",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "pattern": "^none: practice applied: \\S"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["designation", "edition", "clause", "access", "verified"],
+            "properties": {
+              "designation": {"type": "string", "pattern": "\\S", "description": "e.g. 'ISO/IEC 27001'"},
+              "edition": {"type": "string", "pattern": "\\S", "description": "the edition or year actually consulted"},
+              "clause": {"type": "string", "pattern": "\\S", "description": "the clause, control or section relied on"},
+              "access": {"type": "string", "pattern": "\\S", "description": "how you reached the text: 'full text', 'abstract only', 'secondary source: <which>', 'not reached'"},
+              "verified": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$", "description": "YYYY-MM-DD the designation and clause were checked at the issuing body"}
+            }
+          }
+        ]
+      }
+    },
+    "conditions": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "\\S"},
+      "description": "specific, testable conditions to clear — REQUIRED and non-empty when verdict is CONCERNS or FAIL. 'Tighten this up' is not a condition."
+    },
+    "reason": {
+      "type": "string",
+      "pattern": "\\S",
+      "description": "one line of why — REQUIRED when the verdict is COULD_NOT_ASSESS (what blocked the assessment, and what would unblock it)"
+    }
   },
   "allOf": [
-    {"if": {"properties": {"verdict": {"enum": ["CONCERNS", "FAIL"]}}},
-     "then": {"required": ["conditions"], "properties": {"conditions": {"minItems": 1}}}},
-    {"if": {"properties": {"verdict": {"const": "N/A"}}},
-     "then": {"required": ["reason"]}},
-    {"if": {"properties": {"verdict": {"const": "COULD NOT ASSESS"}}},
-     "then": {"required": ["reason"]}}
+    {
+      "if": {"properties": {"verdict": {"enum": ["CONCERNS", "FAIL"]}}},
+      "then": {"required": ["conditions"], "properties": {"conditions": {"minItems": 1}}}
+    },
+    {
+      "if": {"properties": {"verdict": {"enum": ["COULD_NOT_ASSESS", "COULD NOT ASSESS"]}}},
+      "then": {"required": ["reason"]}
+    }
   ]
 }

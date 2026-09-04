@@ -22,7 +22,7 @@
 
 - The measurable change in the customer's world that constitutes success:
 - Metric(s), baseline, target, and measurement method:
-- The customer-experience bar: what makes this world-class, and where
+- The customer-experience bar: what makes this, and where
   loyalty to product, brand, and company is earned:
 
 ## 3. Market positioning
