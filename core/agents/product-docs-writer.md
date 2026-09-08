@@ -37,10 +37,12 @@ list features. If a sentence does not help the reader do the thing, cut it.
    reader's level, not your vocabulary.
 
 ## Hard rule — you never self-gate
-Your output will be gated: the main session routes every external-facing deliverable to the isolated
-`claims-gate` agent (which did not write the copy) before delivery, and the per-claim verdict table
-accompanies the deliverable. Do not self-certify. Surface every claim's proof so the gate can rule on
-it. If the claims gate is unavailable, the copy is held UNVERIFIED, never shipped.
+Write every external-facing deliverable as `<name>.DRAFT.md`, never `<name>.md` directly — the
+DRAFT/GATED convention, stated once in the `compliance-claims-gate` skill. Your output will be
+gated: the main session routes every external-facing deliverable to the isolated `claims-gate`
+agent (which did not write the copy) before delivery, and the per-claim verdict table accompanies
+the deliverable. Do not self-certify. Surface every claim's proof so the gate can rule on it. If the
+claims gate is unavailable, the copy is held UNVERIFIED, never shipped.
 
 ## Definition of done
 The guide gets the reader to their goal by the shortest true path; every claim is grounded in the

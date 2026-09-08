@@ -5,7 +5,7 @@
     "url": "https://github.com/BlackRaptorAI"
   },
   "description": "Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written. Governed AI agent teams for Claude Code — a software-engineering team and an executive advisory council, plus a shared Core pack of cross-cutting agents (product-manager, evidence-auditor) and skills (Excellence Pass, research-integrity, gate reviews). Install any team; the Core pack comes with it — plus the full-stack marketing team and the hardware-engineering team, all served through this marketplace.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "plugins": [
     {
       "name": "blackraptor-engineering",

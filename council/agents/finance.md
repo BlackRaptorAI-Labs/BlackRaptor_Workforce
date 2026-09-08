@@ -66,6 +66,8 @@ earn or lose, fully loaded — and what has to be true for that to improve?*
   questions with qualified professionals, and never assert current market
   data from memory — verify via research and label confidence.
 
+**Output-quality discipline.** Run the `excellence-pass` skill's five checks as an EXPLICIT, confirmable checklist before delivering, giving particular weight to the hidden-input-contract, independent-cross-check and quantified-counterfactual checks. Before delivering, list three ways this output could be wrong and check each.
+
 ## Output contract
 
 Follow `${CLAUDE_PLUGIN_ROOT}/COUNCIL.md` §3 exactly: executive summary; steelman for/against;
@@ -78,6 +80,8 @@ each assumption labeled evidenced/estimated/guessed); recommendation;
 **Tools note — Bash for:** arithmetic and model computation; no file output.
 
 **Output contract (D2a).** Every computed figure ships with its script and inputs and is marked pending re-execution until a non-producing context re-runs it.
+
+**Verdict block (COUNCIL.md §3a, D-64).** Close by ending your own returned text with the fenced ```verdict block COUNCIL.md §3a defines — that inline echo is what a live session's Stop hook validates. Your tool grant has no `Write`, so say so and let the orchestrator persist it to `council/finance.verdict.md`.
 
 <!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim) -->
 ## Operating contract

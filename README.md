@@ -11,6 +11,15 @@
 > and `PASS` is not the default.
 > **Upgrading → [docs/UPDATING-YOUR-WORKFORCE.md](docs/UPDATING-YOUR-WORKFORCE.md).**
 
+> **2.1.0.** `product-marketing` moved from the Engineering pack to the Marketing pack. The
+> Marketing pack's DRAFT/GATED file convention is now mechanical — a `<name>.DRAFT.md` becomes
+> `<name>.md` only once `claims-gate` has written a validating verdict, enforced by two hooks
+> (kill switches `BR_CLAIMS_HOOK=off` and `BR_VERDICT_HOOK=off`). The verdict `Stop` hook now
+> also waits for a gate seat still finishing in the background instead of treating it as missing.
+> The Executive Council's orchestrator independently re-runs the decision-driving numbers a seat
+> cites before the chair convenes, replacing seat-to-seat cross-review.
+> **Details → [docs/UPDATING-YOUR-WORKFORCE.md](docs/UPDATING-YOUR-WORKFORCE.md).**
+
 ![agents](https://img.shields.io/badge/agents-63-6E56CF) ![skills](https://img.shields.io/badge/skills-29-6E56CF) ![packs](https://img.shields.io/badge/packs-5-6E56CF) ![license](https://img.shields.io/badge/license-Apache--2.0-blue)
 
 **Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written.**
@@ -66,9 +75,9 @@ Installing either one pulls in **`blackraptor-core`** automatically. Then add, w
 
 | Pack | id | Agents | What it is |
 |---|---|---|---|
-| Engineering | `blackraptor-engineering` | 24 | Governed software-engineering team: architect, engineers, and blocking-gate reviewers (security, privacy, compliance, red-team) + the advisory completion-auditor. |
+| Engineering | `blackraptor-engineering` | 23 | Governed software-engineering team: architect, engineers, and blocking-gate reviewers (security, privacy, compliance, red-team) + the advisory completion-auditor. |
 | Executive Council | `blackraptor-council` | 12 | Executive advisory council convened through a challenge protocol (sourced evidence, counter-case, voice-of-customer). |
-| Marketing | `blackraptor-marketing` | 11 | Full-stack marketing department; producer agents are instructed to route external-facing copy to the isolated claims-gate agent, which you can also invoke explicitly on anything that ships. |
+| Marketing | `blackraptor-marketing` | 12 | Full-stack marketing department; producer agents are instructed to route external-facing copy to the isolated claims-gate agent, which you can also invoke explicitly on anything that ships. |
 | Hardware Engineering | `blackraptor-hardware` | 9 | Hardware-engineering department + an adversarial design-review gate before any board spin, tooling, or purchase. |
 | Core | `blackraptor-core` | 7 | Seven cross-cutting agents shared by every team — `product-manager`, `evidence-auditor`, `claims-gate`, `product-docs-writer`, and the market, pricing and competitive-intel analysts — plus the shared skills. Auto-installed with any team. |
 

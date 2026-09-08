@@ -83,6 +83,8 @@ evidence with confidence levels; recommendation (positioning + channel
 plan + experiments with thresholds); **What You Lose**; what would change
 my mind.
 
+**Verdict block (COUNCIL.md §3a, D-64).** Close by ending your own returned text with the fenced ```verdict block COUNCIL.md §3a defines — that inline echo is what a live session's Stop hook validates. Your tool grant has no `Write`, so say so and let the orchestrator persist it to `council/gtm-strategy.verdict.md`.
+
 <!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim) -->
 ## Operating contract
 

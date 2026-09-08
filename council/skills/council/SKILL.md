@@ -63,22 +63,39 @@ the CEO; if asked for one, say so and convene `chair` instead.
 in sequence; do not let one seat see another's draft. Each gets the framed question +
 the grounded context, nothing more.
 
+**Never set `run_in_background` on a seat dispatch (D-64, GO-BLOCK-P2-BUILD-v1-AMENDMENT-7).**
+Multiple simultaneous tool calls in the one message already give concurrency; backgrounding a seat
+means its real output arrives only as a task notification, never as this session's own tool result
+for that dispatch — the seat's inline verdict echo (COUNCIL.md §3a) then never reaches a live
+session's Stop hook, which reads this session's transcript only. Wait for every seat's synchronous
+result before moving to §5.
+
 **`chair` is the exception, and it goes last.** It reads the domain seats' verdicts, so it
 cannot run in the concurrent wave — dispatch it as a **second, separate call** once every
 domain seat has reported (see §5). The chair never dispatches anything itself; dispatch
-lives here in the main session (P1/P2).
+lives here in the main session (P1/P2). **The chair is dispatched only after every seat's
+result has arrived (D-65, GO-BLOCK-P2-BUILD-v1-AMENDMENT-8 §1).** Do not end the turn while
+any seat task is still running; wait for every seat's result (a blocking wait on each task),
+then dispatch the chair.
 
 ## 4. Context each specialist receives (and must NOT receive)
 
 Each seat receives: the one-question frame, the one-way/two-way label, and the grounded
 business context. Each seat must **NOT** receive any other seat's draft, verdict, or
-identity — the independence is the evidence (P5). Anonymized cross-review, if run, is a
-second dispatch that passes drafts stripped of authorship.
+identity — the independence is the evidence (P5). Seat-to-seat cross-review is a candidate
+feature (D4, 4 Sep 2026); the orchestrator review step is the control in force.
 
 ## 5. Synthesis rule
 
-**Route the close through `chair`.** Once every domain seat has reported, dispatch `chair`
-with all their verdicts. It forces the disagreement onto the table, synthesizes
+**The orchestrator step (D4), before the chair wave.** Once every domain seat has reported, the
+main session — not `chair`, not a subagent — reads every seat's `council/<slug>.verdict.md` file
+(§3a), re-runs each numbers seat's model per Decision 2a (a context that did not produce the
+figure re-executes the same script on the same stated inputs) and records match or mismatch
+beside it, then passes `chair` the verdict files **verbatim**. This is the review the deleted
+seat-to-seat cross-review mandate used to provide.
+
+**Route the close through `chair`.** Dispatch `chair`
+with all their verdicts (and the orchestrator's match/mismatch record). It forces the disagreement onto the table, synthesizes
 without averaging, and returns **ONE decision** for the user with each branch's trade-off
 named. The chair holds no domain vote and never resolves a seat's call for it.
 

@@ -57,7 +57,8 @@ engagements.
    source releases, conference talks, marketing claims) against filing
    deadlines and bar dates per jurisdiction; maintain the disclosure-freeze
    list for pending filings and flag any planned publication that would
-   surrender rights. Coordinate with `product-marketing` (claims),
+   surrender rights. Coordinate with the Marketing pack's `product-marketing` agent on claims
+   (if that pack is not installed, the main session drafts claims copy and the user gates it),
    `technical-writer` (public docs), and `legal-docs-writer` (public
    policies) via working sessions.
 6. **Keep the ledger.** Maintain the IP register: candidates, verdicts,

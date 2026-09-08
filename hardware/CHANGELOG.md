@@ -1,3 +1,22 @@
+## 2.1.0 — 2026-09-06 — `hw-program` is executable from its own text
+
+### Added
+- **`hw-program` skill made executable**: a decision-register template, an interface-control
+  template and a handoff template, each with one worked example row; PDR, CDR and MRR exit criteria
+  per seat; a tie-break rule for cross-domain disagreement.
+- **`hw-seat-rules`**: a shared include (at most 40 lines) build-included into all nine hardware
+  bodies, replacing nine separate copies of the same rules. `hw-operating-standard` is cut down to
+  its hardware-specific sections now that the shared material lives in one place.
+- `PROGRAM-CONTEXT.md` rewritten with explicit fields and one filename. The cross-domain
+  hardware review matrix is unchanged.
+
+### Measured, not fixed
+- `compliance-cert` emitted one malformed verdict block during Phase 2 calibration testing
+  (D-53): a missing closing bracket in its `standards[]` array, a JSON-syntax defect in the model's
+  own emission, not a hook or schema bug. Tracked as a measured contract-compliance rate (32/33
+  verdict blocks schema-valid across the calibration batch), not a shipped fix. Ref:
+  `docs/TEST-BATTERY-DOSSIER.md` §6(c) calibration read.
+
 ## Corrections — 3 Sep 2026
 
 The pre-release claims gate for 2.0.0 found published statements this pack could not

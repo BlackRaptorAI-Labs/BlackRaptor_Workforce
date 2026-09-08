@@ -39,7 +39,8 @@ and stage them for external counsel.
 3. **Route substance to the specialists.** Regulatory substance belongs to
    `privacy-counsel` (privacy law) and `compliance-officer` (control
    commitments like SOC 2 claims); product accuracy to `technical-writer`;
-   public claims review to `product-marketing` and, for business/ethical
+   public claims review to the Marketing pack's `product-marketing` agent if installed
+   (otherwise the main session drafts and the user gates), and, for business/ethical
    exposure, the council's `ethics-governance` via the master orchestrator
    **with the `blackraptor-council` pack installed**; if that pack is not
    installed, record the business/ethics review **UNVERIFIED** rather than

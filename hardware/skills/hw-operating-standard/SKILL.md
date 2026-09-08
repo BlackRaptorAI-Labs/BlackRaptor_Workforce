@@ -7,24 +7,11 @@ description: The always-on operating standard for the BlackRaptor HW Engineering
 
 Always-on instructions for every session and agent in this project. Derived from BlackRaptor's internal Agent Operating Standard, adapted for hardware and firmware engineering work. The full general standard is in `${CLAUDE_PLUGIN_ROOT}/docs/agent-operating-standard.md`.
 
-## Core operating loop (every task)
-
-1. **Orient:** restate the objective, the deliverable, and what "done" looks like. State assumptions instead of stalling; ask only when ambiguity would materially change the deliverable.
-2. **Plan:** for any task with 3+ steps, write the plan first and include a final verification step. Do the riskiest part early.
-3. **Research before asserting:** never state part specifications, register maps, pinouts, timing figures, pricing, or availability from memory — these MUST come from the current datasheet, errata sheet, or vendor documentation, checked at time of use. A remembered spec presented as fact is a critical failure in hardware work; a wrong number here costs a board spin.
-4. **Verify before delivering:** run the code, run the numbers programmatically, cross-check the datasheet reference. Re-read the request line by line and confirm every part was addressed.
-5. **Revise before shipping:** one full draft → adversarial self-critique → revise cycle minimum for any substantive deliverable.
-6. **Calibration:** flag uncertainty explicitly ("I believe this is approximately…", "verify against the datasheet"). Never invent part numbers, standards clauses, datasheet values, or citations. Flag anything that may have changed since knowledge cutoff (part status, lifecycle, pricing, standards revisions).
-
-## The Excellence Pass (mandatory final step before delivery)
-
-Empirically, these five behaviors separate top-tier output from merely-correct output. Run each as a named, confirmable step:
-
-1. **Enforce the hidden contract.** Enumerate the requirements nobody stated: units and unit consistency, tolerances, voltage domains and logic-level compatibility, timing margins, temperature range, input ranges, connector pinout conventions, exact file/format contracts. Ask: "what technically 'works' but violates the spirit of the spec?"
-2. **Verify by an independent method.** Cross-check via a different route than the one that produced the answer: hand calculation vs. simulation, a brute-force reference implementation vs. the optimized one, worst-case analysis vs. typical-value analysis, a second source for any load-bearing claim.
-3. **Add the second-order layer.** What would a senior hardware engineer add unprompted? Worst-case and corner analysis (not just typicals), derating, thermal implications, EMC considerations, component lifecycle/second-source risk, the implication the numbers contain but don't state. Include what changes decisions; skip decoration.
-4. **Draft the interfaces, don't describe them.** Deliver everything the artifact depends on: the pinout table, the power-tree assumptions, the register configuration, the test procedure, the BOM lines. "You'll also need X" is an incomplete deliverable — draft X. Then check cross-references (net names, designators, units) for consistency.
-5. **Model the counterfactual.** For any design or component recommendation, quantify the alternatives over the relevant axis (cost, power, board area, lead time, risk) and find where the ranking flips. State the assumptions that would change the answer.
+**Cut to hardware-specific sections (the 2.1.0 orchestration change).** The generic core operating loop and the
+five-behavior Excellence Pass previously repeated here are the Core `core-contract` (build-included
+into every agent body) and the Core `excellence-pass` skill — every pack, including this one,
+depends on `blackraptor-core`, so both already reach every hardware seat without restating them
+here. What follows is what is actually specific to hardware and firmware work.
 
 ## Design philosophy (binding on every seat)
 
@@ -58,11 +45,6 @@ The team depends on the shared **`blackraptor-core`** plugin for the two checks 
 - **Opus agents** (architecture, design review, judgment-heavy tradeoffs): give latitude on approach, but the verification loop and Excellence Pass remain mandatory — under-verification is the cheapest failure to prevent and the most expensive to discover downstream.
 - **Sonnet agents** (well-scoped implementation, analysis, documentation): require every Excellence Pass item as an explicit, visibly-completed checklist step — naming each one is what makes it confirmable. Escalate to an Opus agent or the human when confidence is low, sources conflict, or the call is judgment-heavy.
 - **High-stakes deliverables** (anything that gates a board spin, a firmware release, or a purchase): producer/reviewer split — one agent produces, `hw-design-reviewer` (Opus) reviews adversarially, producer revises.
-
-## Honesty rules (non-negotiable, inherited from the founder's standard)
-
-Flag any statistic you are not fully confident in and recommend verification from a primary source. Never attribute quotes without certainty. Never fabricate sources, paper titles, standards numbers, or URLs — a stated gap beats a fabricated reference, every time.
-
 
 ## Where the rest lives
 

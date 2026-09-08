@@ -3,8 +3,12 @@
 
 <!-- Onboarding order (R14): the shared CORE business block is asked FIRST by context-onboarding and
 writes BUSINESS-CONTEXT.md; the hardware EXTENSION then fills these program-specific fields (device,
-decisions, current state) and never re-asks core ground. One PROGRAM-CONTEXT-<program>.md per program. -->
+decisions, current state) and never re-asks core ground. -->
 
+<!-- FILENAME (the 2.1.0 orchestration change — one filename, explicit): a single active program's file lives at
+`PROGRAM-CONTEXT.md` at the project root. A multi-program org names each program's file
+`PROGRAM-CONTEXT-<program>.md` instead — pick ONE convention per project and never mix the two, so
+"the program context" always resolves to exactly one file (or one clearly-named file per program). -->
 
 *The program-specific context every Hardware team agent reads before starting work. Keep this file in the program's engineering folder, next to the decision register. Update it at every handoff — a stale context file misleads every agent that reads it. The agents themselves are product-agnostic; this file is where the product lives.*
 
@@ -14,10 +18,22 @@ One paragraph: what the device is, where it's deployed, the environment it must 
 
 ## Source of truth
 
-- **Decision register:** `<path>` — locked decisions; every deliverable traces to these.
-- **Handoffs:** `<folder>` — newest `HANDOFF_*.md` is the live program state. Naming: `HANDOFF_<YYYY-MM-DD>_<program>_<milestone-reached>_<next-step>.md`; never overwrite.
+- **Decision register:** `<path>` — locked decisions; every deliverable traces to these. Template: `${CLAUDE_PLUGIN_ROOT}/templates/decision-register.md`.
+- **Interface control:** `<path>` — every cross-discipline boundary (signal, mechanical, thermal, power) with its owner and current spec. Template: `${CLAUDE_PLUGIN_ROOT}/templates/interface-control.md`.
+- **Handoffs:** `<folder>` — newest `HANDOFF_*.md` is the live program state. Naming: `HANDOFF_<YYYY-MM-DD>_<program>_<milestone-reached>_<next-step>.md`; never overwrite. Template: `${CLAUDE_PLUGIN_ROOT}/templates/handoff.md`.
 - **Specs:** `<paths>` — per-discipline spec documents and their status (draft / v0.1 / frozen).
 - **Simulations:** `<path to sim/>` — reproducible models; re-run when upstream inputs change.
+
+## Gate readiness (PDR / CDR / MRR)
+
+| Gate | Status | Open items blocking it |
+|---|---|---|
+| PDR (requirements + architecture locked) | not started / in progress / passed | … |
+| CDR (design complete, ready to build) | not started / in progress / passed | … |
+| MRR (ready for manufacturing release) | not started / in progress / passed | … |
+
+Per-seat exit criteria for each gate are `${CLAUDE_PLUGIN_ROOT}/templates/decision-register.md`'s
+companion table (the `hw-program` skill's §6); do not restate them here — link to the register.
 
 ## Locked architecture (summary — the register is authoritative)
 

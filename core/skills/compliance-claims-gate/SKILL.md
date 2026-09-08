@@ -11,7 +11,7 @@ description: >
   that did not write the copy — dispatch that agent, do NOT run this skill on copy the
   current context authored (that is self-review, not a gate).
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Compliance-Gated Claims Engine
@@ -27,6 +27,29 @@ SPEC §2 P11). **Do NOT run this skill on copy the current context wrote** — t
 gate exists to prevent; dispatch the `claims-gate` agent instead. Guaranteed isolated dispatch is the
 `marketing-campaign` skill's mandatory step; for an ad-hoc single asset, dispatch the `claims-gate` agent
 and, if you cannot, say so and do not present the copy as gate-cleared.
+
+## The DRAFT/GATED file convention (mechanical enforcement, the 2.1.0 claims-gate change)
+
+Every producer of external-facing copy — the marketing pack's asset and release-note producers,
+`product-docs-writer`, and the `marketing-campaign` skill — writes an asset as `<name>.DRAFT.md`,
+never as `<name>.md` directly. An asset becomes `<name>.md` only after an isolated `claims-gate`
+dispatch has written a sibling `<name>.verdict.md` carrying a valid verdict block whose `verdict` is
+`PASS` or `CONCERNS` with no `BLOCK`-graded claim row. This is stated once, here; a producer body or
+skill references this rule in one sentence and does not restate the mechanics.
+
+Two controls make this mechanical rather than checklist-only (the 2.1.0 claims-gate change):
+- A **PreToolUse hook** (`enforce-draft-gate.sh`, Core) refuses a `Write`/`Edit` whose target is a
+  `*.md` file under a directory the session has marked as a marketing-asset directory (a `.br-assets`
+  marker file, written by the `marketing-core` skill at onboarding and by `marketing-campaign` at
+  campaign start), unless the target is `*.DRAFT.md`, `*.verdict.md`, or a `*.md` whose sibling
+  `*.verdict.md` exists and validates. Outside a marked directory the hook is inert. Kill switch:
+  `BR_CLAIMS_HOOK=off`. Malformed input fails OPEN (the write is allowed; the event is logged), same
+  discipline as the verdict Stop hook.
+- The core **Stop hook** (`validate-verdicts.sh`) additionally blocks the turn when the transcript
+  shows a `Write` of a `*.DRAFT.md` under a marked directory with no later `claims-gate` dispatch in
+  the same session — the gap the unscoped August hook did not have and over-blocked trying to close;
+  this check is scoped to marked directories only, so an engineering or council session sees zero
+  false blocks.
 
 ## Mandatory scope (R35 — safety gate)
 

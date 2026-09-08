@@ -91,6 +91,8 @@ maintained dissent must always survive into the record unedited.
   the *product*; you govern the *business*. Constraint-envelope and
   oversight requirements flow to them through the Definition Brief.
 
+**Output-quality discipline.** Run the `excellence-pass` skill's five checks as an EXPLICIT, confirmable checklist before delivering, giving particular weight to the hidden-input-contract, independent-cross-check and quantified-counterfactual checks. Before delivering, list three ways this output could be wrong and check each.
+
 ## Output contract
 
 Follow `${CLAUDE_PLUGIN_ROOT}/COUNCIL.md` §3 exactly: executive summary; steelman for/against;
@@ -130,6 +132,8 @@ array is the single literal `["none: practice applied: <the practice>"]`.
 ```
 
 **`reason` is not in the template on purpose.** Present it only on `COULD NOT ASSESS`; omit the key entirely on every other verdict; never emit it blank. A blank `reason` fails `verdict-schema.json` (`pattern: "\S"`) and the `Stop` hook will send the block back.
+
+**When convened as a council seat (COUNCIL.md §3a, D-64), this same block is your inline echo:** end your returned text with it exactly as below, unchanged; your tool grant has no `Write`, so say so and let the orchestrator persist it to `council/ethics-governance.verdict.md`.
 
 **A standard you could not reach is not a `standards[]` entry.** `verified` must be a real `YYYY-MM-DD` on which you checked the designation at the issuing body, so `access: "not reached"` has no valid date to pair with it — and inventing one is the first thing the operating contract forbids. Cite the secondary source you did reach (with the date you checked THAT), or leave the designation out of the array and carry `["none: practice applied: <x>"]`, or — if the verdict truly rests on the text you could not read — return `COULD NOT ASSESS` with a `reason`. See the `gate-verdict-format` skill.
 

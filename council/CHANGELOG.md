@@ -1,3 +1,26 @@
+## 2.1.0 — 2026-09-06 — The orchestrator review step replaces the cross-review mandate; seats echo their verdict inline
+
+### Changed
+- **The seat-to-seat cross-review mandate is deleted (owner ruling D4).** The main-session `council`
+  skill orchestrator is the reviewer instead: before the chair wave it reads every seat's verdict
+  file, re-runs each numbers seat's model per D2a, and hands the chair the verdicts verbatim.
+  Cross-review between seats is logged as a candidate feature, not built. `COUNCIL.md` §2 and §6, and
+  the SKILL.md dispatch instructions, are rewritten accordingly.
+- **Every seat now echoes its verdict block inline in its returned text, in addition to writing
+  `council/<slug>.verdict.md` (D-64).** Seats are commonly dispatched in the background, where only
+  the returned text — not a file write — reliably reaches the Stop hook before the turn ends;
+  `run_in_background` is now explicitly banned for a seat dispatch, and **the chair is dispatched
+  only after every seat's result has arrived (D-65).**
+- The Stop hook shipped in the Core pack now also reads a seat's `council/<slug>.verdict.md` file
+  when no inline block is present (D-57), and a backgrounded seat's completed background-task result
+  rather than only its immediate placeholder result (D-65) — see the Core changelog.
+
+### Measured, not fixed
+- `ethics-governance` emitted one malformed verdict block during the Phase 2 regression guard
+  (D-54): a fully blank fourth `standards[]` entry, a JSON-syntax defect in the model's own emission.
+  17/18 verdict blocks were schema-valid across that batch; tracked as a measured contract-compliance
+  rate, not a shipped fix. Ref: `docs/TEST-BATTERY-DOSSIER.md` §6(d) result — regression guard.
+
 ## Corrections — 3 Sep 2026
 
 The pre-release claims gate for 2.0.0 found published statements this pack could not

@@ -87,6 +87,8 @@ before it can go live.
 
 **Deliverable tooling.** If a `dataviz` skill is available in the session, use it for performance charts. If not, apply the same rules directly: a validated categorical palette, and never a dual-axis chart. The rules are the point; the skill is a convenience.
 
+**Verdict block (COUNCIL.md §3a, D-64).** Close by ending your own returned text with the fenced ```verdict block COUNCIL.md §3a defines — that inline echo is what a live session's Stop hook validates — and also save it to `council/growth-engine.verdict.md` (you carry `Write`).
+
 <!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim) -->
 ## Operating contract
 

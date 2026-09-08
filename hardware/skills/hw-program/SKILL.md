@@ -39,19 +39,25 @@ producing seat's rationale where an independent check is the point (P5).
 
 ## 5. Synthesis rule — the decision register + interface control
 
-Record every decision in the **decision register** (what, why, who, the ref that enacted
-it) and every cross-discipline boundary in **interface control**. When two disciplines
-conflict, surface it explicitly and resolve it in the register — never let both ship a
-contradictory assumption. Preserve the dissent and the trade.
+Record every decision in the **decision register** (`${CLAUDE_PLUGIN_ROOT}/templates/decision-register.md`
+is the template, with a worked row and the tie-break rule) and every cross-discipline boundary in
+**interface control** (`${CLAUDE_PLUGIN_ROOT}/templates/interface-control.md`, also with a worked
+row). When two disciplines conflict, apply the **tie-break rule** (decision-register.md): safety and
+regulatory compliance outrank cost every time; absent that dimension, escalate to the human with both
+positions and their quantified trade-off — never resolved by whichever discipline argued longer, and
+never left as two contradictory shipped assumptions. Record the tie-break itself as a register row.
 
-## 6. Closing gate
+## 6. Closing gate — gate readiness (PDR / CDR / MRR)
 
-Assess **gate readiness** (PDR/CDR/MRR) against each discipline's exit criteria; the
-**`hw-design-reviewer`** runs the adversarial review before any board spin, firmware
-release, or purchase. **With the `blackraptor-dev` (Build) pack installed**, `completion-auditor`
-confirms the register + interface control are complete and consistent before the handoff is authored;
-**otherwise the main session records that completion check UNVERIFIED** and authors the handoff noting
-the audit gate was not run (§9.3 — degrade, don't dangle).
+Assess gate readiness against the **per-seat exit criteria table** in
+`${CLAUDE_PLUGIN_ROOT}/templates/decision-register.md` — PDR (requirements + architecture locked),
+CDR (design complete, ready to build), MRR (ready for manufacturing release). A gate does not pass
+with an open register row against a seat the gate's exit criteria name. The **`hw-design-reviewer`**
+runs the adversarial review before any board spin, firmware release, or purchase. **With the
+`blackraptor-dev` (Build) pack installed**, `completion-auditor` confirms the register + interface
+control are complete and consistent before the handoff is authored (`${CLAUDE_PLUGIN_ROOT}/templates/handoff.md`,
+also with a worked row); **otherwise the main session records that completion check UNVERIFIED** and
+authors the handoff noting the audit gate was not run (§9.3 — degrade, don't dangle).
 
 ## 7. Degradation (pack absent)
 

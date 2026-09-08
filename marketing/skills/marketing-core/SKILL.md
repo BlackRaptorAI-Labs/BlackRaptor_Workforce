@@ -17,7 +17,10 @@ The Marketing Intelligence Core is the hub of the marketing-team plugin. It prev
 
 ## Instructions
 
-1. **Resolve the marketing context per the resolution order** before any marketing work: read `MARKETING-CONTEXT.md` at the project root the user is working in; else an explicit path the user names. The in-pack `${CLAUDE_PLUGIN_ROOT}/context/marketing-context.md` is only the blank **template** (first line `<!-- TEMPLATE — not onboarded -->`) — it is NEVER the live copy, and a pack update overwrites it. The filled context lives at the project root so pack updates cannot touch it.
+1. **Resolve the marketing context per the resolution order** (see the shared `mkt-context-resolution` include below) before any marketing work. The filled context lives at the project root so pack updates cannot touch it.
+
+**Context resolution order (marketing).** Resolve your context in this order and stop at the first that exists: (1) `MARKETING-CONTEXT.md` at the project root — the onboarded, filled copy; if it is missing or still the template, invoke the `context-onboarding` skill before producing external-facing output; (2) an explicit path the user names; (3) never the in-pack `${CLAUDE_PLUGIN_ROOT}/context/marketing-context.md` — that is only the blank template (first line `<!-- TEMPLATE — not onboarded -->`), never the live copy, and a pack update overwrites it. Full detail: `marketing-core` skill.
+
 2. **If the project-root file is missing or still the template, invoke the shared `context-onboarding` skill first**, then read its result. That interview uses the marketing question set in `references/context-questions.md` (company/product, brand architecture, personas in priority order, GTM, voice, competitors, proof standards, ethics guardrails) and writes the approved, dated context to the project root — never into the pack.
 3. When any marketing agent produces output that contradicts the context, the context wins. Flag the contradiction to the user rather than silently proceeding.
 4. When new truth arrives (audited proof point, pricing change, new persona), do not silently rewrite: propose a diff to the context file, apply on approval, and re-date-stamp — the update-on-approval rule the `context-onboarding` skill defines for every context file.

@@ -66,6 +66,48 @@ target is charter-restricted, but the grant is real.
 gate returns COULD NOT ASSESS for the retired-claims check if it cannot find the register, rather
 than guessing.
 
+## 2.1.0 — what changed, and what you must update
+
+### 1. `product-marketing` moved from the Engineering pack to the Marketing pack
+
+If you have an **engineering-only install** (no Marketing pack), you no longer have this agent.
+Release notes, positioning, and regulated-claim review for shipped features now route to the
+Marketing pack's `product-marketing` agent when that pack is installed alongside; otherwise the
+main session drafts the comms itself and you gate them before anything ships. If you dispatch it by
+name in a script or a Change Record template, install `blackraptor-marketing` or update the call
+site to the guarded fallback.
+
+### 2. The DRAFT/GATED file convention is now mechanical (Marketing pack)
+
+Marketing asset producers (and `product-marketing`, `product-docs-writer`) write an asset as
+`<name>.DRAFT.md`; it becomes `<name>.md` only once the isolated `claims-gate` agent has written a
+validating `<name>.verdict.md` (PASS or CONCERNS, no BLOCK-graded claim). Two new controls enforce
+it, both scoped to a directory your session has marked with a `.br-assets` file (written by the
+`marketing-core` and `marketing-campaign` skills) — outside a marked directory neither one does
+anything:
+
+- A **PreToolUse hook** refuses an ungated `Write`/`Edit` of the final `.md` inside a marked
+  directory. **Kill switch:** `BR_CLAIMS_HOOK=off`.
+- The existing verdict `Stop` hook additionally blocks the turn if you wrote a `.DRAFT.md` under a
+  marked directory and never dispatched `claims-gate` afterward in the same session. Same kill
+  switch as before, `BR_VERDICT_HOOK=off`, covers this check too.
+
+If either hook gets in your way on a non-marketing directory, that is a bug — this class of
+false block is exactly what the scoping is designed to prevent, so please report it.
+
+### 3. The verdict hook now waits for a subagent still running in the background
+
+Claude Code (measured on `claude_code_version` 2.1.258) can run a subagent dispatch in the
+background and hand you its result later as a notification, instead of always waiting for it
+inline. The verdict `Stop` hook did not know about that second path: it looked only at the
+dispatch's immediate tool result, so a gate seat that was still finishing in the background looked
+to the hook like a seat that never produced a verdict at all. The hook now also reads a
+backgrounded seat's completed notification, and if the seat has not finished yet when your turn is
+about to end, it blocks with a plain reason — "gate seat still running; wait for its result before
+ending the turn" — rather than treating an in-progress dispatch as a missing one. No schema change,
+no new kill switch: `BR_VERDICT_HOOK=off` still turns this check off along with the rest of the
+verdict hook.
+
 ---
 
 ## The one rule to remember

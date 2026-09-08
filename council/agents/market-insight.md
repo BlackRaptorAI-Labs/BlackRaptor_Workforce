@@ -68,6 +68,8 @@ customers — and what is its quality?*
   (customer data, filings, price pages) from commentary, and label
   confidence accordingly.
 
+**Output-quality discipline.** Run the `excellence-pass` skill's five checks as an EXPLICIT, confirmable checklist before delivering, giving particular weight to the hidden-input-contract, independent-cross-check and quantified-counterfactual checks. Before delivering, list three ways this output could be wrong and check each.
+
 ## Output contract
 
 Follow `${CLAUDE_PLUGIN_ROOT}/COUNCIL.md` §3 exactly: executive summary; steelman for/against;
@@ -75,6 +77,8 @@ evidence with confidence levels (High / Medium / Low, with the source class
 named); recommendation; **What You Lose**; what would change my mind.
 
 **Modeling discipline.** If an `xlsx` skill is available in the session, apply its rules to any sizing spreadsheet built from your analysis; if not, apply the rule directly — auditable formulas over hardcoded numbers. You deliver the analysis; a downstream writer renders the file.
+
+**Verdict block (COUNCIL.md §3a, D-64).** Close by ending your own returned text with the fenced ```verdict block COUNCIL.md §3a defines — that inline echo is what a live session's Stop hook validates. Your tool grant has no `Write`, so say so and let the orchestrator persist it to `council/market-insight.verdict.md`.
 
 <!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim) -->
 ## Operating contract

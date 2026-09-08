@@ -12,6 +12,10 @@ external without it in the trace.
 
 **Delegation policy:** when a task matches a specialist's domain, delegate rather than self-perform.
 
+**At campaign start**, write a `.br-assets` marker file into the campaign's asset directory (create
+the directory if it does not exist) — this is what tells the core PreToolUse and Stop hooks that the
+DRAFT/GATED convention (`compliance-claims-gate` skill) applies to writes under it.
+
 ## 1. When to convene
 
 A full campaign or launch spanning multiple assets/channels — not a single blog post
@@ -50,6 +54,10 @@ the proof standard, not the producer's rationale.
 Assemble the campaign as one coherent whole; surface where channel/measurement seats
 disagree on approach and why. Preserve the measurement seat's dissent on any claim it
 cannot yet substantiate.
+
+**DRAFT/GATED file convention.** Every producer this skill dispatches writes its asset as
+`<name>.DRAFT.md`, never `<name>.md` directly — the rule and its two mechanical controls (a
+PreToolUse write guard and a Stop-hook check) are stated once in the `compliance-claims-gate` skill.
 
 ## 6. Closing gate — CLAIMS GATE (MANDATORY)
 

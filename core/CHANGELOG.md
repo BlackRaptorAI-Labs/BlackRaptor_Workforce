@@ -1,3 +1,64 @@
+## 2.1.0 — 2026-09-06 — The verdict Stop hook closes two gaps found live in testing
+
+### Fixed
+- **The Stop hook now finds a council seat's or the claims gate's verdict when it was written to a
+  file instead of echoed inline (D-57).** The hook could previously tell a standalone gate dispatch
+  from a seat in a council convening only by name, and a seat's `council/<slug>.verdict.md` write
+  did not satisfy it — a false block. It now checks, in order: an inline fenced verdict block; a
+  council seat's `.verdict.md` file; for `claims-gate` only, a `.verdict.md` beside its `.DRAFT.md`.
+  `verdict-schema.json` and `validate_verdict.py` are unchanged — only where the hook looks changed.
+- **A directional ordering bug in that same fix, caught live in the first re-test (D-60).** The
+  file-lookup branch required the DRAFT write to happen at or after the gate's own dispatch, but the
+  real workflow writes the draft BEFORE the gate ever runs, so the branch could never pass. Fixed by
+  dropping the ordering constraint on the DRAFT write while keeping it on the verdict file itself.
+- **The hook now reads a gate seat's result from its background-task notification, and waits for a
+  seat still running instead of treating it as missing (D-65).** Claude Code can dispatch a subagent
+  in the background and deliver its result later as a notification; the hook previously saw only the
+  dispatch's immediate placeholder result and blocked every backgrounded seat. It now reads the
+  notification's completed text, and if a seat has not finished when the turn is about to end, it
+  blocks with a plain "gate seat still running; wait for its result" reason instead of a false "no
+  verdict found." See `UPDATING-YOUR-WORKFORCE.md` for the plain-language version. Ref:
+  `docs/workforce-state.md` D-65. The fixture proving this (`run_fixture_d65.py`) lives in this
+  repository's `_eval/` tree, which does not ship; a live empirical re-run against a real council
+  convening is still open (tracked in `docs/workforce-state.md`, condition (iii)) and has no
+  dossier section yet.
+
+### Added
+- **The DRAFT/GATED convention for external-facing marketing copy is now mechanical**, not just
+  documented. A PreToolUse hook refuses an ungated `*.md` write in a `.br-assets`-marked directory
+  unless the file is a `*.DRAFT.md`, a `*.verdict.md`, or a `*.md` with a validating `*.verdict.md`
+  sibling; the existing Stop hook additionally blocks a turn that wrote a `*.DRAFT.md` in a marked
+  directory and never dispatched `claims-gate` afterward. Both are inert outside a marked directory.
+  Two enforcement-liveness fixtures prove it (block ungated, permit gated, inert unmarked). New kill
+  switch: `BR_CLAIMS_HOOK=off`. See `UPDATING-YOUR-WORKFORCE.md`.
+
+### Measured, not fixed
+- Two isolated malformed verdict-block emissions surfaced live during Phase 2 testing, in agents
+  shipped by other packs: `compliance-cert` (hardware pack, D-53) and `ethics-governance` (council
+  pack, D-54). Both are single JSON-syntax defects in the model's own output — a missing array
+  bracket and a blank `standards[]` entry — not hook or schema bugs. Tracked as measured,
+  self-measured contract-compliance rates internal to this test programme, not an independent or
+  audited figure: 32/33 verdict blocks schema-valid and 17/18, not treated as shipped fixes. The raw
+  `runs.jsonl` records live in this repository's `_eval/` tree, which does not ship; the figures are
+  reproduced in `docs/TEST-BATTERY-DOSSIER.md` §6(c) result (32/33) and §6(d) result (17/18).
+
+### Build-process notes (not shipped)
+- **D-71: a metered test run breached the foreground-only rule a third time and was killed mid-run
+  by the session's own background-task timeout, losing uncommitted records.** Not a product defect —
+  the loop runner (`_eval/loop/br-build-loop.sh`) and every metered-run script in this repository's
+  `_eval/baseline/` tree now print "FOREGROUND ONLY" as their first line and write a `.heartbeat`
+  file every 30s while running; the runner also exports `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0` as
+  a safety net so a breach does not lose records again (not a licence — the foreground rule still
+  stands). None of this ships; it governs how this release's own tests are run. Ref:
+  `docs/workforce-state.md` D-71.
+- **D-72: the string-gate test tool had the same class of blind spot as D-65, in its own code
+  rather than the shipped hook.** `run_string_gate.py` (also `_eval/baseline/`, not shipped) read
+  only a dispatch's final result text for the verdict block; a run whose gate seat completed in the
+  background left the real verdict only in the task notification, and the tool reported `verdict:
+  null` even though the dispatch had genuinely finished. Fixed the same way as D-65: read the
+  notification summary first, falling back to the final result text. Ref: `docs/workforce-state.md`
+  D-72.
+
 ## Corrections — 3 Sep 2026
 
 The pre-release claims gate for 2.0.0 found published statements this pack could not

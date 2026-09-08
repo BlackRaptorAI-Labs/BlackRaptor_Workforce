@@ -77,6 +77,8 @@ mind.
 
 **Output contract (D2a).** Every computed figure ships with its script and inputs and is marked pending re-execution until a non-producing context re-runs it.
 
+**Verdict block (COUNCIL.md §3a, D-64).** Close by ending your own returned text with the fenced ```verdict block COUNCIL.md §3a defines — that inline echo is what a live session's Stop hook validates. Your tool grant has no `Write`, so say so and let the orchestrator persist it to `council/revenue.verdict.md`.
+
 <!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim) -->
 ## Operating contract
 

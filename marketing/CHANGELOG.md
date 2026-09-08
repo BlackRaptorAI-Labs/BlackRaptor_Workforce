@@ -1,3 +1,20 @@
+## 2.1.0 — 2026-09-06 — `product-marketing` arrives; DRAFT/GATED becomes mechanical
+
+### Added
+- **`product-marketing` moves in from the Engineering pack (owner ruling D3).** Release notes,
+  positioning and regulated-claim review for shipped features now live here, under this pack's
+  DRAFT/GATED convention and claims-gate scope like every other producer. See
+  `UPDATING-YOUR-WORKFORCE.md`.
+- **The DRAFT/GATED convention is now mechanical, not just documented.** Every asset producer
+  (and `product-marketing`, `product-docs-writer` in Core) writes `<name>.DRAFT.md`; it becomes
+  `<name>.md` only once the isolated `claims-gate` agent has written a validating `<name>.verdict.md`
+  (PASS or CONCERNS, no BLOCK-graded claim). Enforced by a new PreToolUse hook (kill switch
+  `BR_CLAIMS_HOOK=off`) and a Stop-hook extension, both scoped to a session-marked `.br-assets`
+  directory and inert everywhere else. Two enforcement-liveness fixtures prove it.
+- The retired-claims register moves from `claims-gate`'s own body into `MARKETING-CONTEXT.md §4`;
+  the agent reads the register instead of carrying it, so your filled context is the one place it
+  needs updating.
+
 ## Corrections — 3 Sep 2026
 
 The pre-release claims gate for 2.0.0 found published statements this pack could not

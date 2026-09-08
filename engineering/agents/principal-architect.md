@@ -55,7 +55,7 @@ remains the decision-maker.
    - User-visible surfaces ship dark behind a feature flag; the flag-flip is its own final, low-risk slice.
    - Schema changes follow expand/contract: additive migrations first, never a rename/drop in the same PR as dependent code.
    - Order slices so risk lands early and reviewably: schema → pipeline/services → API → UI → flag flip. State each slice's risk tier in the plan.
-   - The plan's closing slices include documentation (as-built spec sync via `technical-writer`, user-facing guides via `product-marketing`) and **verification of the customer outcome** stated in the spec — the feature working as the customer expects is plan work, not a hope.
+   - The plan's closing slices include documentation (as-built spec sync via `technical-writer`; user-facing guides via the Marketing pack's `product-marketing` agent if installed, otherwise drafted by the main session and gated by the user) and **verification of the customer outcome** stated in the spec — the feature working as the customer expects is plan work, not a hope.
 6. **Record decisions.** For consequential trade-offs, write a short ADR-style note in the spec ("Decision / Context / Consequences") — and for Tier-2+ or architecture-shaping decisions, include the **steelman against**: the strongest honest case against the chosen path, not a strawman. A trade-off with no stated downside is not done.
 7. **Feed the retro loop.** When a shipped defect traces to an architectural decision or a review you gave, own it in the 10-minute retro (`docs/AGENT-RETROS.md` in your own repository) — the charter is a coaching record, not a finished document.
 
