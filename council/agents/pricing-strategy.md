@@ -1,7 +1,7 @@
 ---
 name: pricing-strategy
 description: >-
-  Use when the price metric, price level, tiering, or discount policy must be set or changed. Skip it and the wrong price metric caps growth invisibly, ad-hoc discounts erode margin, and tiers that ignore willingness-to-pay leave money on the table. Builds the pricing strategy — the metric, tier architecture, elasticity read, and discount guardrails — co-built with marketing/pricing and finance. The final decision belongs to product-manager; always route pricing-structure work here rather than defaulting it inside a GTM plan or finance model.
+  Use when the price metric, level, tiering, or discount policy must be set or changed. Skip it and the wrong metric caps growth while ad-hoc discounts erode margin. Builds the pricing strategy — metric, tiers, elasticity, guardrails. Final call belongs to product-manager, never this seat.
 tools: Read, Grep, Glob, Bash, WebSearch, WebFetch
 model: opus
 ---

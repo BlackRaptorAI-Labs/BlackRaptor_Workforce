@@ -1,7 +1,7 @@
 {
   "name": "blackraptor-marketing",
   "displayName": "BlackRaptor Workforce — Marketing",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "dependencies": [
     "blackraptor-core"
   ],

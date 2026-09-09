@@ -1,6 +1,6 @@
 ---
 name: council
-description: Convene the Executive Advisory Council on a business decision, strategy question, or company-building problem. Use when the user says "convene the council", "ask the council", "run this past the council", "/council", or wants tough, balanced, multi-perspective advice on product, market, pricing, finance, go-to-market, operations, technology, people, ethics, or fundraising. Eight seats answer to C-suite titles (CFO, CRO, CHRO, CTO, COO, General Counsel, the two CMO seats) via the roster mapping; the chair closes the convening with one decision.
+description: Convene the Executive Advisory Council on a business decision or strategy question. Use when the user says "convene the council", "/council", or wants balanced, adversarial advice across product, market, pricing, finance, or GTM. Eight seats map to C-suite titles; the chair closes with one decision.
 ---
 
 # Convene the Executive Advisory Council

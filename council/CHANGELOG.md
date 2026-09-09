@@ -1,3 +1,11 @@
+## 2.2.1 — 2026-09-09 — Shorter descriptions for the pricing-strategy seat and the council skill
+
+### Changed
+- **The `pricing-strategy` seat's description and the `council` skill's description are shorter.**
+  Same scope and behaviour — `pricing-strategy` still builds the pricing strategy and leaves the
+  final call to `product-manager`; `/council` still convenes the same eight seats and the chair
+  still closes with one decision.
+
 ## 2.2.0 — 2026-09-09 — Seat descriptions rewritten; onboarding no longer eats your first turn
 
 ### Changed

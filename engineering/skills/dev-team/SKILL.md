@@ -1,6 +1,6 @@
 ---
 name: dev-team
-description: Run the development team's delivery lifecycle for any non-trivial change. Use when a feature or fix needs more than one specialist — routing work and reviews across the dev specialists, convening collaboration, enforcing the engineering challenge on every claim, reconciling against the blocking-gates table, and assembling the Change Record. Triggers: "run the lifecycle for X", "get design and backend on this", "assemble the change record", any change touching a gated surface.
+description: Run the development team's delivery lifecycle for any non-trivial change. Use when a feature or fix needs more than one specialist. Routes work across dev specialists, convenes collaboration, and assembles the Change Record. Holds no content authority of its own — it never designs or writes code.
 ---
 
 # Run the development team

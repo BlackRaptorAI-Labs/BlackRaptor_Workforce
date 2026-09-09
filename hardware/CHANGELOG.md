@@ -1,3 +1,10 @@
+## 2.2.1 — 2026-09-09 — Shorter descriptions for the hw-operating-standard and hw-program skills
+
+### Changed
+- **The `hw-operating-standard` and `hw-program` skill descriptions are shorter.** Same scope and
+  behaviour — `hw-operating-standard` still loads before any hardware or firmware task, and
+  `hw-program` still owns the decision register and interfaces, not the discipline work itself.
+
 ## 2.2.0 — 2026-09-09 — Seat descriptions rewritten; onboarding no longer eats your first turn
 
 ### Changed

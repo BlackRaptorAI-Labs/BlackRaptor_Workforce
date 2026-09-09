@@ -1,3 +1,15 @@
+## 2.2.1 — 2026-09-09 — A blocked turn no longer names the same gate twice
+
+### Fixed
+- **When the Stop hook blocks a turn and the same gate is retried without a valid verdict, its name
+  no longer appears twice in the block message.** Each distinct problem is now listed once, in the
+  order it was found; a retry that is still invalid no longer reads as two separate failures.
+
+### Changed
+- **The `claims-gate` agent's description is shorter.** Same scope and behaviour — it still judges
+  every external-facing marketing asset before it ships, blind to the author's reasoning, and never
+  edits what it judges.
+
 ## 2.2.0 — 2026-09-09 — Onboarding no longer eats your first turn; every description rewritten
 
 ### Changed

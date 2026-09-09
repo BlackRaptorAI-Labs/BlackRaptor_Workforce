@@ -315,6 +315,17 @@ def main():
                     os.path.relpath(abs_path, project_dir)))
 
     if problems:
+        # De-duplicate while preserving order (P3-FOLLOWON-v2 §3): a same-turn retry dispatches the
+        # same gate twice, producing two identical problem lines (e.g. `security-architect` invalid
+        # both attempts) that read as two separate failures to the user. Distinct problems, including
+        # a distinct gate, are never collapsed — only an exact repeat of the same line.
+        seen = set()
+        deduped = []
+        for p in problems:
+            if p not in seen:
+                seen.add(p)
+                deduped.append(p)
+        problems = deduped
         print(json.dumps({
             "decision": "block",
             "reason": ("This turn cannot be treated as gated. Fix and re-emit:\n  - "

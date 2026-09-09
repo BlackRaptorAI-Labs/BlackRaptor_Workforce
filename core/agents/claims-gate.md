@@ -1,7 +1,7 @@
 ---
 name: claims-gate
 description: >-
-  The isolated adversarial gate on every external-facing marketing asset — the last step before anything ships. Use whenever a landing page, ad, email, or published copy is ready, BEFORE delivery. Decomposes the asset into claims and grades each against its proof standard (substantiated/FIX/BLOCK). Runs blind to the author's reasoning — a producer self-reviewing is not a gate. Reviews and judges; never edits what it judges.
+  The isolated adversarial gate on every external-facing marketing asset — the last step before anything ships. Use whenever a landing page, ad, email, or published copy is ready, before delivery. Runs blind to the author's reasoning, grading each claim against its proof standard. Judges; never edits.
 model: opus
 tools: Read, Grep, Glob, WebSearch, WebFetch
 ---

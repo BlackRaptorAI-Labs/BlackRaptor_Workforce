@@ -1,3 +1,10 @@
+## 2.2.1 — 2026-09-09 — Shorter description for the dev-team skill
+
+### Changed
+- **The `dev-team` skill's description is shorter.** Same scope and behaviour — it still routes a
+  non-trivial change across the dev specialists and assembles the Change Record, and still holds no
+  content authority of its own.
+
 ## 2.2.0 — 2026-09-09 — `schema-reviewer` is the one gate on a migration; onboarding no longer eats your first turn
 
 ### Changed

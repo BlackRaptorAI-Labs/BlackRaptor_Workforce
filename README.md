@@ -11,6 +11,10 @@
 > and `PASS` is not the default.
 > **Upgrading → [docs/UPDATING-YOUR-WORKFORCE.md](docs/UPDATING-YOUR-WORKFORCE.md).**
 
+> **2.2.1.** The Stop hook's block message no longer repeats a gate's name when the same turn is
+> retried. Six agent and skill descriptions across the Core, Council, Engineering, and Hardware
+> packs are shorter, with the same scope and behaviour.
+
 > **2.2.0.** Agent and skill descriptions across the roster were rewritten to state scope more
 > directly. Onboarding now fires once at session start instead of intercepting your first prompt;
 > the one-shot claims-gate reminder hook is removed (its job is now carried directly in each

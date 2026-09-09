@@ -1,6 +1,6 @@
 ---
 name: hw-operating-standard
-description: The always-on operating standard for the BlackRaptor HW Engineering team — core loop, Excellence Pass, design-to-cost/design-to-life doctrine, and HW/firmware-specific rules (datasheets are ground truth, worst-case not typical, units everywhere). Load BEFORE any hardware or firmware engineering task with these agents — every seat charter references this standard. Triggers - "HW engineering", "hardware design", "board spin", "power tree", "firmware review", "design review", "PROGRAM-CONTEXT".
+description: The always-on operating standard for the BlackRaptor HW Engineering team — design-to-cost/design-to-life doctrine and HW/firmware rules (datasheets are ground truth, worst-case not typical, units everywhere). Load before any hardware or firmware task; every seat charter references this standard.
 ---
 
 # BlackRaptor HW Engineering — Operating Standard

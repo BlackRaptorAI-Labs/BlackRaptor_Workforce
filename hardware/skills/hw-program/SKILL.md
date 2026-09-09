@@ -1,6 +1,6 @@
 ---
 name: hw-program
-description: Run a hardware engineering program as its technical conductor — dispatch discipline work, keep the decision register, control interfaces between disciplines, trace requirements, assess gate readiness (PDR/CDR/MRR), and author handoffs. Use for any multi-discipline hardware effort or cross-domain conflict. Triggers: "run the program", "resolve this cross-domain conflict", "assess CDR readiness", "author the manufacturer handoff".
+description: Run a hardware engineering program as its technical conductor — dispatch discipline work, keep the decision register, control interfaces between disciplines, and assess gate readiness (PDR/CDR/MRR). Use for any multi-discipline effort or cross-domain conflict. Owns the register, not the work.
 ---
 
 # Run a hardware program

@@ -1,3 +1,8 @@
+## 2.2.1 — 2026-09-09 — No changes in this pack this release
+
+No changes to this pack's agents, skills, or behaviour in 2.2.1. See the Core pack's changelog for
+the release-wide fix and the affected packs' entries for their shorter descriptions.
+
 ## 2.2.0 — 2026-09-09 — Compliance-gate instruction restored to an imperative; onboarding no longer eats your first turn
 
 ### Changed
