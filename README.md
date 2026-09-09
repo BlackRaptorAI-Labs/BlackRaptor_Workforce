@@ -11,6 +11,13 @@
 > and `PASS` is not the default.
 > **Upgrading → [docs/UPDATING-YOUR-WORKFORCE.md](docs/UPDATING-YOUR-WORKFORCE.md).**
 
+> **2.2.0.** Agent and skill descriptions across the roster were rewritten to state scope more
+> directly. Onboarding now fires once at session start instead of intercepting your first prompt;
+> the one-shot claims-gate reminder hook is removed (its job is now carried directly in each
+> producer's own instructions). The `gate-review` command no longer produces an invalid result when
+> no gate applies to a change.
+> **Details → [docs/UPDATING-YOUR-WORKFORCE.md](docs/UPDATING-YOUR-WORKFORCE.md).**
+
 > **2.1.0.** `product-marketing` moved from the Engineering pack to the Marketing pack. The
 > Marketing pack's DRAFT/GATED file convention is now mechanical — a `<name>.DRAFT.md` becomes
 > `<name>.md` only once `claims-gate` has written a validating verdict, enforced by two hooks

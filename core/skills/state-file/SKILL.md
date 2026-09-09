@@ -1,11 +1,7 @@
 ---
 name: state-file
 description: >-
-  Use for any multi-chunk or multi-session task to keep work from drifting — one state file per
-  WORKSTREAM, done-condition written first, decisions recorded with ADR discipline, read at the
-  start of each chunk and updated when work turns significant. Never carry claims across a context
-  boundary. Triggers: starting/resuming a workstream, a decision made, real work completed. The
-  anti-drift execution protocol (v2).
+  Use for any multi-chunk or multi-session task to keep work from drifting — one state file per workstream, done-condition written first, decisions recorded with ADR discipline, read at the start of each chunk. Never carry claims across a context boundary.
 ---
 
 # The anti-drift execution protocol (v2)

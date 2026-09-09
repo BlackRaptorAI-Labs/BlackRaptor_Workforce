@@ -1,3 +1,11 @@
+## 2.2.0 — 2026-09-09 — Seat descriptions rewritten; onboarding no longer eats your first turn
+
+### Changed
+- **Seat descriptions in this pack were rewritten** to state scope more directly when you describe
+  a convening or a question in your own words.
+- **Onboarding now fires at session start, not on your first prompt** — see the Core pack's 2.2.0
+  entry for the mechanism; this pack's seats are covered by the same change.
+
 ## 2.1.0 — 2026-09-06 — The orchestrator review step replaces the cross-review mandate; seats echo their verdict inline
 
 ### Changed

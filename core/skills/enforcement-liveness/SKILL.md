@@ -1,13 +1,7 @@
 ---
 name: enforcement-liveness
 description: >-
-  Before certifying that a control, clamp, guard, or enforcement is "closed" or
-  "enforced at" some point, prove the enforcing code actually runs on the live
-  path. Use when a gate agent is about to certify an enforcement/clamp/guard, or
-  a reviewer is verifying a control exists. Triggers: "closed at dispatch",
-  "enforced at", "the clamp handles it", "gap closed", "is this control
-  actually applied". Shared by the security, test, review, and
-  operational-fitness gates.
+  Before certifying a control, clamp, guard, or enforcement as closed or enforced, prove the enforcing code actually runs on the live path. Use when a gate agent is about to certify an enforcement, or a reviewer is verifying a control exists. Shared by the security, test, and review gates.
 ---
 
 # Enforcement liveness — prove the control executes

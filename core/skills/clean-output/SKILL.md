@@ -1,12 +1,7 @@
 ---
 name: clean-output
 description: >-
-  Keep AI-attribution boilerplate and authoring-tool fingerprints out of the business
-  documents and code the Workforce produces. Use before delivering any document, or when
-  setting up a repo, to strip "Generated with Claude"-style trailers, co-author trailers,
-  and generator/authoring-tool metadata fields from delivered files. Triggers: "clean the
-  output", "remove the AI boilerplate", "strip the commit trailer", "scrub file metadata
-  before I send this". Does NOT remove content-provenance marks (see Boundaries).
+  Keep AI-attribution boilerplate and authoring-tool fingerprints out of delivered documents and code. Use before delivering any document, or setting up a repo, to strip "Generated with Claude"-style trailers and generator metadata. Does NOT remove content-provenance marks.
 metadata:
   version: "0.1.0"
 ---

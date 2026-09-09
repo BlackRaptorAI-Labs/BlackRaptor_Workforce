@@ -1,15 +1,7 @@
 ---
 name: research-integrity
 description: >-
-  Load for ANY research, analysis, or evidence-based reporting task — market /
-  competitive research, source appraisal, "which X is best / most
-  cost-effective", market sizing or statistics, synthesizing studies, or before
-  publishing any finding or citing a number a decision rests on. Enforces
-  mode-appropriate methodology, separate source-reliability × evidence-certainty
-  grading, citation-independence (anti-woozle), root-to-mechanism verification,
-  and a release gate so conclusions withstand scrutiny and challenge. Triggers:
-  "research X", "is there a market for", "which is better", "how big is",
-  "what does the evidence say", "cite a source", "before we publish".
+  Load for ANY research, analysis, or evidence-based reporting task — market/competitive research, source appraisal, sizing, or before publishing a finding or citing a number a decision rests on. Enforces mode-appropriate methodology, citation-independence, and a release gate.
 ---
 
 > Design rationale: `research-integrity-spec.md` (in this folder). Fillable artifact templates: `templates.md` (this folder).

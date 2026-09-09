@@ -1,3 +1,19 @@
+## 2.2.0 — 2026-09-09 — Compliance-gate instruction restored to an imperative; onboarding no longer eats your first turn
+
+### Changed
+- **Some agent descriptions in this pack were rewritten** to state scope more directly.
+- **Onboarding now fires at session start, not on your first prompt** — see the Core pack's 2.2.0
+  entry for the mechanism; this pack's agents are covered by the same change.
+
+### Fixed
+- **The shared compliance-gate instruction ("write every external-facing deliverable as
+  `<name>.DRAFT.md`...") is restored to a direct instruction.** A wording refactor had rephrased it
+  as a passive description, which read fine to a person but no longer clearly instructed the agent to
+  do it. The DRAFT-naming refactor did not touch the separate `claims-gate` dispatch step — this
+  restores the clarity of the instruction that step depends on. Four agents
+  (`analytics-attribution-engineer`, `content-strategist`, `name-trademark-researcher`,
+  `seo-geo-engineer`) also gained a one-line note naming what each specifically writes.
+
 ## 2.1.0 — 2026-09-06 — `product-marketing` arrives; DRAFT/GATED becomes mechanical
 
 ### Added

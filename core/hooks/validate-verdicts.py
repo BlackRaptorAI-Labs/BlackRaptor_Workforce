@@ -135,6 +135,29 @@ def main():
     except Exception:
         return 0
 
+    # TURN BOUNDARY: `transcript_path` is the whole SESSION transcript,
+    # cumulative across every turn — confirmed live downstream (a status-report turn that only
+    # mentioned `code-reviewer` in prose got blocked) and traced to source: nothing here bounded
+    # the scan, so a gate dispatched in an EARLIER turn whose verdict was never found valid stayed
+    # in `dispatched` and got re-flagged on every LATER Stop-hook firing, including turns that
+    # never touched that gate. Bound the scan to the current turn: everything from the most
+    # recent REAL (non-synthetic) user message onward. A hook's own "Stop hook feedback"
+    # continuation is marked `isSynthetic: true` and does NOT start a new turn — the user is still
+    # waiting on the one exchange the hook bounced back for revision. Fail open (scan everything,
+    # today's behaviour) if no real user message is found at all.
+    turn_start = 0
+    for idx, line in enumerate(lines):
+        line_s = line.strip()
+        if not line_s:
+            continue
+        try:
+            ev = json.loads(line_s)
+        except Exception:
+            continue
+        if ev.get("type") == "user" and not ev.get("isSynthetic"):
+            turn_start = idx
+    lines = lines[turn_start:]
+
     project_dir = os.path.realpath(
         os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd())
 

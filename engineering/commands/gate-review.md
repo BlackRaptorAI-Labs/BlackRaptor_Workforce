@@ -26,6 +26,9 @@ Run gate reviews for the current branch's changes.
      and, if Tier 3, that {{SECOND_APPROVER}}'s approval is required.
 
 Do not fill in human decisions or signatures. If no gate applies, say the
-change is Tier 1 and no CR file is needed.
+change is Tier 1 and no CR file is needed, IN PROSE — emit no fenced
+```verdict block on this path. The v3 verdict schema has no "no gate ran"
+shape, so a block improvised here is invalid by construction and will be
+rejected; the Tier-1/no-CR statement is the complete output for this case.
 
 $ARGUMENTS

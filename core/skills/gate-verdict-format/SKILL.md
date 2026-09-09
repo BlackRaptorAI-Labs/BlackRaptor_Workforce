@@ -1,10 +1,7 @@
 ---
 name: gate-verdict-format
 description: >-
-  The standard output format every gate agent uses so verdicts drop cleanly into
-  a Change Record. Use when a security/privacy/compliance/domain/schema gate
-  agent produces a verdict on a diff. Triggers: "gate review", "produce a
-  verdict", "review for the change record". Shared by all blocking-gate agents.
+  The standard output format every gate agent uses so verdicts drop cleanly into a Change Record. Use when a security/privacy/compliance/domain/schema gate agent produces a verdict on a diff. Shared by all blocking-gate agents.
 ---
 
 # Gate verdict format (Change-Record-ready)

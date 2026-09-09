@@ -1,10 +1,7 @@
 ---
 name: workforce-doctor
 description: >-
-  Diagnose an installed BlackRaptor Workforce — confirm the packs are present, versioned
-  consistently, and structurally intact (dependencies resolve; the marketing claims-review hook
-  is wired correctly for the current client). Read-only. Run when something seems off, or before
-  filing a defect. Say "run workforce-doctor" (or /workforce-doctor).
+  Diagnose an installed BlackRaptor Workforce — confirm the packs are present, versioned consistently, and structurally intact (dependencies resolve; the core hooks are wired for the current client). Read-only. Run when something seems off, or before filing a defect.
 ---
 
 # Workforce Doctor
@@ -55,18 +52,23 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    dirs (`agents/`, `skills/`, and for a team pack a `CLAUDE.md`, `LICENSE`, `NOTICE`). Anomaly: a
    missing manifest, a name/version mismatch, or an empty `agents/` or `skills/`.
 
-4. **Core hooks wiring (R15.4; `blackraptor-core` is always installed).** Both always-on hooks live
-   in the CORE pack now — the welcome/onboarding trigger and the claims-gate pointer. Report whether
-   each is wired for the current client:
-   - `core/hooks/hooks.json` is present and lists TWO `UserPromptSubmit` entries.
-   - `core/hooks/inject-onboarding-rule.sh` (welcome/onboarding trigger) and
-     `core/hooks/inject-claims-gate-rule.sh` (claims-gate pointer) are both present **and executable**
+4. **Core hooks wiring (R15.4; `blackraptor-core` is always installed).** Three hooks live in the
+   CORE pack: the welcome/onboarding trigger (`SessionStart`), the DRAFT/GATED write gate
+   (`PreToolUse`), and the verdict validator (`Stop`). The one-shot claims-gate prompt-reminder hook
+   that used to run on `UserPromptSubmit` was removed in 2.2.0 (its job is now carried directly in
+   each producer's own instructions) — its absence is expected, not an anomaly. Report whether each
+   of the three current hooks is wired:
+   - `core/hooks/hooks.json` is present and lists one `SessionStart` entry, one `PreToolUse` entry
+     (matcher `Write|Edit|MultiEdit`), and one `Stop` entry.
+   - `core/hooks/inject-onboarding-rule.sh` (`SessionStart`), `core/hooks/enforce-draft-gate.sh`
+     (`PreToolUse`), and `core/hooks/validate-verdicts.sh` (`Stop`) are all present **and executable**
      (`test -x`). A hook the client cannot execute is a silently disabled rule.
    - the core `plugin.json` does **NOT** declare a `"hooks"` key. On client 2.1.170+ `hooks/hooks.json`
      auto-loads by convention, so declaring it is a fatal "Duplicate hooks file detected" load failure —
      a **blocking** anomaly.
-   Report the wiring status for both hooks; a missing/non-executable hook means that rule won't
-   auto-fire (the in-skill R3/R7 triggers still apply as the backstop) — note it, non-blocking.
+   Report the wiring status for all three hooks; a missing/non-executable hook means that rule won't
+   auto-fire (for onboarding, the in-skill R3/R7 triggers still apply as the backstop) — note it,
+   non-blocking.
 
 5. **Client version.** Record `claude --version`. Note it in the report — hook-loading and
    marketplace behavior have varied across client versions.

@@ -1,15 +1,7 @@
 ---
 name: compliance-claims-gate
 description: >
-  This skill should be used when the user asks to "check this copy", "run the claims gate",
-  "is this claim safe to publish", "compliance-check this marketing", or before ANY
-  external-facing marketing OR sales copy is delivered — from this plugin OR from any
-  third-party marketing/sales tool, which may not include a claims gate of its own.
-  It screens marketing claims against the proof standards and ethics guardrails in the
-  Marketing Intelligence Core and returns pass/fix/block verdicts per claim. This is the
-  METHOD; the isolated gate is the separate `claims-gate` AGENT that runs it in a context
-  that did not write the copy — dispatch that agent, do NOT run this skill on copy the
-  current context authored (that is self-review, not a gate).
+  Use to check marketing/sales copy against proof standards and ethics guardrails before ANY external-facing asset is delivered, returning pass/fix/block per claim. This is the METHOD; dispatch the isolated claims-gate AGENT instead of running this on copy the current context authored — that is self-review.
 metadata:
   version: "1.2.0"
 ---

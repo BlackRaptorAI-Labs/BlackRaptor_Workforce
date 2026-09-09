@@ -1,12 +1,7 @@
 ---
 name: content-craft
 description: >
-  This skill should be used for ANY writing the Workforce produces — memos, reports, handoffs,
-  documentation, white papers, emails, and marketing copy — and whenever the copywriter, video, or
-  creative agents produce an asset. It encodes human-voice craft (an avoid-list of AI tells), a
-  structure menu that auto-selects by deliverable type (Minto for analytical), rhythm rules, and
-  match-length-to-ask, plus the evidence-based writing/technical/visual craft references. Every team
-  writes, so it lives in core.
+  Use for ANY writing the Workforce produces — memos, reports, docs, emails, marketing copy — and whenever the copywriter, video, or creative agents produce an asset. Encodes human-voice craft (an AI-tells avoid-list), a structure menu by deliverable type, and match-length-to-ask.
 metadata:
   version: "1.3.0"
 ---

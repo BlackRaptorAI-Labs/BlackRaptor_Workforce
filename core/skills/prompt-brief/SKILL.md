@@ -1,12 +1,7 @@
 ---
 name: prompt-brief
 description: >-
-  Use at the START of any non-trivial request to turn it into a buildable brief
-  before work begins — ask 2–4 clarifying questions, write a short brief (goal /
-  context / audience / constraints / done-criteria), confirm it, then route. Clear small
-  asks pass straight through with zero friction; heavy asks escalate to
-  product-manager. Triggers: any incoming task whose goal or done-criteria are
-  not already explicit. The intake ladder for the Layer-0 Core contract.
+  Use at the START of any non-trivial request to turn it into a buildable brief before work begins — ask 2-4 clarifying questions, write a short brief (goal/context/audience/constraints/done-criteria), confirm it, then route. Clear small asks pass straight through with zero friction.
 ---
 
 # Prompt-brief — the intake ladder

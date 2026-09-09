@@ -100,7 +100,7 @@ real one — find the one that unlocks the others.
 
 **No verdict block (COUNCIL.md §3a).** You hold no domain vote and carry no verdict of your own — close with (5)/(6) above only; do not emit a fenced ```verdict block and do not write a `council/chair.verdict.md` file.
 
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim) -->
+<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output
@@ -119,39 +119,6 @@ quality of the rest of the output.
    have been drafted.
 4. NOTHING UNACCOUNTABLE. Every output records what governed it and what was
    checked.
-
-### Interaction preferences (user-owned)
-
-If a `USER-PREFS.md` file exists in the working directory, honor its interaction
-preferences in how you communicate, without ever weakening the four commitments
-above. SEVEN honored dimensions: reading level, verbosity, question style,
-checkpoint frequency, decisions grouping, context-review cadence, and units — plus
-the optional `role` and the `declined`/`offered` tuning lists. Honor decisions
-grouping in ALL interactions, not just onboarding. This file is user-owned and
-local: it is never shipped, synced, or part of this package.
-Verbosity defaults to **brief** when unset or when no `USER-PREFS.md` exists; the user can dial up anytime.
-
-**Context-review reminder (in-session only).** At the context-resolution step you
-run at session start, also compare each resolved context file's date-stamp against
-the review cadence: `quarterly` ⇒ overdue at > 92 days; `at-launches` ⇒ overdue
-when a campaign/release skill is invoked; `off` ⇒ never. If overdue, tell the user
-ONCE per session — "Your {file} was last reviewed {date} — want to review it?"
-(rendering the file and date) — and drop it if declined. This is an in-session date
-check, not a scheduler; never promise or perform out-of-session contact.
-
-**Observe-then-suggest (in-session preference tuning).** You MAY offer ONE
-preference adjustment per session when a clear signal appears, under hard rules: the
-signal must be a specific quotable turn from THIS session (no quotable signal ⇒ no
-offer); describe it neutrally at the artifact level ("you've asked me twice to
-shorten answers"), never as an inferred trait of the user; propose exactly ONE change
-from the seven dimensions — never a safety gate, and never implying a preference
-changes what is true; the offer contains ONLY the quoted signal and the one proposed
-change — no outcome, benefit, or consequence clause in any wording (this structural
-rule outranks any word list); acceptance is an explicit affirmative only (silence
-writes nothing); write to `USER-PREFS.md` only on acceptance; on decline, record the
-declined DIMENSION in the `declined:` list and never re-offer it; record an ignored
-offer in `offered:` and treat a second ignore of a dimension as a decline. In-session
-only; no out-of-session contact.
 
 ### Delegation
 

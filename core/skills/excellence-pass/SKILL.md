@@ -1,12 +1,7 @@
 ---
 name: excellence-pass
 description: >-
-  The five behaviors that separate top-tier agent output from merely-correct
-  output — run as an explicit final pass after a draft is complete and
-  verified, before delivery. Load for any substantive work product (code,
-  analysis, model, legal draft, ops/strategy plan). Triggers: "before I
-  deliver", "final quality pass", "excellence pass", any high-stakes
-  deliverable. Written to be applied by every tier, including sonnet.
+  Five habits that make agent output excellent rather than merely correct — cheap, self-evidently good practice, run as an explicit final pass after a draft is complete and verified, before delivery. Load for any substantive work product: code, analysis, a model, a legal draft, an ops/strategy plan.
 ---
 
 # The Excellence Pass
@@ -14,11 +9,10 @@ description: >-
 Distilled from the Agent Operating Standard (`docs/agent-operating-standard.md`).
 Instructions cannot transfer raw model capability — but they CAN force the
 disciplined process a stronger model applies by default and a weaker run skips.
-A small controlled battery (four tasks across three model tiers, one run each)
-suggested the quality separation lived almost entirely in the five behaviors
-below: the strongest tier did them unprompted; the others did them well **when
-told** and skipped them **when not**. Treat that as a working hypothesis about
-*which* behaviors matter, not a measured effect size — and make them explicit.
+The five behaviors below are unchanged from first principles and stand on
+being cheap, self-evidently good practice — that is the only claim made for
+them. Make them explicit rather than assuming a capable model applies them
+unprompted.
 
 **When to run:** after your draft is complete AND verified, before delivery,
 on any substantive work product. **Scale to stakes** — a quick answer stays
@@ -55,8 +49,8 @@ the full pass. Do not turn trivial tasks into checklist theater.
    quantify each path over time — don't just argue qualitatively. Find the
    crossover / breakeven / threshold where the answer flips, then state the
    assumptions that would flip it so the reader knows exactly what to verify.
-   (In testing, the most decision-relevant insights came from this step — e.g.
-   the "cash-rich" option having *less* cash by month 7.)
+   (Illustrative: a "cash-rich" option can still show *less* cash by month 7
+   once the crossover is actually modeled.)
 
 ## Domain-specific checks (apply the ones that fit the task)
 

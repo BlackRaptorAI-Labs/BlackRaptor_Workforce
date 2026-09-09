@@ -1,3 +1,20 @@
+## 2.2.0 — 2026-09-09 — Onboarding no longer eats your first turn; every description rewritten
+
+### Changed
+- **Agent and skill descriptions across the roster were rewritten** to state scope more directly.
+  The router matches your request against this description text, not against agent names — if you
+  have muscle memory for a specific name, it still works.
+- **Onboarding and the verdict-format reminder now fire at session start, not on your first prompt.**
+  Both previously ran as a `UserPromptSubmit` hook, which meant the first thing you typed in a fresh
+  session got intercepted for setup. They now run once at `SessionStart` instead, so your first turn
+  is your first turn.
+- **The one-shot claims-gate prompt-reminder hook is removed.** Its job — telling a producer agent
+  about the DRAFT/GATED convention — is now carried directly in each producer's own instructions, so
+  a separate hook nagging about it on every relevant prompt was redundant and is gone.
+- **The shared operating-contract text agents carry was split into two files under the hood**
+  (the always-on commitments, and a separate session/preference layer). No visible change to what an
+  agent tells you it follows; this is an internal reorganization to keep the always-on part smaller.
+
 ## 2.1.0 — 2026-09-06 — The verdict Stop hook closes two gaps found live in testing
 
 ### Fixed

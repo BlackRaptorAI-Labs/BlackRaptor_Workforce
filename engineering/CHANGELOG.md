@@ -1,3 +1,22 @@
+## 2.2.0 — 2026-09-09 — `schema-reviewer` is the one gate on a migration; onboarding no longer eats your first turn
+
+### Changed
+- **`schema-reviewer` is now the sole, exclusive owner of pre-merge schema and migration review and
+  sign-off; `data-engineer` authors schema and migration work but never signs its own off** (owner
+  ruling D-96). If you were asking `data-engineer` to review a migration before merge, ask
+  `schema-reviewer` instead — `data-engineer` still designs the migration and its rollback, it just
+  no longer reviews or approves one.
+- **Agent descriptions in this pack were rewritten** to state scope more directly.
+- **Onboarding now fires at session start, not on your first prompt** — see the Core pack's 2.2.0
+  entry for the mechanism; this pack's agents are covered by the same change.
+
+### Fixed
+- **The `gate-review` command no longer produces an invalid result when no gate applies to a
+  change.** It previously tried to emit a verdict-shaped block even on a "Tier 1, no gate ran" path,
+  which the verdict schema has no shape for and which the Stop hook correctly rejected. It now states
+  the Tier-1/no-CR-needed result in prose on that path and emits no verdict block, matching what the
+  schema actually supports.
+
 ## 2.1.0 — 2026-09-06 — `product-marketing` moves to the Marketing pack
 
 ### Changed

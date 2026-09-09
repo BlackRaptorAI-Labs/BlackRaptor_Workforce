@@ -1,13 +1,7 @@
 ---
 name: set-preferences
 description: >-
-  Use when the user wants to set or change how the assistant communicates with
-  them — reading level, verbosity, how many clarifying questions to ask, or how
-  often to checkpoint. Triggers: "set my preferences", "explain things more
-  simply", "be more concise", "stop asking so many questions", "check in less
-  often". Writes or updates the user-owned USER-PREFS.md; it does not change any
-  agent, skill, or shipped file. The conversational front end for the Layer-0
-  Core contract's Interaction-preferences directive.
+  Use when the user wants to set or change how the assistant communicates: reading level, verbosity, question style, or checkpoint frequency. Writes or updates the user-owned USER-PREFS.md; never changes an agent, skill, or shipped file.
 ---
 
 # Set interaction preferences

@@ -1,12 +1,7 @@
 ---
 name: context-onboarding
 description: >-
-  The first-run welcome + the one standardized interview that teaches a pack your company and/or
-  project before it does substantive work. Use on true first run (context file missing/template AND
-  USER-PREFS.md missing), when a pack's context file is missing or still a template, or when the user
-  says "set up the workforce", "onboard", "set up the context", "learn my business", "update the
-  context", or points you at documents. Shared by every pack; choice-first, document-fed with
-  provenance, approval before writing, and it can always be deferred with "Later".
+  The first-run welcome and standardized interview that teaches a pack your company/project before it does substantive work. Use on true first run (context file missing or a template, and USER-PREFS.md missing), or when the user asks to onboard or set up context. Always deferrable.
 ---
 
 # Context onboarding — first-run welcome & the standardized interview

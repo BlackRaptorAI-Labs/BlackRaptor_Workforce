@@ -1,12 +1,7 @@
 ---
 name: standards-discipline
 description: >-
-  Apply and cite a standard, statute, regulation, or specification correctly.
-  Use whenever an output invokes a designation (IEC/ISO/IEEE/UL/IPC/ETSI/FCC/CFR
-  /FTC/case law) or claims conformance — "cite this standard", "is this
-  compliant", "what governs this", "STANDARDS APPLIED block". The long form of
-  the Layer-0 Core standards rule; the verified anchor map is in
-  references/standards-anchor-map.md.
+  Apply and cite a standard, statute, regulation, or specification correctly. Use whenever an output invokes a designation (IEC/ISO/IEEE/UL/IPC/ETSI/FCC/CFR) or claims conformance. The verified anchor map is in references/standards-anchor-map.md.
 ---
 
 # Standards discipline
