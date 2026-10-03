@@ -1,7 +1,7 @@
 name: Defect
 description: Something broke or behaved wrong. File one per defect, any time.
 title: "[defect] "
-labels: ["alpha", "alpha-defect"]
+labels: ["type:defect"]
 body:
   - type: markdown
     attributes:

@@ -1,5 +1,7 @@
 # BlackRaptor Workforce — Private Alpha
 
+This document describes the invite-only alpha that ran before 3 October 2026. The alpha has ended; the repository is public and open to issues and pull requests. See CONTRIBUTING.md.
+
 Welcome, and thank you for testing this.
 
 **BlackRaptor Workforce** is a set of specialist agent packs with read-only review gates that block work until it meets the standard. You install it into Claude Code and get governed teams — engineering, an executive council, marketing, hardware — that draft and review work while you make the decisions.
@@ -16,10 +18,10 @@ You are one of a small number of invited testers. Please keep the repo and your 
 
 ## 1. Install
 
-1. **Accept the GitHub invitation** to the private `BlackRaptorAI/blackraptor` repo (you'll install using your own GitHub login).
+1. **Accept the GitHub invitation** to the then-private `BlackRaptorAI-Labs/BlackRaptor_Workforce` repo (you'll install using your own GitHub login).
 2. In Claude Code, add the marketplace:
    ```
-   /plugin marketplace add BlackRaptorAI/blackraptor
+   /plugin marketplace add BlackRaptorAI-Labs/BlackRaptor_Workforce
    ```
 3. Install the **starter recipe** — most people begin here:
    ```
@@ -51,7 +53,7 @@ If anything in these four steps is confusing or fails — that itself is the mos
   ```json
   {
     "extraKnownMarketplaces": {
-      "blackraptor": { "source": { "source": "github", "repo": "BlackRaptorAI/blackraptor" } }
+      "blackraptor": { "source": { "source": "github", "repo": "BlackRaptorAI-Labs/BlackRaptor_Workforce" } }
     },
     "enabledPlugins": {
       "blackraptor-engineering@blackraptor": true,
@@ -86,7 +88,7 @@ Please spend your time roughly in this order. Items 1 and 2 are where we most ne
 
 ### Two specific checks we need confirmed
 
-- **Project-scope `settings.json` install (§1b).** At least **two testers**, please commit the `.claude/settings.json` block above to the **private** `BlackRaptorAI/blackraptor`-based workflow and confirm collaborators actually get the packs on opening the repo. Report exactly what happened (worked / partial / failed, and any prompt or error).
+- **Project-scope `settings.json` install (§1b).** At least **two testers**, please commit the `.claude/settings.json` block above to the **then-private** `BlackRaptorAI-Labs/BlackRaptor_Workforce`-based workflow and confirm collaborators actually get the packs on opening the repo. Report exactly what happened (worked / partial / failed, and any prompt or error).
 - **Marketing hook in Cowork.** With the marketing pack installed, does the claims-gate hook **fire in a Cowork session** (not just the CLI)? Report **yes/no + the Cowork app version**.
 
 ---

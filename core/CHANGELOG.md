@@ -1,3 +1,8 @@
+## 2.3.1 — 2026-10-03 — New home at BlackRaptorAI-Labs
+
+### Changed
+- The project now lives at BlackRaptorAI-Labs; the old address redirects. Issues and pull requests are open; see CONTRIBUTING.
+
 ## 2.3.0 — 2026-10-03 — Findings you can act on; hooks that are tested and can be switched off
 
 ### Changed

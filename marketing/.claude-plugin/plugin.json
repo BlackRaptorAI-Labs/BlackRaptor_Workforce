@@ -1,17 +1,17 @@
 {
   "name": "blackraptor-marketing",
   "displayName": "BlackRaptor Workforce — Marketing",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "dependencies": [
     "blackraptor-core"
   ],
   "description": "Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written. A governed, full-stack marketing department: specialist agents (brand, naming/trademark, content, copy, creative, SEO/GEO, paid media, social/community, email/outbound, video, analytics) hub-and-spoke around a shared Marketing Intelligence Core context file. Draws on published methodology (Dillman survey design, Kohavi experimentation, IPA/Binet & Field creative effectiveness, Ehrenberg-Bass distinctive assets, Made to Stick / NN-g writing craft), cited as sources and not an endorsement by or affiliation with their authors; including trademark/name research, a compliance-gated claims engine, and pricing/willingness-to-pay modeling. Auto-pulls the blackraptor-core pack (evidence-auditor adversarial research gate + research-integrity skill + product-manager). Hard rules baked in: no autonomous sends, posts, or spend — agents draft, humans approve.",
   "author": {
     "name": "BlackRaptor AI",
-    "url": "https://github.com/BlackRaptorAI"
+    "url": "https://github.com/BlackRaptorAI-Labs"
   },
-  "homepage": "https://github.com/BlackRaptorAI/blackraptor/tree/main/marketing",
-  "repository": "https://github.com/BlackRaptorAI/blackraptor",
+  "homepage": "https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce/tree/main/marketing",
+  "repository": "https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce",
   "license": "Apache-2.0",
   "keywords": [
     "marketing",

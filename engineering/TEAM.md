@@ -33,7 +33,7 @@ designed to reinforce the platform's existing spec-driven workflow
 
 > The full group — development team + Executive Advisory Council — is
 > collectively **BlackRaptor Workforce** (public home:
-> `BlackRaptorAI/BlackRaptor_Agents`).
+> `BlackRaptorAI-Labs/BlackRaptor_Workforce`).
 
 **Pod 1 · Orchestration & Architecture**
 0. **`dev-team` skill** (main session) — process-only orchestration of the dev

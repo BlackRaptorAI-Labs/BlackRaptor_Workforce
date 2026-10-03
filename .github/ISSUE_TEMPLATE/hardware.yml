@@ -1,0 +1,38 @@
+name: "Hardware Engineering pack"
+description: Something an agent or skill in the Hardware Engineering pack did that you did not expect.
+title: "[hardware] "
+labels: ["pack:hardware"]
+body:
+  - type: textarea
+    id: version
+    attributes:
+      label: Pack version
+      description: Run `/workforce-doctor` and paste its output.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: agent_or_skill
+    attributes:
+      label: Agent or skill
+      placeholder: e.g. code-reviewer, or the /plan-review command
+    validations:
+      required: true
+  - type: textarea
+    id: asked
+    attributes:
+      label: What you asked
+    validations:
+      required: true
+  - type: textarea
+    id: did
+    attributes:
+      label: What it did
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true

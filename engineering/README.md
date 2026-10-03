@@ -174,7 +174,7 @@ prompts.
 ## Quickstart
 
 ```bash
-git clone https://github.com/BlackRaptorAI/blackraptor.git
+git clone https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce.git
 cd blackraptor/development
 ./install.sh /path/to/your/repo
 ```
@@ -217,7 +217,7 @@ This kit practices what it preaches, so here's its own CONCERNS verdict:
 ## Companion project: the Executive Advisory Council
 
 development-team-agents answers *"are we building the thing right?"* Its companion,
-**[BlackRaptor Workforce — council](https://github.com/BlackRaptorAI/blackraptor/tree/main/council)**,
+**[BlackRaptor Workforce — council](https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce/tree/main/council)**,
 answers the question upstream of it: *"are we building the right company?"* —
 ten tough, evidence-driven advisor seats (market, pricing,
 finance, GTM, revenue, growth, technology & data, people, ethics & legal,

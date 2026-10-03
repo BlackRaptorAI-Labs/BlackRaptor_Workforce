@@ -3,7 +3,7 @@
 An open team of AI advisor agents that helps a CEO build the right company.
 Created by **Tom Hanks (BlackRaptor AI)**, battle-tested building a real
 operating company. Keep this attribution and a link to the source repository
-(https://github.com/BlackRaptorAI/BlackRaptor_Agents — `council/`) with any copy,
+(https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce — `council/`) with any copy,
 port, or derivative.
 
 The Council answers *"are we building the right company?"* — customers, what to
@@ -250,6 +250,6 @@ and must never change.
 
 Created by Tom Hanks (BlackRaptor AI); battle-tested building a real operating company.
 Keep this notice and a link to the source repository
-(https://github.com/BlackRaptorAI/BlackRaptor_Agents — `council/`) with any copy,
+(https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce — `council/`) with any copy,
 port, or derivative. Contributions and improvements are welcome — share them
 back so everyone builds better products and serves their customers well.

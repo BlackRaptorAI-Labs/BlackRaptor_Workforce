@@ -1,5 +1,7 @@
 # BlackRaptor Workforce — Private Alpha Terms
 
+This document describes the invite-only alpha that ran before 3 October 2026. The alpha has ended; the repository is public and open to issues and pull requests. See CONTRIBUTING.md.
+
 *By accepting the repo invitation and installing, you're agreeing to this.*
 
 These are plain-language terms for the private alpha. They're a working version — counsel reviews a formal version before any public launch — but they reflect how we intend to treat you and your feedback.

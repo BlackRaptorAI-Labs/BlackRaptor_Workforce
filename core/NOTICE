@@ -6,7 +6,7 @@ with the world. The shared dependency for the BlackRaptor Workforce teams — th
 cross-cutting `product-manager` and `evidence-auditor` agents and the
 `research-integrity` skill, auto-installed with the dev-team, council,
 marketing, and HW-engineering plugins.
-Source: https://github.com/BlackRaptorAI/blackraptor/tree/main/core
+Source: https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce/tree/main/core
 
 Per the Apache License 2.0 (Section 4), this NOTICE file must be included
 with any copy, port, or derivative of this work. Please also keep a link

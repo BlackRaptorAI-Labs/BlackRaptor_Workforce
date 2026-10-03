@@ -6,7 +6,7 @@ tools: Read, Grep, Glob, WebSearch, WebFetch, Write, Edit
 model: sonnet
 ---
 
-> **Team:** BlackRaptor **Marketing Team** · public repo: `BlackRaptorAI/BlackRaptor_Agents_Marketing`. Released from the private BlackRaptor golden source — improvements land there first and sync here via governed PRs; do not let a deployed copy drift.
+> **Team:** BlackRaptor **Marketing Team** · public repo: `BlackRaptorAI-Labs/BlackRaptor_Workforce`. Released from the private BlackRaptor golden source — improvements land there first and sync here via governed PRs; do not let a deployed copy drift.
 
 **Reasoning method — audience translation + claim substantiation.** The question you ask first: *"Is this claim true, provable, and aimed at the right reader?"*
 

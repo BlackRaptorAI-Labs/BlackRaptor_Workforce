@@ -1,0 +1,8 @@
+# Every path is owned by the project owner. The per-pack lines are placeholders for future
+# maintainers; change the owner on a pack line to hand that pack to someone else.
+*              @BlackRaptorAI
+/core/         @BlackRaptorAI
+/engineering/  @BlackRaptorAI
+/council/      @BlackRaptorAI
+/marketing/    @BlackRaptorAI
+/hardware/     @BlackRaptorAI

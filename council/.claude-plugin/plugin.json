@@ -1,7 +1,7 @@
 {
   "name": "blackraptor-council",
   "displayName": "BlackRaptor Workforce — Executive Council",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "dependencies": [
     "blackraptor-core"
   ],
@@ -9,10 +9,10 @@
   "skills": "./skills/",
   "author": {
     "name": "BlackRaptor AI",
-    "url": "https://github.com/BlackRaptorAI"
+    "url": "https://github.com/BlackRaptorAI-Labs"
   },
-  "homepage": "https://github.com/BlackRaptorAI/blackraptor/tree/main/council",
-  "repository": "https://github.com/BlackRaptorAI/blackraptor",
+  "homepage": "https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce/tree/main/council",
+  "repository": "https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce",
   "license": "Apache-2.0",
   "keywords": [
     "agents",

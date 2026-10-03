@@ -2,10 +2,10 @@
 
 The eight-seat **hardware engineering department** for Claude, plus an
 adversarial design-review gate — built by
-[BlackRaptor AI](https://github.com/BlackRaptorAI) as the hardware sibling of
-[blackraptor](https://github.com/BlackRaptorAI/blackraptor) (the
+[BlackRaptor AI](https://github.com/BlackRaptorAI-Labs) as the hardware sibling of
+[blackraptor](https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce) (the
 development team + executive advisory council) and
-[blackraptor](https://github.com/BlackRaptorAI/blackraptor),
+[blackraptor](https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce),
 held to the same operating standard: **agents design and analyze — humans make
 the irreversible calls.**
 
@@ -21,9 +21,9 @@ the full standard behind every rule included in `hw-engineering/docs/`.
 
 | Where | How | Status |
 |---|---|---|
-| **Claude Code — recommended** | `claude plugin marketplace add BlackRaptorAI/blackraptor` then `claude plugin install blackraptor-hardware@blackraptor-ai` — auto-pulls **blackraptor-core** (product-manager + evidence-auditor + research-integrity) | ✅ Available now |
-| **Claude Code — this repo directly** | `claude plugin marketplace add BlackRaptorAI/blackraptor` then `claude plugin install blackraptor-hardware` (bridge auto-installs only if the `blackraptor-ai` marketplace is also added) | ✅ Available now |
-| **Claude Desktop** (no terminal) | **+** next to the prompt box → **Plugins** → **Manage plugins** → **+ Add marketplace** → GitHub repository `BlackRaptorAI/blackraptor` → install **blackraptor-hardware** → restart the session | ✅ Available now |
+| **Claude Code — recommended** | `claude plugin marketplace add BlackRaptorAI-Labs/BlackRaptor_Workforce` then `claude plugin install blackraptor-hardware@blackraptor` — auto-pulls **blackraptor-core** (product-manager + evidence-auditor + research-integrity) | ✅ Available now |
+| **Claude Code — this repo directly** | `claude plugin marketplace add BlackRaptorAI-Labs/BlackRaptor_Workforce` then `claude plugin install blackraptor-hardware` | ✅ Available now |
+| **Claude Desktop** (no terminal) | **+** next to the prompt box → **Plugins** → **Manage plugins** → **+ Add marketplace** → GitHub repository `BlackRaptorAI-Labs/BlackRaptor_Workforce` → install **blackraptor-hardware** → restart the session | ✅ Available now |
 | **Any program workspace, vendored** | copy `hw-engineering/agents/` into the workspace's `.claude/agents/` and `hw-engineering/CLAUDE.md` + `TEAM.md` + `docs/` + `templates/` into the workspace root | ✅ Available now |
 
 ## What's here
@@ -57,7 +57,7 @@ independent reviewer is the point, not an optimisation.
 ## Market grounding (the shared bridge)
 
 The team auto-installs
-[**blackraptor-core**](https://github.com/BlackRaptorAI/blackraptor/tree/main/core)
+[**blackraptor-core**](https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce/tree/main/core)
 for the two checks engineering cannot referee for itself:
 **`product-manager`** validates at requirement intake and PDR that the device's
 makeup — feature set, design life, cost target — traces to market need and

@@ -2,10 +2,10 @@
   "name": "blackraptor",
   "owner": {
     "name": "BlackRaptor AI",
-    "url": "https://github.com/BlackRaptorAI"
+    "url": "https://github.com/BlackRaptorAI-Labs"
   },
   "description": "Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written. Governed AI agent teams for Claude Code — a software-engineering team and an executive advisory council, plus a shared Core pack of cross-cutting agents (product-manager, evidence-auditor) and skills (Excellence Pass, research-integrity, gate reviews). Install any team; the Core pack comes with it — plus the full-stack marketing team and the hardware-engineering team, all served through this marketplace.",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "plugins": [
     {
       "name": "blackraptor-engineering",
@@ -23,13 +23,13 @@
       "name": "blackraptor-marketing",
       "displayName": "BlackRaptor Workforce — Marketing",
       "source": "./marketing",
-      "description": "Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written. A governed, full-stack marketing department (brand, naming/trademark, content, copy, creative, SEO/GEO, paid, social, email, video, analytics) + the compliance-claims-gate every external asset passes through. Auto-installs blackraptor-core. No autonomous sends, posts, or spend — agents draft, humans approve. Hosted in BlackRaptorAI/BlackRaptor_Agents_Marketing."
+      "description": "Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written. A governed, full-stack marketing department (brand, naming/trademark, content, copy, creative, SEO/GEO, paid, social, email, video, analytics) + the compliance-claims-gate that producer agents are instructed to route every external asset through. Auto-installs blackraptor-core. No autonomous sends, posts, or spend — agents draft, humans approve."
     },
     {
       "name": "blackraptor-hardware",
       "displayName": "BlackRaptor Workforce — Hardware Engineering",
       "source": "./hardware",
-      "description": "Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written. A governed hardware-engineering department + an adversarial design-review gate, conducted by the main-session hw-program skill (decision register, interfaces, PDR/CDR/MRR readiness). Ships the hw-operating-standard skill. Product-agnostic via per-program PROGRAM-CONTEXT.md. Auto-installs blackraptor-core. Agents design and analyze — humans make the irreversible calls. Hosted in BlackRaptorAI/BlackRaptor_Agents_HW_Engineering."
+      "description": "Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written. A governed hardware-engineering department + an adversarial design-review gate, conducted by the main-session hw-program skill (decision register, interfaces, PDR/CDR/MRR readiness). Ships the hw-operating-standard skill. Product-agnostic via per-program PROGRAM-CONTEXT.md. Auto-installs blackraptor-core. Agents design and analyze — humans make the irreversible calls."
     },
     {
       "name": "blackraptor-core",

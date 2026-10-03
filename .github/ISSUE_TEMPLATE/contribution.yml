@@ -1,0 +1,30 @@
+name: I want to change an agent
+description: Propose a change to an agent or skill before or alongside a pull request.
+title: "[contribution] "
+labels: ["type:contribution"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read [CONTRIBUTING.md](https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce/blob/main/CONTRIBUTING.md) first.
+        Accepted changes are ported into the private source by a maintainer and ship in a later release.
+  - type: input
+    id: target
+    attributes:
+      label: Agent or skill
+      placeholder: e.g. marketing/agents/copywriter.md
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: What you want to change, and why
+      description: The miss your change prevents.
+    validations:
+      required: true
+  - type: input
+    id: pr
+    attributes:
+      label: Pull request, if you opened one
+    validations:
+      required: false

@@ -1,0 +1,31 @@
+# Packages the five pack folders as release assets when a v* tag is pushed.
+# Packaging only: no tests run here. Built from the private source; do not hand-edit.
+name: release-assets
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Zip each pack
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          mkdir -p out
+          for pack in core engineering council marketing hardware; do
+            test -d "$pack"
+            zip -qr "out/${pack}-${version}.zip" "$pack"
+          done
+          ls -l out
+      - name: Attach zips to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" --notes "See each pack's CHANGELOG.md."
+          gh release upload "$GITHUB_REF_NAME" out/*.zip --clobber

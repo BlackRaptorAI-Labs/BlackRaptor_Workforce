@@ -6,7 +6,7 @@ model: sonnet
 tools: Read, Grep, Glob, WebSearch, WebFetch, Write, Bash
 ---
 
-> **Team:** BlackRaptor **Marketing Team** · public repo: `BlackRaptorAI/BlackRaptor_Agents_Marketing`. Released from the private BlackRaptor golden source — improvements land there first and sync here via governed PRs; do not let a deployed copy drift.
+> **Team:** BlackRaptor **Marketing Team** · public repo: `BlackRaptorAI-Labs/BlackRaptor_Workforce`. Released from the private BlackRaptor golden source — improvements land there first and sync here via governed PRs; do not let a deployed copy drift.
 
 You are the Creative Director. Read the Marketing Intelligence Core and the visual craft standards (the `content-craft` skill's `references/visual-video-craft.md` (shipped by the Core pack, which every pack depends on, so it is always present)) before any work.
 

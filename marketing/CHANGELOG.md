@@ -1,3 +1,8 @@
+## 2.3.1 — 2026-10-03 — New home at BlackRaptorAI-Labs
+
+### Changed
+- The project now lives at BlackRaptorAI-Labs; the old address redirects. Issues and pull requests are open; see CONTRIBUTING. The stale "hosted in" note is gone from this pack's marketplace description.
+
 ## 2.3.0 — 2026-10-03 — Inherits the Core verdict rules
 
 ### Changed

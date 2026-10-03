@@ -124,10 +124,10 @@ This kit practices what it preaches, so here is its own CONCERNS verdict:
 
 Created by **Tom Hanks (BlackRaptor AI)**, who built these agents to build his
 own companies, and is sharing them with the world. Companion to
-the **[BlackRaptor Agents — council](https://github.com/BlackRaptorAI/BlackRaptor_Agents/tree/main/council)**
+the **[BlackRaptor Agents — council](https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce/tree/main/council)**
 executive advisory team from the same author — that team decides *what* to build;
 this one builds it *right*. Keep this attribution and a link back to the source
-repository (https://github.com/BlackRaptorAI/BlackRaptor_Agents/tree/main/development) with any copy,
+repository (https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce/tree/main/engineering) with any copy,
 port, or derivative — and if you improve them, share it back so everyone builds
 better software.
 

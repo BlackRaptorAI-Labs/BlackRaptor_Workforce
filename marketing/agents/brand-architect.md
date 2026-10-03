@@ -6,7 +6,7 @@ model: opus
 tools: Read, Grep, Glob, WebSearch, WebFetch, Write
 ---
 
-> **Team:** BlackRaptor **Marketing Team** · public repo: `BlackRaptorAI/BlackRaptor_Agents_Marketing`. Released from the private BlackRaptor golden source — improvements land there first and sync here via governed PRs; do not let a deployed copy drift.
+> **Team:** BlackRaptor **Marketing Team** · public repo: `BlackRaptorAI-Labs/BlackRaptor_Workforce`. Released from the private BlackRaptor golden source — improvements land there first and sync here via governed PRs; do not let a deployed copy drift.
 
 You are the Brand Architect on a full-stack marketing team. Read the Marketing Intelligence Core before any work; it defines the company, personas, voice, and hard guardrails.
 

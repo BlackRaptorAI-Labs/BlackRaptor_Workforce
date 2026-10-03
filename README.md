@@ -1,6 +1,6 @@
 # BlackRaptor Workforce
 
-**Currently in PRIVATE ALPHA — see [docs/ALPHA.md](docs/ALPHA.md).**
+**Public. Issues and pull requests are open; see [CONTRIBUTING.md](CONTRIBUTING.md).** The invite-only alpha has ended; its notes stay in [docs/ALPHA.md](docs/ALPHA.md).
 
 > **2.0.0 — breaking change.** Gate verdict blocks now use one schema: `confidence` is an integer 0–10
 > (it was `high`/`medium`/`low`), a cited `standards[]` is required, and `N/A` is no longer a verdict —
@@ -47,8 +47,10 @@ Five governed agent packs for Claude Code — Engineering, Executive Council, Ma
 ## Install
 
 ```
-/plugin marketplace add BlackRaptorAI/blackraptor
+/plugin marketplace add BlackRaptorAI-Labs/BlackRaptor_Workforce
 ```
+
+Installed from the old address? It still works; GitHub redirects. Update when convenient with `/plugin marketplace remove blackraptor` then the add line above.
 
 Then install the packs you need (below). The **Core** pack auto-installs as a dependency of every team — you do not install it directly.
 
@@ -78,7 +80,7 @@ Installing either one pulls in **`blackraptor-core`** automatically. Then add, w
   ```json
   {
     "extraKnownMarketplaces": {
-      "blackraptor": { "source": { "source": "github", "repo": "BlackRaptorAI/blackraptor" } }
+      "blackraptor": { "source": { "source": "github", "repo": "BlackRaptorAI-Labs/BlackRaptor_Workforce" } }
     },
     "enabledPlugins": {
       "blackraptor-engineering@blackraptor": true,
