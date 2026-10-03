@@ -66,7 +66,7 @@ CI check parses and validates it.**
 <details><summary>security-architect</summary>
 
 ```verdict
-{"gate":"security","agent":"security-architect","artifact":"PR #___ / <files>","verdict":"___","confidence":0,"falsifier":"the one fact that would flip this","evidence":"file:line — basis","standards":["none: practice applied: ___"]}
+{"gate":"security","agent":"security-architect","artifact":"PR #___ / <files>","verdict":"___","confidence":0,"falsifier":"the one fact that would flip this","evidence":"CITED file:line@sha — basis","standards":["none: practice applied: ___"]}
 ```
 
 (prose analysis here)
@@ -75,7 +75,7 @@ CI check parses and validates it.**
 <details><summary>privacy-counsel</summary>
 
 ```verdict
-{"gate":"privacy","agent":"privacy-counsel","artifact":"PR #___","verdict":"___","confidence":0,"falsifier":"...","evidence":"file:line — basis","standards":["none: practice applied: ___"]}
+{"gate":"privacy","agent":"privacy-counsel","artifact":"PR #___","verdict":"___","confidence":0,"falsifier":"...","evidence":"CITED file:line@sha — basis","standards":["none: practice applied: ___"]}
 ```
 
 (prose analysis here)

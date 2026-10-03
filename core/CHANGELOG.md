@@ -1,3 +1,36 @@
+## 2.3.0 — 2026-10-03 — Findings you can act on; hooks that are tested and can be switched off
+
+### Changed
+- **Every verdict's evidence now starts with how it was obtained.** The `evidence` line opens with
+  MEASURED (it was run), CITED (a file line or fetched page, quoted), COMPUTED (traced or
+  calculated), ESTIMATED or ASSUMED. The verdict schema is now 3.1 and rejects an unlabelled line, so
+  the `Stop` hook sends such a verdict back. Nothing else in the verdict block changed.
+- **Findings are one claim per row.** Each row lists which sibling entry points were checked
+  (create, update, delete and every caller kind), a severity on a defined scale (Critical, High,
+  Medium, Low), the smallest fix, and the check that proves it closed. Rows that cannot cite the
+  exact line, the failure, the trigger and why existing guards miss it are not written, and a clean
+  review with no findings is a valid result.
+- **Claims about how a vendor service or framework behaves are cited from its documentation, or
+  marked as assumptions.** An assumed claim is capped at Medium and cannot block on its own.
+- **Re-reviews mark each earlier finding CLOSED, PARTIAL or OPEN** at the new commit.
+- **The enforcement map names the real gates.** `test-auditor` and `schema-reviewer` are listed;
+  `qa-test-engineer`, which writes tests, is no longer treated as a gate by the `Stop` hook.
+
+### Added
+- **One switch turns every Core hook off:** set `BR_HOOKS=off` before starting Claude Code.
+  `BR_VERDICT_HOOK=off` and `BR_CLAIMS_HOOK=off` still turn off one hook each. A hook that is off
+  says so in one line.
+- **Each hook now has a timeout** (10 seconds at session start and before a write, 45 seconds at the
+  end of a turn), and a short `hooks/README.md` explains what fires, when, and what it needs.
+- **`workforce-doctor` now checks that `python3` is on your PATH**; without it two of the hooks
+  check nothing.
+
+### Fixed
+- **The claims-gate instructions no longer mention a prompt hook that was removed in 2.2.0.** The
+  rule is carried by the `compliance-claims-gate` skill and each producer's instructions. The skill
+  also now states that the marketing write gate trusts any verdict file on disk, so a verdict a
+  producer wrote itself is caught only by the end-of-turn check.
+
 ## 2.2.1 — 2026-09-09 — A blocked turn no longer names the same gate twice
 
 ### Fixed

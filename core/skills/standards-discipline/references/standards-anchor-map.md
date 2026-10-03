@@ -212,7 +212,7 @@ Verified 3 August 2026 against issuing bodies. **Re-verify before relying on any
 | Digital disclosure | .com Disclosures | FTC staff guidance, March 2013 | Non-binding staff guidance | **Free** |
 | Market research conduct | ICC/Esomar International Code on Market, Opinion and Social Research and Data Analytics | **2025 edition** (supersedes 2016) | Voluntary self-regulatory code | **Free** |
 | Market research (formal) | Market, opinion and social research — vocabulary and service requirements | ISO 20252:2019 | Standard (certifiable) | Paywalled |
-| Online experimentation | Kohavi, Tang & Xu, *Trustworthy Online Controlled Experiments* (CUP, 2020) | — | ⚠️ **Textbook, NOT a standard** | Paywalled |
+| Online experimentation | Kohavi, Tang & Xu, *Trustworthy Online Controlled Experiments* (CUP, 2020) | — | ⚠ **Textbook, NOT a standard** | Paywalled |
 
 **Marketing caveats:**
 

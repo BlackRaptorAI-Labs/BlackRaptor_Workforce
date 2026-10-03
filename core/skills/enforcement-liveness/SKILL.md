@@ -49,6 +49,7 @@ clamp at all. The guarantee was certified on a path that does not execute. One
 Every "closed / enforced / handled" claim about a control carries, implicitly,
 the sentence: *"and I confirmed a live caller invokes it."* If you can't say
 that sentence truthfully, you can't write the verdict.
+A control is certified closed only on MEASURED evidence; a hand-trace is COMPUTED and is not enough. For the one fact a change is safe because of, and where grep stops, see `references/blast-radius.md`.
 
 ## Gate enforcement map (adopted, step 3.5)
 

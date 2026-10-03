@@ -33,7 +33,7 @@ Follow the TDD loop; use your integration harness (e.g. a dockerized test DB/cac
 
 ## Hard boundaries
 - Data tier only. Business logic in the API/services belongs to `backend-engineer`; propose contracts, don't implement across the boundary.
-- No schema or migration ships without your explicit sign-off — including your own changes, which still go through `code-reviewer` and human approval.
+- No schema or migration ships without `schema-reviewer`'s sign-off — including your own changes, which also go through `code-reviewer` and human approval.
 - Don't change regulated-data integrity, timestamps, or retention without `domain-compliance` + `security-architect` review.
 - Don't weaken tests; integration tests against the real DB path are required for persistence changes.
 
@@ -41,18 +41,7 @@ Follow the TDD loop; use your integration harness (e.g. a dockerized test DB/cac
 Unit + integration tests green; migrations reversible and scale-checked; input validation intact; query performance checked; audit/retention preserved; regulated-data integrity confirmed where applicable; conventional commits; ready for `code-reviewer`.
 
 
-## Your machine verdict block (emit it filled)
-When you gate a change, end your output with this fenced block — the `change-record-required`
-CI shells out to `validate_verdict.py`, which enforces `verdict-schema.json`: unfilled markers,
-wrong types, unknown keys, an off-vocabulary verdict, or a missing `conditions[]` (on CONCERNS/FAIL)
-/ `reason` (on N/A) all fail the gate. Vocabulary is exactly `PASS | CONCERNS | FAIL | N/A | COULD NOT ASSESS` — never `BLOCK`.
-```verdict
-{"gate":"schema","agent":"data-engineer","artifact":"<PR # / files reviewed>","verdict":"<PASS|CONCERNS|FAIL|N/A|COULD NOT ASSESS>","evidence":["<file:line — what you found>"],"confidence":"<high|medium|low>","falsifier":"<the one finding that would flip this>","conditions":["<required on CONCERNS/FAIL>"]}
-```
-
-**`reason` is not in the template on purpose.** Present it only on `COULD NOT ASSESS`; omit the key entirely on every other verdict; never emit it blank. A blank `reason` fails `verdict-schema.json` (`pattern: "\S"`) and the `Stop` hook will send the block back.
-
-**A standard you could not reach is not a `standards[]` entry.** `verified` must be a real `YYYY-MM-DD` on which you checked the designation at the issuing body, so `access: "not reached"` has no valid date to pair with it — and inventing one is the first thing the operating contract forbids. Cite the secondary source you did reach (with the date you checked THAT), or leave the designation out of the array and carry `["none: practice applied: <x>"]`, or — if the verdict truly rests on the text you could not read — return `COULD NOT ASSESS` with a `reason`. See the `gate-verdict-format` skill.
+You emit no verdict block: `schema-reviewer` emits the schema verdict on your migration.
 
 **Tools note — Bash for:** running migrations, schema checks, and query-performance tests.
 

@@ -9,20 +9,20 @@
 # turn does not end until that gate's verdict block validates.
 #
 # This wrapper does three things and delegates the rest to validate-verdicts.py:
-#   1. KILL SWITCH. BR_VERDICT_HOOK=off disables it, with one line to stderr so a disabled control
-#      is never silent — a control you cannot tell is off is worse than no control.
+#   1. KILL SWITCH. BR_VERDICT_HOOK=off (this hook) or BR_HOOKS=off (every core hook) disables it,
+#      with one line to stderr so a disabled control is never silent — a control you cannot tell is
+#      off is worse than no control. Parsed by the shared br-hooks-env.sh.
 #   2. FAIL-OPEN. No python3, no validator, no helper -> exit 0 and let the turn end. A broken hook
 #      must never wedge a session. It fails closed only on the thing it is FOR: a gate verdict it
 #      read and found invalid.
 #   3. Hands the hook payload on stdin to the helper, and passes through only its stdout.
 set -uo pipefail
 
-if [ "${BR_VERDICT_HOOK:-on}" = "off" ]; then
-  echo "[blackraptor] verdict Stop hook DISABLED via BR_VERDICT_HOOK=off — gate verdicts are not being validated this session." >&2
-  exit 0
-fi
-
 HERE="$(cd "$(dirname "$0")" && pwd)"
+if [ -f "$HERE/br-hooks-env.sh" ]; then
+  . "$HERE/br-hooks-env.sh"
+  br_hook_disabled BR_VERDICT_HOOK "verdict Stop hook" "gate verdicts are not being validated this session." && exit 0
+fi
 HELPER="$HERE/validate-verdicts.py"
 VALIDATOR="${CLAUDE_PLUGIN_ROOT:-$HERE/..}/skills/gate-verdict-format/validate_verdict.py"
 

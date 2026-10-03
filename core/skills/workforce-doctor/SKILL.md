@@ -63,6 +63,8 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    - `core/hooks/inject-onboarding-rule.sh` (`SessionStart`), `core/hooks/enforce-draft-gate.sh`
      (`PreToolUse`), and `core/hooks/validate-verdicts.sh` (`Stop`) are all present **and executable**
      (`test -x`). A hook the client cannot execute is a silently disabled rule.
+   - `command -v python3` succeeds. The write gate and the verdict validator run in Python; without
+     `python3` on PATH both fail open and check nothing, so a missing `python3` is an anomaly.
    - the core `plugin.json` does **NOT** declare a `"hooks"` key. On client 2.1.170+ `hooks/hooks.json`
      auto-loads by convention, so declaring it is a fatal "Duplicate hooks file detected" load failure —
      a **blocking** anomaly.

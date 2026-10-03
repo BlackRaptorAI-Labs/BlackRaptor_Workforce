@@ -21,6 +21,13 @@
 # first time the fresh-project branch fires in a given project directory; its presence silences that
 # branch on every later session in the SAME directory. The other two branches (context or prefs
 # present but not both — genuine in-progress setup) are unaffected and keep nudging normally.
+#
+# KILL SWITCH (2.3.0): BR_HOOKS=off turns this hook off with every other core hook (br-hooks-env.sh).
+HERE="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
+if [ -f "$HERE/br-hooks-env.sh" ]; then
+  . "$HERE/br-hooks-env.sh"
+  br_hook_disabled "" "onboarding SessionStart hook" "the first-run welcome will not be offered this session." && exit 0
+fi
 {
   MARKER='<!-- TEMPLATE — not onboarded -->'
   is_real() { [ -f "$1" ] || return 1; IFS= read -r first < "$1" 2>/dev/null || return 1; [ "$first" != "$MARKER" ]; }

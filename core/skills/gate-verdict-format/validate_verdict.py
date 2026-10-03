@@ -34,6 +34,7 @@ SCHEMA_PATH = Path(__file__).with_name("verdict-schema.json")
 # verdict '___' → PASS but leaves these is a two-character rubber stamp; reject them.
 TEMPLATE_PLACEHOLDERS = {
     "file:line — basis",
+    "CITED file:line@sha — basis",   # the v3.1 Change Record form placeholder
     "the one fact that would flip this",
     "PR #___",
     "PR #___ / <files>",
@@ -148,7 +149,11 @@ def validate_block(obj, idx, schema):
                 errs.append(f"block {idx}: {k} must be at least {ml} char(s)")
             pat = spec.get("pattern")
             if pat is not None and re.search(pat, v) is None:
-                errs.append(f"block {idx}: {k} must match /{pat}/ (e.g. non-blank — not just whitespace)")
+                if k == "evidence" and pat.startswith("^(MEASURED"):
+                    errs.append(f"block {idx}: evidence must open with a provenance label — MEASURED, CITED, "
+                                f"COMPUTED, ESTIMATED or ASSUMED (schema v3.1) — got '{v[:40]}'")
+                else:
+                    errs.append(f"block {idx}: {k} must match /{pat}/ (e.g. non-blank — not just whitespace)")
 
     # verdict-conditional rules (schema allOf, hand-applied)
     v = obj.get("verdict")

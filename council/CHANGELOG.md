@@ -1,3 +1,9 @@
+## 2.3.0 — 2026-10-03 — Seats inherit the Core verdict rules
+
+### Changed
+- **Seat verdicts follow the Core 2.3.0 verdict rules:** the evidence line starts with how it was
+  obtained (MEASURED, CITED, COMPUTED, ESTIMATED or ASSUMED). See the Core pack's changelog.
+
 ## 2.2.1 — 2026-09-09 — Shorter descriptions for the pricing-strategy seat and the council skill
 
 ### Changed

@@ -122,7 +122,7 @@ other gate uses (`verdict-schema.json`, enforced by `validate_verdict.py`), nami
 both `gate` and `agent`:
 
 ```verdict
-{"gate":"<your seat slug>","agent":"<your seat slug>","artifact":"<the decision or question you reviewed>","verdict":"<PASS|CONCERNS|FAIL|COULD NOT ASSESS>","confidence":<0-10>,"falsifier":"<the one observation that would flip this>","evidence":"<the concrete basis>","standards":["none: practice applied: <the practice>"],"conditions":["<required and non-empty on CONCERNS and FAIL>"]}
+{"gate":"<your seat slug>","agent":"<your seat slug>","artifact":"<the decision or question you reviewed>","verdict":"<PASS|CONCERNS|FAIL|COULD NOT ASSESS>","confidence":<0-10>,"falsifier":"<the one observation that would flip this>","evidence":"MEASURED|CITED|COMPUTED|ESTIMATED|ASSUMED (pick one) — <the concrete basis>","standards":["none: practice applied: <the practice>"],"conditions":["<required and non-empty on CONCERNS and FAIL>"]}
 ```
 
 Write this block to `council/<slug>.verdict.md` if your tool grant includes `Write` (most seats do

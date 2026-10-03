@@ -13,12 +13,15 @@ metadata:
 This skill is the **method**. The **gate** is the separate **`claims-gate` agent**, which runs this
 method in a context that has **not** seen the copy's author reasoning (P5). The mandatory routing rule —
 *every external-facing marketing asset is dispatched to the `claims-gate` agent before delivery* — is
-carried on loaded surfaces (this skill; the marketing plugin's `UserPromptSubmit` hook; each producer's
-description) because a plugin-root `CLAUDE.md` carrier does **not** load on a marketplace install (measured;
+carried on loaded surfaces (this skill and each producer's
+description; no hook carries it) because a plugin-root `CLAUDE.md` carrier does **not** load on a marketplace install (measured;
 SPEC §2 P11). **Do NOT run this skill on copy the current context wrote** — that is self-review, which the
 gate exists to prevent; dispatch the `claims-gate` agent instead. Guaranteed isolated dispatch is the
 `marketing-campaign` skill's mandatory step; for an ad-hoc single asset, dispatch the `claims-gate` agent
 and, if you cannot, say so and do not present the copy as gate-cleared.
+The DRAFT/GATED write gate is best-effort: it trusts any `.verdict.md` on disk, so a verdict file a
+producer wrote itself is caught only by the `Stop` hook's dispatch check, and only when no
+`claims-gate` dispatch happened later in the same turn.
 
 ## The DRAFT/GATED file convention (mechanical enforcement, the 2.1.0 claims-gate change)
 

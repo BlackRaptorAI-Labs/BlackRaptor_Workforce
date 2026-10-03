@@ -1,3 +1,33 @@
+## 2.3.0 — 2026-10-03 — A plan-review command; measured test verdicts; reviewers that cite vendor docs
+
+### Added
+- **`/plan-review`** reviews an implementation plan or design before code is written. It always
+  runs eight core reviewers, adds specialists only when the plan touches their area, gives each
+  reviewer the sections it owns, and on a second round checks whether each earlier finding is
+  closed. Use `/gate-review` for a finished diff.
+- **A facts pack before any multi-reviewer review.** `completion-auditor` gathers the changed files,
+  dependency and ID coverage, file-ownership collisions and every count with its command, once;
+  each reviewer cites it instead of re-deriving it.
+
+### Changed
+- **`test-auditor` passes a test set only on a measured run.** It stays read-only and is paired with
+  `completion-auditor`, which runs the suite or the mutation `test-auditor` names. Without a measured
+  run it returns COULD NOT ASSESS or CONCERNS; a FAIL it can show by reading the code stands.
+- **`code-reviewer`, `schema-reviewer`, `devops-sre`, `backend-engineer` and `frontend-engineer` can
+  fetch vendor and framework documentation**, so claims about how a service or framework behaves
+  are cited by URL. They read; they do not post.
+- **`security-architect`, `red-team-reviewer`, `code-reviewer`, `backend-engineer` and
+  `frontend-engineer` check every sibling entry point** of a defect before reporting it, and `code-reviewer` and `test-auditor` look for failures that are
+  swallowed silently.
+- **`qa-test-engineer` hands over a RED-test table:** a test counts as RED only if it was run and
+  failed for the intended reason.
+- **`dev-team` waits for every dispatched gate before ending its turn**, so no verdict is lost.
+- **`data-engineer` no longer emits a verdict block**; `schema-reviewer` signs off migrations.
+
+### Deprecated
+- **The Tier-3 hook override is now `BR_ALLOW_TIER3=1`.** `ALLOW_TIER3=1` still works in 2.3.x and
+  prints a notice; it is removed in the next release.
+
 ## 2.2.1 — 2026-09-09 — Shorter description for the dev-team skill
 
 ### Changed

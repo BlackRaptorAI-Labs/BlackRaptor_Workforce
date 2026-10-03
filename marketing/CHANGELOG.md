@@ -1,3 +1,9 @@
+## 2.3.0 — 2026-10-03 — Inherits the Core verdict rules
+
+### Changed
+- **This pack inherits the Core 2.3.0 verdict rules**, and the `marketing-campaign` skill no longer
+  mentions a prompt hook that was removed in 2.2.0. See the Core pack's changelog.
+
 ## 2.2.1 — 2026-09-09 — No changes in this pack this release
 
 No changes to this pack's agents, skills, or behaviour in 2.2.1. See the Core pack's changelog for

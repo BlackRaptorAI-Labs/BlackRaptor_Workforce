@@ -128,7 +128,7 @@ array is the single literal `["none: practice applied: <the practice>"]`.
 **Council vocabulary maps onto this block** (COUNCIL.md §3a). Your seat's `BLOCK` is `FAIL` in the machine block; a concern you would let pass with conditions is `CONCERNS`. Say `BLOCK` in the prose if that is your word — the block carries `FAIL`, and the two must agree in substance.
 
 ```verdict
-{"gate":"ethics","agent":"ethics-governance","artifact":"<what you reviewed>","verdict":"<PASS|CONCERNS|FAIL|COULD NOT ASSESS>","confidence":<0-10>,"falsifier":"<the one observation that would flip this>","evidence":"<file:line or the concrete basis>","standards":[{"designation":"<designation, verified at the issuing body>","edition":"<year>","clause":"<clause>","access":"<full text|abstract only|secondary source: X|not reached>","verified":"<YYYY-MM-DD>"}],"conditions":["<required and non-empty on CONCERNS and FAIL>"]}
+{"gate":"ethics","agent":"ethics-governance","artifact":"<what you reviewed>","verdict":"<PASS|CONCERNS|FAIL|COULD NOT ASSESS>","confidence":<0-10>,"falsifier":"<the one observation that would flip this>","evidence":"MEASURED|CITED|COMPUTED|ESTIMATED|ASSUMED (pick one) — <path:line@sha + the exact quote, or the measurement>","standards":[{"designation":"<designation, verified at the issuing body>","edition":"<year>","clause":"<clause>","access":"<full text|abstract only|secondary source: X|not reached>","verified":"<YYYY-MM-DD>"}],"conditions":["<required and non-empty on CONCERNS and FAIL>"]}
 ```
 
 **`reason` is not in the template on purpose.** Present it only on `COULD NOT ASSESS`; omit the key entirely on every other verdict; never emit it blank. A blank `reason` fails `verdict-schema.json` (`pattern: "\S"`) and the `Stop` hook will send the block back.

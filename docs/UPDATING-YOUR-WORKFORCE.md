@@ -110,6 +110,29 @@ verdict hook.
 
 ---
 
+## 2.3.0 — what changed, and what you must update
+
+### 1. Every verdict's evidence line now starts with a label
+
+The verdict schema is now 3.1. The `evidence` string must open with one of `MEASURED`, `CITED`,
+`COMPUTED`, `ESTIMATED` or `ASSUMED`, saying how the evidence was obtained. Gates emit the label on
+their own. If you keep Change Records, a record that a pull request adds or changes is validated
+against 3.1 once your copy of the validator updates, so add the label to any block you wrote by hand
+(for example `"evidence":"CITED src/auth.ts:42 ..."`). Nothing else in the block changed.
+
+### 2. The Tier-3 hook override has a new name (Engineering pack)
+
+If you start sessions with `ALLOW_TIER3=1` to allow intentional Tier-3 edits, switch to
+`BR_ALLOW_TIER3=1`. The old name still works in 2.3.x and prints a notice; it is removed in the next
+release.
+
+### 3. One switch turns every Core hook off
+
+`BR_HOOKS=off` turns off all three Core hooks at once. `BR_VERDICT_HOOK=off` and
+`BR_CLAIMS_HOOK=off` still work for one hook each. No action needed unless you want it.
+
+---
+
 ## The one rule to remember
 
 **A session keeps the pack versions it started with.** Updating doesn't retroactively change a

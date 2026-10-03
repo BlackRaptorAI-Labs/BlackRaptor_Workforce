@@ -21,9 +21,10 @@ claim Mechanical if the paths do not cover the concern.
 
 | Gate agent | category (nature / ruling) | mechanism | gap covered by the discipline step |
 |---|---|---|---|
-| `claims-gate` | **Checklist-only** — *ruled order-8 (8 Aug); mechanism updated A1 (13 Aug)* | **Guaranteed** = the mandatory agent-dispatch step in the `marketing-campaign` skill. **Best-effort** for ad-hoc single assets = an always-on rule on LOADED surfaces (a plugin `UserPromptSubmit` hook + the `compliance-claims-gate` skill + producer descriptions) — NOT the plugin-root `CLAUDE.md` carrier, which does not load on a marketplace install (measured, SPEC §2 P11). Measured limit: single-asset isolated dispatch is not guaranteed (the model tends to self-review). Marketing assets have no stable CODEOWNERS/CI paths → not Mechanical. | every external claim's proof |
+| `claims-gate` | **Checklist-only** — *ruled order-8 (8 Aug); mechanism updated A1 (13 Aug)* | **Guaranteed** = the mandatory agent-dispatch step in the `marketing-campaign` skill. **Best-effort** for ad-hoc single assets = an always-on rule on LOADED surfaces (the `compliance-claims-gate` skill + producer descriptions; no hook carries it — the core `SessionStart` hook does onboarding only, and the `UserPromptSubmit` claims hook was removed in 2.2.0) — NOT the plugin-root `CLAUDE.md` carrier, which does not load on a marketplace install (measured, SPEC §2 P11). Known limit: single-asset isolated dispatch is not guaranteed (the model tends to self-review). Marketing assets have no stable CODEOWNERS/CI paths → not Mechanical. | every external claim's proof |
 | `code-reviewer` | Mechanical (nature) | required CI review check on PRs | style/architecture judgment beyond CI |
-| `qa-test-engineer` | Mechanical + Checklist | required coverage CI checks | test honesty (tautological/over-mocked) |
+| `test-auditor` | Checklist-only (quality) | — (read-only; `completion-auditor` supplies the MEASURED runs) | test honesty (tautological/over-mocked) |
+| `schema-reviewer` | Partial (schema) | CODEOWNERS on migration paths, where the install enables that line | migration safety (expand/contract, lock impact, rollback) |
 | `security-architect` | Partial (nature) | CODEOWNERS on auth/remote/tenant paths | new attack surfaces outside listed paths |
 | `privacy-counsel` | Partial (nature) | CODEOWNERS on data-collection paths | PII-to-LLM / cross-border data-flow |
 | `domain-compliance` | Checklist-only | — | regulated-output eligibility judgments |

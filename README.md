@@ -11,6 +11,13 @@
 > and `PASS` is not the default.
 > **Upgrading → [docs/UPDATING-YOUR-WORKFORCE.md](docs/UPDATING-YOUR-WORKFORCE.md).**
 
+> **2.3.0.** Gate findings are one claim per row, with the sibling paths checked, a severity, the
+> smallest fix and the check that proves it closed; every evidence line starts with how it was obtained.
+> A new `/plan-review` command reviews a plan with a core set of reviewers and checks earlier findings
+> for closure. `test-auditor` passes a test set only on a measured run. The Core hooks carry timeouts,
+> are tested on every verify run, and all turn off with `BR_HOOKS=off`.
+> **Upgrading → [docs/UPDATING-YOUR-WORKFORCE.md](docs/UPDATING-YOUR-WORKFORCE.md).**
+
 > **2.2.1.** The Stop hook's block message no longer repeats a gate's name when the same turn is
 > retried. Six agent and skill descriptions across the Core, Council, Engineering, and Hardware
 > packs are shorter, with the same scope and behaviour.

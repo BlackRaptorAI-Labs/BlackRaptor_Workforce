@@ -15,20 +15,19 @@
 # CONTRACT (Claude Code PreToolUse hooks): stdin = JSON {tool_name, tool_input, cwd, ...};
 # exit 0 = allow; exit 2 = block, stderr is the reason fed back to the agent.
 #
-#   1. KILL SWITCH. BR_CLAIMS_HOOK=off disables it, with one line to stderr so a disabled control
-#      is never silent.
+#   1. KILL SWITCH. BR_CLAIMS_HOOK=off (this hook) or BR_HOOKS=off (every core hook) disables it,
+#      with one line to stderr so a disabled control is never silent. Parsed by br-hooks-env.sh.
 #   2. FAIL-OPEN. No python3, no helper, malformed input -> exit 0 and let the write through,
 #      logged to stderr. A broken hook must never wedge a session; it fails closed only on the one
 #      judgement it exists to make (an ungated write inside a marked directory).
 #   3. Hands the hook payload on stdin to the helper, and passes through only its stderr/exit code.
 set -uo pipefail
 
-if [ "${BR_CLAIMS_HOOK:-on}" = "off" ]; then
-  echo "[blackraptor] DRAFT/GATED PreToolUse hook DISABLED via BR_CLAIMS_HOOK=off — marketing-asset writes are not being checked this session." >&2
-  exit 0
-fi
-
 HERE="$(cd "$(dirname "$0")" && pwd)"
+if [ -f "$HERE/br-hooks-env.sh" ]; then
+  . "$HERE/br-hooks-env.sh"
+  br_hook_disabled BR_CLAIMS_HOOK "DRAFT/GATED PreToolUse hook" "marketing-asset writes are not being checked this session." && exit 0
+fi
 HELPER="$HERE/enforce-draft-gate.py"
 VALIDATOR="${CLAUDE_PLUGIN_ROOT:-$HERE/..}/skills/gate-verdict-format/validate_verdict.py"
 

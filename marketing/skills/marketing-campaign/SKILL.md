@@ -20,8 +20,8 @@ DRAFT/GATED convention (`compliance-claims-gate` skill) applies to writes under 
 
 A full campaign or launch spanning multiple assets/channels — not a single blog post
 (hand that straight to the copywriter). A single asset is still *subject to the gate rule*:
-the always-on rule rides the plugin's `UserPromptSubmit` hook, this pack's
-`compliance-claims-gate` skill, and each producer's description. Measured limit (SPEC §2 P11):
+the always-on rule rides the core
+`compliance-claims-gate` skill and each producer's description. Measured limit (SPEC §2 P11):
 outside this skill's mandatory dispatch step, isolated single-asset dispatch to the separate
 `claims-gate` agent is best-effort (P3 dispatched 0/3 — the model tends to self-review), so
 **this skill is the one guaranteed path** — it is for orchestrating the multi-asset case, not

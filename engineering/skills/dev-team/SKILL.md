@@ -44,7 +44,7 @@ step never depends on prose recall.
 | Audit trail, access control, retention, change management | `compliance-officer` | spec + review |
 | Personal data collected/stored/transferred/sent to an LLM | `privacy-counsel` | spec + review |
 | Data of record underpinning a regulated output | `domain-compliance` | spec + review |
-| Any test missing or weak | `qa-test-engineer` (plan-time strategy) then `test-auditor` (audit gate) | plan + pre-review |
+| Any test missing or weak | `qa-test-engineer` (plan-time strategy) then `test-auditor` (audit gate), always paired with `completion-auditor` for the MEASURED run (D-101) | plan + pre-review |
 | `prisma/schema.prisma` change | `schema-reviewer` (gate; `data-engineer` authors and does not gate its own migration) | review |
 | `/infrastructure/`, `/.github/` change | `devops-sre` (CODEOWNERS) | review |
 | UI surface | `ux-designer` | spec + review |
@@ -90,6 +90,10 @@ spec, TDD-style.
 surface-matched gates does not narrow row 55 of the tier matrix — that row is unconditional, not
 a surface match, so it is never read out of the selection by the framing of the ask.
 
+**Your final message is the deliverable.** A turn that ends while a dispatched gate is still running
+orphans its verdict. If you delegate, you own collection: wait for every gate's result before ending
+the turn.
+
 ## 6. Context each specialist receives (and must NOT receive)
 
 Each gets: the approved spec/plan, the specific surface it owns, and the acceptance
@@ -110,7 +114,32 @@ FAIL into a soft pass.
 (refs advanced, CI green, STATE updated, Done-criteria met) before anything is reported
 done. Route the code to `code-reviewer` and confirm the right CODEOWNERS gates cleared.
 
-## 9. Degradation (pack absent)
+## 9. Reviews with more than one agent
+
+**Step 0: facts pack.** Before dispatching two or more reviewers, `completion-auditor` produces the
+facts pack once (template: `references/facts-pack.md`): changed files since the last reviewed commit,
+dependency-graph consistency, ID coverage, file-ownership collisions, every count with its command.
+Hand it to every reviewer as a cited input; reviewers cite it and do not re-derive it.
+
+**Lanes.** Assign each reviewer the sections it owns. Outside its lane a reviewer reports Critical
+only. Merge duplicates by `path:line` before writing the report.
+
+**Findings.** Each finding follows the `gate-verdict-format` finding contract. Send back any row
+missing class coverage, minimum fix or proof of closure.
+
+**Orchestrator self-checks.** Read repo facts only at the reviewed commit (`git ls-tree <sha>`,
+`git show <sha>:path`), never the working tree. Before publishing, re-check every Critical and a
+random 10 percent of the other findings yourself, and state the sample.
+
+**Test-quality pairing (D-101).** Dispatch `test-auditor` and `completion-auditor` together on every
+test-quality gate: `test-auditor` names the run, `completion-auditor` executes it and hands back the
+MEASURED lines. No MEASURED line, no test-quality PASS.
+
+**Re-reviews.** A second review of the same work is a delta re-review (`references/delta-review.md`):
+prior findings marked CLOSED, PARTIAL or OPEN at the new commit, new findings only in changed text
+plus any Critical anywhere. For a plan rather than a diff, use the `plan-review` command.
+
+## 10. Degradation (pack absent)
 
 If a required gate's pack is absent, mark that control **UNVERIFIED**, lower confidence,
 and say so — never silently ship a gated surface ungated (§9.3). If the architect seat is

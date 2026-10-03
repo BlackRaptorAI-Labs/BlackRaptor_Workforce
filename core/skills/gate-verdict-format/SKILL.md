@@ -32,16 +32,18 @@ COULD NOT ASSESS = the gate ran and could not finish — BLOCKING, never neutral
 **Not reviewed / assumptions:** <context you were not given or could not verify —
 name it explicitly rather than silently narrowing scope; "none" if fully scoped>
 
-**Findings:**
-- [severity] <finding> — evidence: `path:line` — why it matters — fix.
-- (repeat; every finding needs file:line evidence, no vibes)
+**Findings:** one claim per row; zero rows is a valid result. Long form: `references/finding-contract.md`.
+
+| id | claim | class coverage | evidence | severity | confidence | falsifier | minimum fix | proof of closure | disposition |
+|---|---|---|---|---|---|---|---|---|---|
+| F1 | <one claim> | <kind>: affected `a:12`; clean `b:40` | CITED `path:line@sha` "<exact quote>" | High | 7/10 | <what flips it> | <smallest change that closes it> | <the check that fails now and passes after> | Act on |
 
 **Conditions to clear (if CONCERNS/FAIL):** <specific, testable>
 
 **Model/agent version:** <if the agent definition changed recently>
 ```
 
-## Machine-parseable verdict block (schema v3 — required)
+## Machine-parseable verdict block (schema v3.1 — required)
 
 Immediately after the prose above, emit a fenced `verdict` block. One vocabulary,
 replacing the old per-gate APPROVE/READY/CHANGES words. `validate_verdict.py`
@@ -50,10 +52,10 @@ that same validator; and in a live session the core `Stop` hook runs it over eve
 gate result and **blocks the turn** on a missing or invalid block.
 
 ```verdict
-{"gate":"security","agent":"<gate-agent-slug>","artifact":"PR #123 / <file/diff>","verdict":"FAIL","confidence":3,"falsifier":"a rate-limit middleware on the login route with a test asserting 429 after N attempts","evidence":"login.ts:42 — no rate limit on the login route, and no test asserts lockout","standards":[{"designation":"ISO/IEC 27001","edition":"2022","clause":"A.8.5 Secure authentication","access":"full text","verified":"2026-08-14"}],"conditions":["add rate limiting to the login route","add the 429 lockout test"]}
+{"gate":"security","agent":"<gate-agent-slug>","artifact":"PR #123 / <file/diff>","verdict":"FAIL","confidence":3,"falsifier":"a rate-limit middleware on the login route with a test asserting 429 after N attempts","evidence":"CITED login.ts:42@3f9c2a1 \"router.post('/login', login)\" has no rate limiter; MEASURED rg -n rateLimit src/ returned 0 lines, so no test asserts lockout","standards":[{"designation":"ISO/IEC 27001","edition":"2022","clause":"A.8.5 Secure authentication","access":"full text","verified":"2026-08-14"}],"conditions":["add rate limiting to the login route","add the 429 lockout test"]}
 ```
 
-Fields (schema: `verdict-schema.json`, v3):
+Fields (schema: `verdict-schema.json`, v3.1):
 
 | Field | Shape | Note |
 |---|---|---|
@@ -61,7 +63,7 @@ Fields (schema: `verdict-schema.json`, v3):
 | `verdict` | `PASS \| CONCERNS \| FAIL \| COULD_NOT_ASSESS` | `N/A` is **not** a verdict — see below |
 | `confidence` | **integer 0-10** | a number, so a threshold can be written against it |
 | `falsifier` | non-blank string | the one fact that would flip it |
-| `evidence` | **a string** | file:line or the concrete basis (an array in v2) |
+| `evidence` | **a string opening with a label** | `MEASURED`, `CITED`, `COMPUTED`, `ESTIMATED` or `ASSUMED`, then `path:line@sha` and the exact quote (v3.1; the schema rejects an unlabelled string). A hand-trace is COMPUTED, never MEASURED. |
 | `standards` | **required array** | each entry `{designation, edition, clause, access, verified}`, or the single literal `"none: practice applied: <x>"` |
 | `conditions[]` | required, non-empty, on CONCERNS and FAIL | specific and testable |
 | `reason` | **present only on `COULD NOT ASSESS`** | omit the key entirely on every other verdict; never emit it blank. What blocked it, and what would unblock it. A blank `reason` fails the schema (`pattern: "\S"`) and the `Stop` hook sends the block back. |
@@ -98,7 +100,25 @@ A verdict never rests on a designation you did not read.
   column or sign — the human records ACCEPT / ACCEPT-WITH-RISK / REWORK.
 - If the human overrules a FAIL, the Change Record's §5 risk-acceptance entry is
   **mandatory** — state that in your output.
-- Every finding carries `file:line` evidence. No-evidence items are dropped.
+- Every finding carries `path:line@sha` and the exact quote, label first. No-evidence items are dropped.
+- **Finding brake.** Before writing a finding, answer four questions: can I cite the exact line;
+  can I describe the concrete failure; can I name the trigger; why do the existing guards not catch
+  it. A row that cannot answer all four is not written. Each row carries a disposition: Act on,
+  Consider, Noted or Dismissed. Common false positives: `references/false-positives.md`.
+- **Class coverage.** For every defect, mark each entry point of the same kind (create, update,
+  delete; every challenge, message or channel type; every caller kind) affected or clean, each with
+  `path:line`. A row without class coverage, minimum fix or proof of closure is incomplete; the
+  orchestrator sends it back.
+- **Calibration.** Quote the exact line. "No", "never", "every", "all" and "none" need the search
+  command and its output in `evidence`. Before "none exists", search for partial controls and name
+  them. A count carries its command.
+- **Vendor claims.** A claim about vendor or framework behaviour is CITED with the fetched URL and
+  quote, or it is ASSUMED, capped at Medium, and cannot be blocking.
+- **Severity.** Critical = exploitable or data-loss now, in production. High = exploitable with a
+  precondition, or a control that is absent on a live path. Medium = a defect with a compensating
+  control. Low = hygiene.
+- **Delta re-review.** Each prior finding is marked CLOSED, PARTIAL or OPEN with evidence at the new
+  commit (format in `references/finding-contract.md`).
 - **`N/A` is not a verdict** (removed in v3). A gate that does not apply emits **no
   verdict block at all**; the Change Record's §2 row carries the N/A with one line of
   why. An unexplained N/A is the rubber stamp an auditor looks for, and `N/A` as a

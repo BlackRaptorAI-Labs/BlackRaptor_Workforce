@@ -81,7 +81,7 @@ the date you verified it at the issuing body. If no published standard governs t
 array is the single literal `["none: practice applied: <the practice>"]`.
 
 ```verdict
-{"gate":"compliance","agent":"compliance-officer","artifact":"<what you reviewed>","verdict":"<PASS|CONCERNS|FAIL|COULD NOT ASSESS>","confidence":<0-10>,"falsifier":"<the one observation that would flip this>","evidence":"<file:line or the concrete basis>","standards":[{"designation":"<designation, verified at the issuing body>","edition":"<year>","clause":"<clause>","access":"<full text|abstract only|secondary source: X|not reached>","verified":"<YYYY-MM-DD>"}],"conditions":["<required and non-empty on CONCERNS and FAIL>"]}
+{"gate":"compliance","agent":"compliance-officer","artifact":"<what you reviewed>","verdict":"<PASS|CONCERNS|FAIL|COULD NOT ASSESS>","confidence":<0-10>,"falsifier":"<the one observation that would flip this>","evidence":"MEASURED|CITED|COMPUTED|ESTIMATED|ASSUMED (pick one) — <path:line@sha + the exact quote, or the measurement>","standards":[{"designation":"<designation, verified at the issuing body>","edition":"<year>","clause":"<clause>","access":"<full text|abstract only|secondary source: X|not reached>","verified":"<YYYY-MM-DD>"}],"conditions":["<required and non-empty on CONCERNS and FAIL>"]}
 ```
 
 **`reason` is not in the template on purpose.** Present it only on `COULD NOT ASSESS`; omit the key entirely on every other verdict; never emit it blank. A blank `reason` fails `verdict-schema.json` (`pattern: "\S"`) and the `Stop` hook will send the block back.

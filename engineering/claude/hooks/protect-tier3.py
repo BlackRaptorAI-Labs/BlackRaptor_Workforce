@@ -28,7 +28,8 @@ Contract (Claude Code hooks):
   stdin  = JSON: { tool_name, tool_input: {...}, cwd, ... }
   exit 0 = allow · exit 2 = block; stderr is fed back to Claude as the reason
 
-Intentional Tier-3 work: run with  ALLOW_TIER3=1 claude
+Intentional Tier-3 work: run with  BR_ALLOW_TIER3=1 claude
+(ALLOW_TIER3=1 still works in 2.3.x as a deprecated alias; it is removed in the next release.)
 Blocked attempts and overrides are logged to .claude/hooks/tier3-attempts.log.
 """
 import json
@@ -92,7 +93,7 @@ def block(msg: str) -> int:
     sys.stderr.write(
         msg + "\n"
         "If this change is part of an approved Tier-3 slice: stop, tell the human to re-run "
-        "the session with ALLOW_TIER3=1 (the override is logged), and note that the "
+        "the session with BR_ALLOW_TIER3=1 (the override is logged), and note that the "
         "change requires a Change Record and second-person approval on the PR.\n"
         "Otherwise: propose the change as a diff in your response instead of applying it.\n"
     )
@@ -100,7 +101,11 @@ def block(msg: str) -> int:
 
 
 def main() -> int:
-    allow = os.environ.get("ALLOW_TIER3") == "1"
+    allow = os.environ.get("BR_ALLOW_TIER3") == "1"
+    if not allow and os.environ.get("ALLOW_TIER3") == "1":
+        # Deprecated alias, kept for one release (2.3.x).
+        sys.stderr.write("[blackraptor] ALLOW_TIER3 is deprecated; use BR_ALLOW_TIER3=1.\n")
+        allow = True
     try:
         payload = json.load(sys.stdin)
     except Exception:

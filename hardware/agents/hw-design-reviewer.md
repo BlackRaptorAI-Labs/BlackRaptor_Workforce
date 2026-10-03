@@ -81,7 +81,7 @@ array is the single literal `["none: practice applied: <the practice>"]`.
 Per D2a, a figure you re-derived carries its script and inputs. When you re-execute a seat's `sim/` script, record in `evidence` who produced the figure, that you re-ran it, and whether it matched. A mismatch goes back to the producing seat and is never averaged.
 
 ```verdict
-{"gate":"hw-review","agent":"hw-design-reviewer","artifact":"<what you reviewed>","verdict":"<PASS|CONCERNS|FAIL|COULD NOT ASSESS>","confidence":<0-10>,"falsifier":"<the one observation that would flip this>","evidence":"<file:line or the concrete basis>","standards":[{"designation":"<designation, verified at the issuing body>","edition":"<year>","clause":"<clause>","access":"<full text|abstract only|secondary source: X|not reached>","verified":"<YYYY-MM-DD>"}],"conditions":["<required and non-empty on CONCERNS and FAIL>"]}
+{"gate":"hw-review","agent":"hw-design-reviewer","artifact":"<what you reviewed>","verdict":"<PASS|CONCERNS|FAIL|COULD NOT ASSESS>","confidence":<0-10>,"falsifier":"<the one observation that would flip this>","evidence":"MEASURED|CITED|COMPUTED|ESTIMATED|ASSUMED (pick one) — <path:line@sha + the exact quote, or the measurement>","standards":[{"designation":"<designation, verified at the issuing body>","edition":"<year>","clause":"<clause>","access":"<full text|abstract only|secondary source: X|not reached>","verified":"<YYYY-MM-DD>"}],"conditions":["<required and non-empty on CONCERNS and FAIL>"]}
 ```
 
 **`reason` is not in the template on purpose.** Present it only on `COULD NOT ASSESS`; omit the key entirely on every other verdict; never emit it blank. A blank `reason` fails `verdict-schema.json` (`pattern: "\S"`) and the `Stop` hook will send the block back.

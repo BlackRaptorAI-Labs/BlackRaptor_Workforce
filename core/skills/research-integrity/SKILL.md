@@ -18,7 +18,9 @@ We are usually **analysts appraising and synthesizing what others produced** —
 5. **Disconfirmation beats confirmation.** Rank hypotheses/options by evidence *inconsistent* with each (ACH), and actively fetch the strongest *credible dissent*. A claim you didn't try to kill is ungraded.
 6. **Freeze the method before the answer** (Mode C especially): commit the question + analysis plan / decision weights before you see the data or scores.
 7. **Our judgment ≠ raw reporting.** Every output labels each claim as sourced-fact / stated-assumption / our-inference, carries calibrated confidence, and **preserves dissent**.
-8. **The release gate.** Grade everything internally; **publish only claims that clear the "withstands reasonable scrutiny" bar.** Low-confidence material stays in the working set, labeled — it informs thinking, it is not asserted externally.
+8. **The code is not evidence of its own intent.** A claim about what a system is meant to do, resting only on the code that implements it, is reclassified as an assumption until a spec, decision record or owner statement supports it.
+9. **Every output has a gaps section.** Name the searches run and what each returned, including the ones that returned nothing.
+10. **The release gate.** Grade everything internally; **publish only claims that clear the "withstands reasonable scrutiny" bar.** Low-confidence material stays in the working set, labeled — it informs thinking, it is not asserted externally.
 
 ## 1. Intake triage (run FIRST — sets how heavy to go)
 | Tier | When | Effort |
