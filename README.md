@@ -50,7 +50,7 @@ Five governed agent packs for Claude Code — Engineering, Executive Council, Ma
 /plugin marketplace add BlackRaptorAI-Labs/BlackRaptor_Workforce
 ```
 
-Installed from the old address? It still works; GitHub redirects. Update when convenient with `/plugin marketplace remove blackraptor` then the add line above.
+Installed from the old address? It still works; GitHub redirects, so no action is needed.
 
 Then install the packs you need (below). The **Core** pack auto-installs as a dependency of every team — you do not install it directly.
 
