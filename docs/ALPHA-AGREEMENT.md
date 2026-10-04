@@ -18,4 +18,4 @@ These are plain-language terms for the private alpha. They're a working version 
 
 6. **No warranty — this is alpha software.** It may break, produce wrong output, or change without notice. Don't rely on it for anything you can't check yourself. Agents draft and advise; you make the decisions and remain responsible for them.
 
-Questions about these terms: email **tom.hanks@paragonenergy.ai**.
+Questions about these terms: open an issue on [GitHub](https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce/issues).

@@ -129,6 +129,6 @@ Entirely optional — skipping it never affects your access or standing in the a
 ## 6. Support
 
 - Open a **Defect** issue (fastest — it goes straight into the fix queue), or
-- Email **tom.hanks@paragonenergy.ai**.
+- Open an issue on [GitHub](https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce/issues).
 
 Thank you. You're shaping what this becomes.
