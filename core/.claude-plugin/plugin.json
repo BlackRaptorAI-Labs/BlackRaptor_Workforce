@@ -1,7 +1,7 @@
 {
   "name": "blackraptor-core",
   "displayName": "BlackRaptor Workforce — Core",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written. The shared Core pack, auto-installed with every other pack. The cross-cutting agents: `product-manager` (the end-to-end product owner), `evidence-auditor` (the adversarial gate on research and evidence), `claims-gate` (the isolated gate on external-facing copy), `product-docs-writer`, and the market-research, pricing-strategy and competitive-intel analysts — plus the fourteen doctrine skills every pack depends on: research-integrity, content-craft, excellence-pass, prompt-brief, state-file, change-record, gate-verdict-format, compliance-claims-gate, customer-promise, enforcement-liveness, standards-discipline, context-onboarding, set-preferences and clean-output. Ships the verdict validator and the Stop hook that enforces it, so every gate's verdict is machine-checked on the live path.",
   "skills": "./skills/",
   "author": {

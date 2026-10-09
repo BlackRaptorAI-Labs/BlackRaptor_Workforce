@@ -1,3 +1,19 @@
+## 2.3.2 — 2026-10-07 — The verdict check sees every gate in the turn
+
+### Fixed
+- **The `Stop` hook now checks every gate dispatched in the turn.** Claude Code stores a tool result
+  the same way as a user message, so the hook used to start the turn after the last tool result and
+  could miss a gate's verdict entirely. It now starts the turn at your last real message.
+- **A verdict block must name the agent that returned it.** A block signed by a different agent
+  than the one dispatched sends the turn back.
+- **A COULD NOT ASSESS verdict written with underscores now counts as blocking** in the overall
+  result, the same as the spaced form.
+- **`workforce-doctor` counts agents from the installed folders** and does not report a quiet `Stop`
+  hook in print mode (`claude -p`) as a fault.
+
+### Removed
+- A leftover hook script from 2.2.0 that was no longer wired to anything.
+
 ## 2.3.1 — 2026-10-03 — New home at BlackRaptorAI-Labs
 
 ### Changed

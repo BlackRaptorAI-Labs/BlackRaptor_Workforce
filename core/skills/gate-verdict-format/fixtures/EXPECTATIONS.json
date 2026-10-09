@@ -6,6 +6,10 @@
   "invalid-na-verdict.md": "FAIL",
   "invalid-standards-uncited.md": "FAIL",
   "invalid-word-confidence.md": "FAIL",
+  "valid-cna-state.md": {
+    "valid": "PASS",
+    "state": "HAS_COULD_NOT_ASSESS"
+  },
   "valid-cna.md": "PASS",
   "valid-concerns-spaced-cna-vocab.md": "PASS",
   "valid-pass.md": "PASS"

@@ -184,6 +184,24 @@ def validate_block(obj, idx, schema):
     return errs
 
 
+def aggregate_state(verdicts):
+    """The aggregate gate state over a list of verdict strings. COULD_NOT_ASSESS (the canonical
+    machine form) is normalised to the spaced form first (2.3.2, audit F8): without that, a file whose
+    only blocker was COULD_NOT_ASSESS reported HAS_CONCERNS."""
+    verdicts = ["COULD NOT ASSESS" if v == "COULD_NOT_ASSESS" else v for v in verdicts]
+    # N/A is neutral (gate does not apply); COULD NOT ASSESS is BLOCKING — it stays in non_na
+    non_na = [v for v in verdicts if v != "N/A"]
+    if not non_na:
+        return "N/A"
+    if all(v == "PASS" for v in non_na):
+        return "ALL_PASS"
+    if any(v == "FAIL" for v in non_na):
+        return "HAS_FAIL"
+    if any(v == "COULD NOT ASSESS" for v in non_na):
+        return "HAS_COULD_NOT_ASSESS"
+    return "HAS_CONCERNS"
+
+
 def self_test():
     """Run the fixture set. A validator nobody tests is a claim, not a control.
 
@@ -200,8 +218,12 @@ def self_test():
     bad = 0
     for name in sorted(expectations):
         want = expectations[name]
+        # An expectation is "PASS"/"FAIL", or {"valid": "PASS"|"FAIL", "state": "<aggregate>"} for a
+        # fixture that also pins the aggregate state (2.3.2, audit F8).
+        want_state = want.get("state") if isinstance(want, dict) else None
+        want = want["valid"] if isinstance(want, dict) else want
         text = (fx / name).read_text()
-        errs = []
+        errs, verdicts = [], []
         for i, raw in enumerate(FENCE.findall(text), 1):
             try:
                 obj = json.loads(raw)
@@ -209,8 +231,15 @@ def self_test():
                 errs.append(f"block {i}: invalid JSON ({e})")
                 continue
             errs.extend(validate_block(obj, i, schema))
+            if isinstance(obj, dict) and obj.get("verdict"):
+                verdicts.append(obj["verdict"])
         got = "FAIL" if errs else "PASS"
         ok = (got == want)
+        if want_state is not None:
+            got_state = aggregate_state(verdicts)
+            if got_state != want_state:
+                ok = False
+                errs.append(f"aggregate state {got_state}, expected {want_state}")
         bad += 0 if ok else 1
         print(f"  {'ok  ' if ok else 'BAD '} {name:<42} want {want:<4} got {got}")
         if not ok:
@@ -254,18 +283,7 @@ def main():
         if isinstance(obj, dict) and obj.get("verdict"):
             verdicts.append(obj["verdict"])
 
-    # N/A is neutral (gate does not apply); COULD NOT ASSESS is BLOCKING — it stays in non_na
-    non_na = [v for v in verdicts if v != "N/A"]
-    if not non_na:
-        state = "N/A"
-    elif all(v == "PASS" for v in non_na):
-        state = "ALL_PASS"
-    elif any(v == "FAIL" for v in non_na):
-        state = "HAS_FAIL"
-    elif any(v == "COULD NOT ASSESS" for v in non_na):
-        state = "HAS_COULD_NOT_ASSESS"
-    else:
-        state = "HAS_CONCERNS"
+    state = aggregate_state(verdicts)
 
     report = {"blocks": len(raw_blocks), "verdicts": verdicts, "state": state,
               "ok": not all_errs, "errors": all_errs}
@@ -277,7 +295,7 @@ def main():
             print(f"  ERROR: {e}")
         if state == "HAS_FAIL":
             print("  NOTE: a FAIL is present — merge requires a §5 human risk-acceptance to overrule.")
-        if "COULD NOT ASSESS" in verdicts:
+        if state == "HAS_COULD_NOT_ASSESS":
             print("  NOTE: a COULD NOT ASSESS is present — BLOCKING; the gate must be re-run or the artifact reduced. completion-auditor treats it as not-done.")
         if not all_errs:
             print("  OK — all verdict blocks well-formed.")

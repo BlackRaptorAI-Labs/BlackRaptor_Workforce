@@ -50,6 +50,7 @@ from __future__ import print_function
 
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -66,6 +67,10 @@ GATES = {
 # The fixed prefix of a backgrounded Agent/Task dispatch's async-launch tool_result (D-65). Never
 # treated as a gate's returned text, whether or not a task_notification has arrived yet.
 STUB_PREFIX = "Async agent launched"
+
+# The validator's own fence rule (validate_verdict.py FENCE), used here only to read each block's
+# `agent` for the author check (D-112, R22). Validity is still judged by the validator itself.
+FENCE = re.compile(r"^[ \t]*```verdict[ \t]*\n(.*?)\n[ \t]*```", re.S | re.M)
 
 
 def find_marker_dir(start_dir, project_dir):
@@ -114,6 +119,13 @@ def _read_output_file_text(path):
     return content or None
 
 
+def _carries_tool_result(ev):
+    """True if the event's message content holds a `tool_result` block (D-112)."""
+    content = (ev.get("message") or {}).get("content")
+    return isinstance(content, list) and any(
+        isinstance(b, dict) and b.get("type") == "tool_result" for b in content)
+
+
 def main():
     if len(sys.argv) < 2:
         return 0
@@ -145,6 +157,9 @@ def main():
     # continuation is marked `isSynthetic: true` and does NOT start a new turn — the user is still
     # waiting on the one exchange the hook bounced back for revision. Fail open (scan everything,
     # today's behaviour) if no real user message is found at all.
+    # A tool result is ALSO stored as a `type: "user"` event (D-112, audit F1: measured on a live
+    # `claude -p` transcript), so it never starts a turn; nor does an `isMeta` event. Without this the
+    # turn began at the LAST tool result, after every dispatch, and the hook never saw a gate.
     turn_start = 0
     for idx, line in enumerate(lines):
         line_s = line.strip()
@@ -154,7 +169,8 @@ def main():
             ev = json.loads(line_s)
         except Exception:
             continue
-        if ev.get("type") == "user" and not ev.get("isSynthetic"):
+        if ev.get("type") == "user" and not ev.get("isSynthetic") and not ev.get("isMeta") \
+                and not _carries_tool_result(ev):
             turn_start = idx
     lines = lines[turn_start:]
 
@@ -162,6 +178,7 @@ def main():
         os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd())
 
     dispatched, results, task_idx = {}, {}, {}
+    all_dispatched = {}        # tool_use_id -> slug, EVERY Task/Agent dispatch (R22 author check)
     notifications = {}         # tool_use_id -> {"summary": str|None, "output_file": str|None}
     draft_writes = []          # [(index, abs_path)] — DRAFT writes under a marked directory
     claims_gate_at = []        # [index, ...] — every claims-gate dispatch, in transcript order
@@ -184,6 +201,7 @@ def main():
             if blk.get("type") == "tool_use" and blk.get("name") in ("Task", "Agent"):
                 # subagent_type is "<plugin>:<slug>" for a plugin agent, or a bare slug
                 slug = str((blk.get("input") or {}).get("subagent_type") or "").split(":")[-1].strip()
+                all_dispatched[blk.get("id")] = slug
                 if slug in GATES:
                     dispatched[blk.get("id")] = slug
                     task_idx[blk.get("id")] = idx
@@ -306,6 +324,28 @@ def main():
                    "standards[]), or — for a council seat or the claims gate — writes "
                    "one to the file location this hook checked." % "; ".join(locations_checked))
         problems.append("%s: %s" % (slug, detail))
+
+    # Check 1b (D-112, R22): a verdict block's `agent` must be the agent whose dispatch returned it.
+    # Applies to EVERY dispatch, gate or not, so a producer cannot hand back a block signed as a gate.
+    for tuid, slug in sorted(all_dispatched.items(), key=lambda kv: str(kv[0])):
+        texts = []
+        note = notifications.get(tuid) or {}
+        if (note.get("summary") or "").strip():
+            texts.append(note.get("summary"))
+        out = results.get(tuid)
+        if isinstance(out, str) and not out.startswith(STUB_PREFIX):
+            texts.append(out)
+        for text in texts:
+            for raw in FENCE.findall(text):
+                try:
+                    obj = json.loads(raw)
+                except Exception:
+                    continue
+                agent = obj.get("agent") if isinstance(obj, dict) else None
+                if isinstance(agent, str) and agent.split(":")[-1].strip() != slug:
+                    problems.append(
+                        "%s: returned a verdict block signed by agent '%s'; a verdict block must "
+                        "carry the agent of the dispatch that returned it" % (slug or "?", agent))
 
     # Check 2 (the 2.1.0 claims-gate change): a DRAFT under a marked directory needs a LATER claims-gate dispatch.
     for idx, abs_path in draft_writes:

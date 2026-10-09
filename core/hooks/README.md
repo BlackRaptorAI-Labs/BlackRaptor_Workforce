@@ -7,7 +7,7 @@ installed; you do not wire anything yourself.
 |---|---|---|---|
 | `inject-onboarding-rule.sh` | `SessionStart` | Offers the first-run welcome when a project has no context file or no `USER-PREFS.md`. Silent once you are set up. | 10 s |
 | `enforce-draft-gate.sh` | `PreToolUse` (Write, Edit, MultiEdit) | In a folder marked for marketing assets only, blocks writing a final `.md` until a sibling `.verdict.md` exists that validates as PASS or CONCERNS. Inert everywhere else. | 10 s |
-| `validate-verdicts.sh` | `Stop` | When a turn dispatched a gate agent, the turn does not end until that gate's verdict block validates. | 45 s |
+| `validate-verdicts.sh` | `Stop` | When a turn dispatched a gate agent, the turn does not end until that gate's verdict block validates. A verdict block must name the agent that returned it. | 45 s |
 
 ## Turning them off
 

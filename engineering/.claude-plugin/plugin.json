@@ -1,7 +1,7 @@
 {
   "name": "blackraptor-engineering",
   "displayName": "BlackRaptor Workforce — Engineering",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "dependencies": [
     "blackraptor-core"
   ],

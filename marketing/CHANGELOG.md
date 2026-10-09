@@ -1,3 +1,9 @@
+## 2.3.2 — 2026-10-07 — Leftover install script removed
+
+### Removed
+- The old `install.sh` script, which installed a hook removed in 2.2.0. This pack inherits the Core
+  2.3.2 fixes; see the Core pack's changelog.
+
 ## 2.3.1 — 2026-10-03 — New home at BlackRaptorAI-Labs
 
 ### Changed

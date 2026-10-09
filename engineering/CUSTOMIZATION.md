@@ -3,15 +3,34 @@
 The templates are parameterized with `{{PLACEHOLDERS}}`. This guide takes you
 from clone to a working, governed agent team on your repo.
 
-## 1. Run the installer
+## 1. Install the pack and copy the repo files
 
-```bash
-./install.sh /path/to/your/repo
+Install from the marketplace in Claude Code:
+
+```
+/plugin marketplace add BlackRaptorAI-Labs/BlackRaptor_Workforce
+/plugin install blackraptor-engineering@blackraptor
 ```
 
-It copies agents → `.claude/agents/`, hook/skill/commands → `.claude/`,
-CI workflow + templates → `.github/`, and governance docs → `docs/`, backing up
-anything it would overwrite.
+This also installs `blackraptor-core`. The agents, skills and commands load from the plugin; you do
+not copy them.
+
+The enforcement files must live in your repo, because Claude Code and your CI read them from there.
+Copy them from the installed packs, from your repo root:
+
+```bash
+ENG=$(ls -d ~/.claude/plugins/cache/blackraptor/blackraptor-engineering/*/ | tail -1)
+CORE=$(ls -d ~/.claude/plugins/cache/blackraptor/blackraptor-core/*/ | tail -1)
+mkdir -p .claude/hooks .github/workflows .claude/skills/gate-verdict-format
+cp "$ENG/claude/hooks/protect-tier3.py" .claude/hooks/protect-tier3.py
+cp "$ENG/claude/settings.json" .claude/settings.json
+cp "$ENG/github/change-record-required.yml" .github/workflows/change-record-required.yml
+cp "$CORE/skills/gate-verdict-format/validate_verdict.py" "$CORE/skills/gate-verdict-format/verdict-schema.json" .claude/skills/gate-verdict-format/
+```
+
+If the cache holds more than one version folder, use the version `claude plugin list` reports. If you
+already have a `.claude/settings.json`, merge its `hooks` block instead of overwriting the file. The
+validator needs `verdict-schema.json` beside it; the CI check fails without it. Commit all of these.
 
 ## 2. Fill the global placeholders (10 min)
 

@@ -1,3 +1,13 @@
+## 2.3.2 — 2026-10-07 — /gate-review sends each change to the right reviewer
+
+### Fixed
+- **`/gate-review` routes schema and migration changes to `schema-reviewer`,** runs `code-reviewer`
+  on every change and `test-auditor` on any test change. It no longer sends schema work to
+  `data-engineer`, which writes migrations and should not judge its own.
+
+### Removed
+- The old `install.sh` script, which installed a hook removed in 2.2.0.
+
 ## 2.3.1 — 2026-10-03 — New home at BlackRaptorAI-Labs
 
 ### Changed

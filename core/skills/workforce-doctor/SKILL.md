@@ -51,6 +51,8 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    `"version"` matches what `claude plugin list` reports, and the pack ships its expected top-level
    dirs (`agents/`, `skills/`, and for a team pack a `CLAUDE.md`, `LICENSE`, `NOTICE`). Anomaly: a
    missing manifest, a name/version mismatch, or an empty `agents/` or `skills/`.
+   Report each pack's agent count as counted from its install folder (`ls <pack>/agents/*.md | wc -l`,
+   top level only) and quote the command. Never take a count from a README, a manifest or memory.
 
 4. **Core hooks wiring (R15.4; `blackraptor-core` is always installed).** Three hooks live in the
    CORE pack: the welcome/onboarding trigger (`SessionStart`), the DRAFT/GATED write gate
@@ -71,6 +73,9 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    Report the wiring status for all three hooks; a missing/non-executable hook means that rule won't
    auto-fire (for onboarding, the in-skill R3/R7 triggers still apply as the backstop) — note it,
    non-blocking.
+   Print mode (`claude -p`) allowance: the client may not run Stop hooks in print mode, so a print-mode
+   session that shows no Stop-hook activity is not an anomaly. This check covers wiring only; never
+   report Stop-hook silence as a defect.
 
 5. **Client version.** Record `claude --version`. Note it in the report — hook-loading and
    marketplace behavior have varied across client versions.
@@ -102,7 +107,7 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    `.claude/.blackraptor-core-version`. If that marker exists, read it and compare against the core
    version the installed team pack expects (its `blackraptor-core` dependency / the version you can see
    for core): if the vendored core is **older**, flag "stale vendored core `<found>` (< `<expected>`) —
-   re-run the pack's install.sh to refresh it." Non-blocking / cosmetic; skip silently if no marker
+   reinstall the pack from the marketplace to refresh it." Non-blocking / cosmetic; skip silently if no marker
    (marketplace installs resolve core through the dependency and have no marker).
 
 ## Report format
