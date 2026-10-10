@@ -54,15 +54,16 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    Report each pack's agent count as counted from its install folder (`ls <pack>/agents/*.md | wc -l`,
    top level only) and quote the command. Never take a count from a README, a manifest or memory.
 
-4. **Core hooks wiring (R15.4; `blackraptor-core` is always installed).** Three hooks live in the
-   CORE pack: the welcome/onboarding trigger (`SessionStart`), the DRAFT/GATED write gate
+4. **Core hooks wiring (R15.4; `blackraptor-core` is always installed).** Four hooks live in the
+   CORE pack: the welcome/onboarding trigger and the session-contract hook (both `SessionStart`; the
+   session-contract hook is off unless `BR_SESSION_CONTRACT=on`, so its silence is expected), the DRAFT/GATED write gate
    (`PreToolUse`), and the verdict validator (`Stop`). The one-shot claims-gate prompt-reminder hook
    that used to run on `UserPromptSubmit` was removed in 2.2.0 (its job is now carried directly in
    each producer's own instructions) — its absence is expected, not an anomaly. Report whether each
-   of the three current hooks is wired:
+   of the four current hooks is wired:
    - `core/hooks/hooks.json` is present and lists one `SessionStart` entry, one `PreToolUse` entry
      (matcher `Write|Edit|MultiEdit`), and one `Stop` entry.
-   - `core/hooks/inject-onboarding-rule.sh` (`SessionStart`), `core/hooks/enforce-draft-gate.sh`
+   - `core/hooks/inject-onboarding-rule.sh` and `core/hooks/inject-session-contract.sh` (`SessionStart`), `core/hooks/enforce-draft-gate.sh`
      (`PreToolUse`), and `core/hooks/validate-verdicts.sh` (`Stop`) are all present **and executable**
      (`test -x`). A hook the client cannot execute is a silently disabled rule.
    - `command -v python3` succeeds. The write gate and the verdict validator run in Python; without
@@ -70,7 +71,7 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    - the core `plugin.json` does **NOT** declare a `"hooks"` key. On client 2.1.170+ `hooks/hooks.json`
      auto-loads by convention, so declaring it is a fatal "Duplicate hooks file detected" load failure —
      a **blocking** anomaly.
-   Report the wiring status for all three hooks; a missing/non-executable hook means that rule won't
+   Report the wiring status for all four hooks; a missing/non-executable hook means that rule won't
    auto-fire (for onboarding, the in-skill R3/R7 triggers still apply as the backstop) — note it,
    non-blocking.
    Stop-hook scope: the verdict hook checks verdict blocks that a gate dispatched in the turn returned,
@@ -111,6 +112,23 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    for core): if the vendored core is **older**, flag "stale vendored core `<found>` (< `<expected>`) —
    reinstall the pack from the marketplace to refresh it." Non-blocking / cosmetic; skip silently if no marker
    (marketplace installs resolve core through the dependency and have no marker).
+
+9. **Engineering repo files (only when `blackraptor-engineering` is installed).** The Tier-3 hook and
+   the Change Record CI check run from your repo, not from the pack, so these five files must exist under
+   the directory the session was launched from:
+   `.claude/hooks/protect-tier3.py`, `.claude/settings.json`,
+   `.github/workflows/change-record-required.yml`,
+   `.claude/skills/gate-verdict-format/validate_verdict.py` and
+   `.claude/skills/gate-verdict-format/verdict-schema.json`.
+   Check each with `test -f` and quote the result. Any missing file is an **ANOMALY (blocking)**: name
+   it and point to the engineering pack's `CUSTOMIZATION.md`, step 1. A session launched from a parent
+   folder of the repo shows all five missing; say so, since relaunching from the repo root is the fix.
+
+10. **Project context file.** The launch directory must hold the project context file the agents read
+   their project values from: `BUSINESS-CONTEXT.md` (or, for an engineering repo, a root `CLAUDE.md`
+   with a "Project values" table). If neither exists there, report an **ANOMALY (blocking)**: gates
+   return COULD NOT ASSESS on any gate-critical value they cannot read. Fix: relaunch from the project
+   root, or run `context-onboarding` to create the file. (Check 6 still reports per-pack state.)
 
 ## Report format
 

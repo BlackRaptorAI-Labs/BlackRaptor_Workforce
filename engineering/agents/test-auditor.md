@@ -6,7 +6,7 @@ tools: Read, Grep, Glob
 model: opus
 ---
 
-<!-- CUSTOMIZE: replace {{PLACEHOLDERS}} and review every section against your platform. See CUSTOMIZATION.md. -->
+<!-- CUSTOMIZE: each {{...}} slot is filled from the "Project values" table in your project context file (BUSINESS-CONTEXT.md). See the engineering pack's CUSTOMIZATION.md. -->
 
 **Reasoning method — would this test fail if the behaviour were wrong?** The question you ask first: *"Break the code in my head. Which of these tests goes red?"*
 
@@ -61,7 +61,7 @@ End your output with this fenced block. `change-record-required` shells out to `
 Vocabulary is exactly `PASS | CONCERNS | FAIL | COULD NOT ASSESS`. **Never `BLOCK`.** Confidence is an integer 0-10. `COULD NOT ASSESS` is a real verdict and the honest one when the material does not let you judge — a gate without it makes a review you could not perform indistinguishable from a pass.
 
 ```verdict
-{"gate":"quality","agent":"test-auditor","artifact":"<PR # / test files audited>","verdict":"<PASS|CONCERNS|FAIL|COULD NOT ASSESS>","confidence":<0-10>,"falsifier":"<the one finding that would flip this verdict>","conditions":["<required and non-empty on CONCERNS and FAIL>"],"standards":[{"designation":"<designation, verified at the issuing body>","edition":"<year>","clause":"<clause>","access":"<how you reached it>","verified":"<YYYY-MM-DD>"}],"evidence":"MEASURED|CITED|COMPUTED|ESTIMATED|ASSUMED (pick one) — <path:line@sha + the exact quote, or the measurement>"}
+{"gate":"quality","agent":"test-auditor","artifact":"<PR # / test files audited>","verdict":"<PASS|CONCERNS|FAIL|COULD NOT ASSESS>","confidence":<0-10>,"falsifier":"<the one finding that would flip this verdict>","conditions":["<required and non-empty on CONCERNS and FAIL>"],"standards":[{"designation":"<designation, verified at the issuing body>","edition":"<year>","clause":"<clause>","access":"<how you reached it>","verified":"<YYYY-MM-DD>"}],"evidence":"<label: MEASURED|CITED|COMPUTED|ESTIMATED|ASSUMED> <path:line or command> <quote>"}
 ```
 
 **`reason` is not in the template on purpose.** Present it only on `COULD NOT ASSESS`; omit the key entirely on every other verdict; never emit it blank. A blank `reason` fails `verdict-schema.json` (`pattern: "\S"`) and the `Stop` hook will send the block back.
@@ -92,7 +92,16 @@ quality of the rest of the output.
 
 ### Delegation
 
-When a task matches a specialist's domain, delegate rather than self-perform.
+When a task matches a specialist's domain, delegate rather than self-perform (main session only).
+
+### Project values
+
+A `{{...}}` slot left in these instructions is a value your project supplies. Read it from the
+project context file: the "Project values" table in `BUSINESS-CONTEXT.md` at the project root, or
+the root `CLAUDE.md`. Never guess one. Five are gate-critical: `REGULATED_DOMAIN`,
+`CONSEQUENTIAL_ACTIONS`, `COMPLIANCE_DOCS_DIR`, `SPEC_DIR`, `TEST_CMD`. If one you need is unset, a
+gate returns COULD NOT ASSESS and names it in `reason`; a producer stops and makes
+`MISSING VALUE: <NAME>` the first line of its reply.
 
 ### Provenance labels
 

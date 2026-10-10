@@ -1,3 +1,11 @@
+## 2.4.0 — 2026-10-10 — Seats name the rule they apply
+
+### Changed
+- **Hardware seats name the seat rule they apply** (for example "worst-case, not typical") in their
+  returned text.
+- This pack inherits the Core 2.4.0 changes (project values, the gate evidence template used by
+  `compliance-cert` and `hw-design-reviewer`); see the Core pack's changelog.
+
 ## 2.3.1 — 2026-10-03 — New home at BlackRaptorAI-Labs
 
 ### Changed

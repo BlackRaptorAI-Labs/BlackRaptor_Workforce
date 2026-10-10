@@ -1,3 +1,9 @@
+## 2.4.0 — 2026-10-10 — Inherits the Core 2.4.0 changes
+
+### Changed
+- This pack inherits the Core 2.4.0 changes (project values, the delegation rule, the gate evidence
+  template used by `ethics-governance`); see the Core pack's changelog.
+
 ## 2.3.1 — 2026-10-03 — New home at BlackRaptorAI-Labs
 
 ### Changed

@@ -1,7 +1,7 @@
 {
   "name": "blackraptor-council",
   "displayName": "BlackRaptor Workforce — Executive Council",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "dependencies": [
     "blackraptor-core"
   ],

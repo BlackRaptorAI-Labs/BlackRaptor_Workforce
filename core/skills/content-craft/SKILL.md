@@ -61,7 +61,8 @@ persuasive-emotional copy.
 
 ## 4. Match length to the ask
 A simple find / question / report gets a short answer. Length only when the task earns it — never pad
-a small ask into an essay.
+a small ask into an essay. Brevity never drops a material gap, uncertainty or risk. On a revision,
+show what changed rather than repeating the whole piece (provisional rule).
 
 ## 5. Evidence-based craft references (read the one matching the asset)
 - `references/writing-craft.md` — creative/persuasive writing: message hierarchy, Made-to-Stick,
@@ -83,6 +84,8 @@ a small ask into an essay.
    copy routes through the isolated claims-gate** → deliver with the checklist result noted.
 4. Never ship the first draft; the second pass cuts 20–30% and swaps generic claims for specific ones.
 5. Match the reader's reading level, not the writer's vocabulary; expand acronyms on first use.
+6. End a deliverable or a handoff with one `NEXT:` line: the next action and who takes it. It never
+   replaces a material gap (§4).
 
 Dedup: marketing's retired-claims ban and brand-voice register (Marketing Intelligence Core) govern
 marketing claims/voice; this skill does not restate or override them (see `references/ai-tells.md`).

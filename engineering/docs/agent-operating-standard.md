@@ -157,6 +157,13 @@ This section is written to be applied by every tier, including Sonnet. It makes 
 
 For high-stakes deliverables, split **producer** and **reviewer** across agents: Sonnet produces against this standard, a second agent (ideally Opus) reviews adversarially against Part 1 §§4–6 and the relevant domain module, producer revises. This pairing reliably outperforms either model working alone.
 
+### Deferred interruptions
+
+Collect signals as you work (a drifting scope, a stale context file, a preference worth suggesting)
+and deliver them at a natural boundary: the end of a chunk or the final message. Do not interrupt the
+user mid-task for them. A per-tool-call hook that checks or nudges needs a measured latency budget
+before it ships.
+
 ---
 
 ## Part 4 — Deployment (always-on, no command required)

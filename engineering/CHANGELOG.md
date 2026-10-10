@@ -1,3 +1,27 @@
+## 2.4.0 — 2026-10-10 — Clear roles, your own values, and a customization guide that fits the plugin
+
+### Changed
+- **`qa-test-engineer` writes tests and returns findings; it no longer gives a verdict.** The quality
+  verdict belongs to `test-auditor`. Its evidence table gains a mutation-testing row.
+- **`/plan-review`:** the agent that wrote a plan never reviews it, and non-gate reviewers return
+  findings only. `/gate-review` and `/plan-review` name no producer as a reviewer.
+- **`principal-architect` can write its spec** into your spec folder, and nowhere else.
+- **`completion-auditor` has one output format:** findings, the verdict block, then the standards
+  block.
+- **No source-company facts in the agents.** `compliance-officer` reads token, session and audit-trail
+  values from your compliance docs or says it could not assess; several agents lost leftover example
+  values (package names, a component name, page counts).
+- **`domain-compliance` reads your regulated domain first** and returns COULD NOT ASSESS when it is not
+  set, instead of guessing a regime.
+- **`CUSTOMIZATION.md` fits a marketplace install:** record your project values, copy the five repo
+  files, and see every slot the agents use in one generated table.
+- **Producers follow one build-error loop** (smallest fix first, stop after three failed attempts on the
+  same error, no silenced lint without approval). Provisional: no automated check yet.
+- **`technical-writer` mines a spec from code with a stop rule** and marks what the code does not
+  settle. Provisional: no automated check yet.
+- Agents that pointed at document skills this Workforce does not ship now return the text for your
+  session to turn into a file.
+
 ## 2.3.3 — 2026-10-09 — CI fails on a FAIL verdict
 
 ### Changed

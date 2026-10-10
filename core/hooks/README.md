@@ -1,11 +1,12 @@
 # BlackRaptor Core hooks
 
-The Core pack ships three hooks. Claude Code loads them from `hooks/hooks.json` when the pack is
+The Core pack ships four hooks. Claude Code loads them from `hooks/hooks.json` when the pack is
 installed; you do not wire anything yourself.
 
 | Hook | Event | What it does | Timeout |
 |---|---|---|---|
 | `inject-onboarding-rule.sh` | `SessionStart` | Offers the first-run welcome when a project has no context file or no `USER-PREFS.md`. Silent once you are set up. | 10 s |
+| `inject-session-contract.sh` | `SessionStart` | Off by default. With `BR_SESSION_CONTRACT=on` it adds the session contract (honor `USER-PREFS.md`, the context-review reminder, at most one preference suggestion per session) to each session, at a cost of about 270 tokens per turn. | 10 s |
 | `enforce-draft-gate.sh` | `PreToolUse` (Write, Edit, MultiEdit) | In a folder marked for marketing assets only, blocks writing a final `.md` until a sibling `.verdict.md` exists that validates as PASS. Inert everywhere else. | 10 s |
 | `validate-verdicts.sh` | `Stop` | When a turn dispatched a gate agent, the turn does not end until that gate's verdict block validates. A verdict block must name the agent that returned it. | 45 s |
 
@@ -24,7 +25,8 @@ installed; you do not wire anything yourself.
 
 Set an environment variable before you start Claude Code:
 
-- `BR_HOOKS=off` turns off all three hooks.
+- `BR_HOOKS=off` turns off all four hooks.
+- `BR_SESSION_CONTRACT=on` turns the session-contract hook on (it is off by default).
 - `BR_VERDICT_HOOK=off` turns off the verdict check only.
 - `BR_CLAIMS_HOOK=off` turns off the marketing write gate only.
 

@@ -19,6 +19,9 @@ a unit conversion, a one-off with no company/project dependency) skip this — i
 the work actually depends on knowing the company or project. This is an instruction, not a hard
 gate; `workforce-doctor` check 6 is the visibility backstop.
 
+**Several asks in one message.** Open with one line naming asks two onward ("Also noted, after
+this: X; Y."), then answer the first. That line is never a question.
+
 ## Rung 1 — pass-through (the DEFAULT; the intake must earn its turn)
 
 **Redesign (order-11, measured): the intake is not free — asking costs a round-trip.
@@ -38,7 +41,8 @@ whose success bar you can't write). Then:
 
 1. Ask the **fewest questions that resolve the ambiguity** (1–3, not a checklist) —
    only what changes the deliverable. Honor `question-style`: `assume-and-flag` → prefer
-   making a labeled ASSUMED assumption over asking (ask ≤1); `ask` → stop and ask when unsure.
+   making a labeled ASSUMED assumption over asking (ask ≤1); `ask` → stop and ask when unsure. An
+   irreversible action (trigger (b) below) always asks first, whatever the preference.
 2. **Author the improved prompt (R18).** Restate the user's ask as a tightened, unambiguous
    prompt that folds in their answers — one tight paragraph in the user's own intent, ready to
    run. Honor `verbosity: brief`: the restatement stays tight, never padded. Pair it with the

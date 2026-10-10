@@ -6,8 +6,9 @@ Start the feature-definition workflow for: $ARGUMENTS
 
 Follow the team lifecycle (your team charter):
 
-1. Use the principal-architect subagent to orchestrate. It restates the outcome
-   and identifies blast radius in the codebase.
+1. Dispatch the principal-architect subagent to restate the outcome and identify
+   the blast radius in the codebase. You (the main session) run every step
+   below yourself; a subagent only does the step it is dispatched for.
 2. Use the product-manager subagent to interview me — users/roles affected,
    scope, MVP cut, acceptance criteria, instrumented success metrics. Ask me
    the questions directly and wait for answers; don't invent business facts.

@@ -29,8 +29,14 @@ by id. If the prior findings exist, this is a delta re-review (step 6).
      | Field devices, device messaging (for example MQTT) | `edge-agent-engineer` |
      | Web flows or user-facing screens | `frontend-engineer`, `ux-designer` |
 
-   - Producers are never dispatched as reviewers. `qa-test-engineer`, `backend-engineer` and the other
-     builders review only when they appear above as a trigger's named seat.
+   - Producers (the agents that build, or write tests) are never dispatched as reviewers, except where
+     a trigger above names one as a findings-only seat.
+   - **The plan's author never reviews that plan.** If an agent wrote the plan or design (often
+     `principal-architect`, who authors specs), drop it from the roster and say so.
+   - **Findings-only seats (no verdict block):** `principal-architect`, `devops-sre`,
+     `security-operations`, `ip-counsel`, `legal-docs-writer`, `edge-agent-engineer`,
+     `frontend-engineer`. They return the findings table only. Every other reviewer named here is a
+     gate and ends with a verdict block.
    - State the roster and why each specialist was added before dispatching.
 
 4. **Lanes.** Assign each reviewer the plan sections it owns and name them in its dispatch. Outside
@@ -55,7 +61,7 @@ by id. If the prior findings exist, this is a delta re-review (step 6).
    `{"run": "<UTC timestamp>", "commit": "<REVIEWED>", "agent": "<slug>", "tokens": <n>, "wall_s": <n>}`,
    taken from each subagent's reported usage. Do this on every run.
 
-9. **Output.** The roster with reasons; the merged findings table; each reviewer's verdict block;
+9. **Output.** The roster with reasons; the merged findings table; each gate reviewer's verdict block;
    the re-check sample; for a re-review, the closure list first. Do not fill in human decisions.
 
 $ARGUMENTS

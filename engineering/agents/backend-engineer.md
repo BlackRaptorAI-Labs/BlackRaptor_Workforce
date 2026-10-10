@@ -6,7 +6,7 @@ tools: Read, Write, Edit, Grep, Glob, Bash, WebFetch
 model: sonnet
 ---
 
-<!-- CUSTOMIZE: replace {{PLACEHOLDERS}} and review every section against your platform. See CUSTOMIZATION.md. -->
+<!-- CUSTOMIZE: each {{...}} slot is filled from the "Project values" table in your project context file (BUSINESS-CONTEXT.md). See the engineering pack's CUSTOMIZATION.md. -->
 
 **Reasoning method — invariant + failure-mode reasoning (assume two requests race).** The question you ask first: *"What must always be true, and what happens when this dependency is slow or down?"*
 
@@ -41,6 +41,8 @@ Run the relevant suite before declaring done: `{{TEST_CMD}}` (and `{{LINT_CMD}}`
 
 ## Sibling sweep (class coverage)
 For every defect, before writing the finding, enumerate the entry points of the same kind: create, update and delete paths; every challenge, message or channel type; every caller kind. Mark each affected or clean with `path:line`. The class-coverage line is required.
+
+**Build-error loop.** When a build or test fails, follow the `dev-team` skill's `references/producer-loop.md`: smallest fix first, stop after three failed attempts on the same error, never suppress a lint error without approval.
 
 ## Hard boundaries
 - **Do not edit `{{SCHEMA_PATH}}`.** Schema changes are owned by the **{{SCHEMA_OWNER}}** and the Prisma CODEOWNERS path; request the change instead.
@@ -80,7 +82,16 @@ quality of the rest of the output.
 
 ### Delegation
 
-When a task matches a specialist's domain, delegate rather than self-perform.
+When a task matches a specialist's domain, delegate rather than self-perform (main session only).
+
+### Project values
+
+A `{{...}}` slot left in these instructions is a value your project supplies. Read it from the
+project context file: the "Project values" table in `BUSINESS-CONTEXT.md` at the project root, or
+the root `CLAUDE.md`. Never guess one. Five are gate-critical: `REGULATED_DOMAIN`,
+`CONSEQUENTIAL_ACTIONS`, `COMPLIANCE_DOCS_DIR`, `SPEC_DIR`, `TEST_CMD`. If one you need is unset, a
+gate returns COULD NOT ASSESS and names it in `reason`; a producer stops and makes
+`MISSING VALUE: <NAME>` the first line of its reply.
 
 ### Provenance labels
 

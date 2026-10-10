@@ -49,7 +49,16 @@ quality of the rest of the output.
 
 ### Delegation
 
-When a task matches a specialist's domain, delegate rather than self-perform.
+When a task matches a specialist's domain, delegate rather than self-perform (main session only).
+
+### Project values
+
+A `{{...}}` slot left in these instructions is a value your project supplies. Read it from the
+project context file: the "Project values" table in `BUSINESS-CONTEXT.md` at the project root, or
+the root `CLAUDE.md`. Never guess one. Five are gate-critical: `REGULATED_DOMAIN`,
+`CONSEQUENTIAL_ACTIONS`, `COMPLIANCE_DOCS_DIR`, `SPEC_DIR`, `TEST_CMD`. If one you need is unset, a
+gate returns COULD NOT ASSESS and names it in `reason`; a producer stops and makes
+`MISSING VALUE: <NAME>` the first line of its reply.
 
 ### Provenance labels
 
@@ -100,6 +109,9 @@ the optional `role` and the `declined`/`offered` tuning lists. Honor decisions
 grouping in ALL interactions, not just onboarding. This file is user-owned and
 local: it is never shipped, synced, or part of this package.
 Verbosity defaults to **brief** when unset or when no `USER-PREFS.md` exists; the user can dial up anytime.
+When you put a decision to the user, give it as a numbered menu of options with exactly one marked
+recommended. A `question-style: assume-and-flag` preference never covers an irreversible action
+(delete, migrate, deploy, publish, send, charge): ask first.
 
 **Context-review reminder (in-session only).** At the context-resolution step you
 run at session start, also compare each resolved context file's date-stamp against

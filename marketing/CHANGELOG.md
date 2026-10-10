@@ -1,3 +1,9 @@
+## 2.4.0 — 2026-10-10 — Inherits the Core 2.4.0 changes
+
+### Changed
+- This pack inherits the Core 2.4.0 changes (project values, the delegation rule); see the Core pack's
+  changelog.
+
 ## 2.3.2 — 2026-10-07 — Leftover install script removed
 
 ### Removed

@@ -1,3 +1,27 @@
+## 2.4.0 — 2026-10-10 — Project values, a clearer doctor, and tidier sessions
+
+### Changed
+- **Agents read your project's facts from one place.** Slots such as your test command, spec folder or
+  regulated domain are read from a "Project values" table in `BUSINESS-CONTEXT.md` at your repo root.
+  Agents never guess them. If one of five key values (regulated domain, consequential actions,
+  compliance-docs folder, spec folder, test command) is missing, a gate returns COULD NOT ASSESS and
+  names it, and a producer stops and names it.
+- **`workforce-doctor` checks two more things:** that an engineering repo holds the five files the
+  Tier-3 hook and the Change Record check read, and that the folder you launched from holds your
+  project context file. Launching from a parent folder is now reported, with the fix.
+- **Optional session contract hook.** A new SessionStart hook can add the session rules (honor
+  `USER-PREFS.md`, the context-review reminder, at most one preference suggestion per session). It is
+  off by default because it adds about 270 tokens per turn; set `BR_SESSION_CONTRACT=on` to use it.
+- **Ergonomics and anti-drift.** When one message holds several asks, the agent names the later ones
+  before answering the first. An "assume and flag" preference never covers an irreversible action. The
+  `state-file` skill adds `ruled-out` and `parked` sections and keeps decisions append-only.
+  Deliverables and handoffs end with one `NEXT:` line, and decisions come as a numbered menu with one
+  recommendation. Provisional (no automated check yet): showing what changed on a revision instead of
+  repeating it, holding non-urgent signals until a natural break, and a drift check at the start of
+  each chunk.
+- Gate templates now ask for evidence as a label, a `path:line` or command, and the quote.
+- Delegation to a specialist is a rule for the main session only.
+
 ## 2.3.3 — 2026-10-09 — Verdicts must be signed by the gate that gave them
 
 ### Changed

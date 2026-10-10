@@ -18,8 +18,8 @@ Run gate reviews for the current branch's changes.
      auto-remediation, bulk operations) → operational-readiness
 3. Invoke each applicable gate agent as a subagent with the diff and ask for
    its Change-Record-ready verdict (PASS / CONCERNS / FAIL with analysis).
-   Run independent gates in parallel. Dispatch gates only: never a producer
-   such as data-engineer, which authors schema work and cannot judge it.
+   Run independent gates in parallel. Dispatch gates only, never a producer:
+   the agent that authored the work cannot judge it.
 4. Output:
    - The risk tier of this change (Tier 1/2/3) with the deciding paths.
    - A gate table matching §2 of the Change Record template, verdicts filled,
