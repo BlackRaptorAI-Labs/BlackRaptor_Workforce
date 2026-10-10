@@ -19,9 +19,9 @@ SPEC §2 P11). **Do NOT run this skill on copy the current context wrote** — t
 gate exists to prevent; dispatch the `claims-gate` agent instead. Guaranteed isolated dispatch is the
 `marketing-campaign` skill's mandatory step; for an ad-hoc single asset, dispatch the `claims-gate` agent
 and, if you cannot, say so and do not present the copy as gate-cleared.
-The DRAFT/GATED write gate is best-effort: it trusts any `.verdict.md` on disk, so a verdict file a
-producer wrote itself is caught only by the `Stop` hook's dispatch check, and only when no
-`claims-gate` dispatch happened later in the same turn.
+The DRAFT/GATED write gate trusts any `.verdict.md` on disk, so the `Stop` hook checks who wrote it: a
+verdict file written in the turn, by the main session or a subagent, must carry a block that a
+`claims-gate` dispatch returned in that turn, or the turn is sent back.
 
 ## The DRAFT/GATED file convention (mechanical enforcement, the 2.1.0 claims-gate change)
 
@@ -29,7 +29,7 @@ Every producer of external-facing copy — the marketing pack's asset and releas
 `product-docs-writer`, and the `marketing-campaign` skill — writes an asset as `<name>.DRAFT.md`,
 never as `<name>.md` directly. An asset becomes `<name>.md` only after an isolated `claims-gate`
 dispatch has written a sibling `<name>.verdict.md` carrying a valid verdict block whose `verdict` is
-`PASS` or `CONCERNS` with no `BLOCK`-graded claim row. This is stated once, here; a producer body or
+`PASS`. A `CONCERNS` verdict is a HOLD: fix the copy and gate it again. This is stated once, here; a producer body or
 skill references this rule in one sentence and does not restate the mechanics.
 
 Two controls make this mechanical rather than checklist-only (the 2.1.0 claims-gate change):
@@ -76,7 +76,7 @@ Every external-facing sentence is a potential regulatory, legal, or trust liabil
    - **Testimonial/endorsement** — verify consent and FTC endorsement-guide disclosure. Block without both.
    - **Conflict of interest** — affiliate or partner relationships must be disclosed in-body. Fix.
 4. Check channel-specific law: CAN-SPAM for email (identification, opt-out, physical address), TCPA for SMS/calls, FTC endorsement guides for influencer/UGC-style content.
-5. Return a verdict table: claim → classification → verdict (PASS = publish · CONCERNS = fix per the suggested rewrite, then publish · FAIL = block, with reason) → evidence required to unblock.
+5. Return a verdict table: claim → classification → verdict (PASS = publish · CONCERNS = fix per the suggested rewrite, then gate again before publishing · FAIL = block, with reason) → evidence required to unblock.
 
 ## Rules
 

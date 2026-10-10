@@ -1,4 +1,4 @@
-# Finding contract (gate-verdict-format v3.1, long form)
+# Finding contract (gate-verdict-format v3.2, long form)
 
 The SKILL states the rules. This file holds the detail a gate needs while writing a row.
 
@@ -82,3 +82,17 @@ F3 OPEN    — CITED `db/migrate/0042.sql:3@9e1b0c2` unchanged since the prior r
 
 CLOSED needs the recorded proof of closure, run or quoted at the new commit. PARTIAL names what is
 still open. New findings follow, limited to changed text plus any Critical anywhere.
+
+## PASS evidence (schema v3.2)
+
+A PASS must be re-checkable by someone who was not there. The validator rejects:
+
+- a bare label: `MEASURED`, `CITED`;
+- an ASSUMED PASS: `ASSUMED I hand-traced the handler`;
+- a label with nothing to re-check: `MEASURED hand-traced, nothing was run`, `COMPUTED by eye`.
+
+It accepts, for example, `CITED reports.ts:27 tenant_id taken from req.auth` or
+``MEASURED `npm test -- dedupe` 14 passed, 0 failed``. For the test-quality and completion gates the
+PASS opens with `MEASURED`: a quality gate's PASS rests on a run. If you cannot meet this, the honest
+verdict is CONCERNS (with the run as a condition) or COULD NOT ASSESS (with a `reason`).
+

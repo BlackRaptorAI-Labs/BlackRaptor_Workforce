@@ -1,7 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Gate verdict block",
-  "x-schema-version": "3.1",
+  "x-schema-version": "3.2",
+  "x-version-note-3.2": "MINOR bump 2026-10-09 (v3.1->v3.2, PLAN-WF-2026-10-v2 R3, audit F4). A content rule on an existing field, no new field: a PASS needs `evidence` that opens with MEASURED, CITED, COMPUTED or ESTIMATED (never ASSUMED) and contains at least one `path:line` reference or a backticked command. For `test-auditor` and `completion-auditor` a PASS must open with MEASURED. A bare label (`MEASURED`) or a hand-trace with nothing to re-check no longer carries a PASS. CONCERNS, FAIL and COULD NOT ASSESS are unchanged.",
   "x-version-note-3.1": "MINOR bump 2026-10-02 (v3.0->v3.1, D-101). One content rule on an existing field, no new field: `evidence` must open with one of the five provenance labels the core contract already defines (MEASURED, CITED, COMPUTED, ESTIMATED, ASSUMED), so a hand-traced result (COMPUTED or ASSUMED) can never pass as an executed one (MEASURED). Blocks that were valid v3.0 fail v3.1 only if their evidence lacks the label.",
   "x-version-note": "MAJOR bump 2026-09-02 (v2->v3), AGENT-SPEC-v3 §7 / BUILD-ORDER-v4 D1. THREE BREAKING CHANGES. (1) `confidence` is an INTEGER 0-10, replacing the high|medium|low enum, so a Change Record and the completion auditor can set a threshold on it — you cannot write `confidence >= 7` against a word. (2) `standards[]` is new and REQUIRED: a gate that invokes a designation now records how it reached it and when it verified it, or states plainly that no standard governs the review. Spec §7 required a Standards line for a year and the schema had no field for it, so it was never enforced. (3) `N/A` is removed from the verdict vocabulary: a gate that does not apply emits no verdict block, and the Change Record row carries the N/A. `evidence` becomes a single string. The verdict schema is a declared interface (AGENT-SPEC §12.4); this is a coordinated major version across all five plugins, shipping as 2.0.0.",
   "description": "The single machine-parseable verdict every gate agent emits, fenced as a ```verdict code block alongside its human-readable prose. validate_verdict.py enforces it, the change-record-required CI check shells out to that validator, and the core Stop hook runs it over every gate result in a live session.",
@@ -44,7 +45,7 @@
       "type": "string",
       "minLength": 1,
       "pattern": "^(MEASURED|CITED|COMPUTED|ESTIMATED|ASSUMED)\\b",
-      "description": "the concrete basis, opening with its provenance label (v3.1): MEASURED (you ran it), CITED (path:line@sha plus the exact quote, or a fetched URL plus the quote), COMPUTED (derived by tracing or arithmetic), ESTIMATED, or ASSUMED. Then path:line@sha and the exact quote, or the measurement."
+      "description": "the concrete basis, opening with its provenance label (v3.1; v3.2 adds the PASS rule in allOf): MEASURED (you ran it), CITED (path:line@sha plus the exact quote, or a fetched URL plus the quote), COMPUTED (derived by tracing or arithmetic), ESTIMATED, or ASSUMED. Then path:line@sha and the exact quote, or the measurement."
     },
     "standards": {
       "type": "array",
@@ -90,6 +91,16 @@
     {
       "if": {"properties": {"verdict": {"enum": ["COULD_NOT_ASSESS", "COULD NOT ASSESS"]}}},
       "then": {"required": ["reason"]}
+    },
+    {
+      "x-rule": "v3.2 PASS evidence: a non-ASSUMED label and at least one path:line or backticked command",
+      "if": {"properties": {"verdict": {"const": "PASS"}}, "required": ["verdict"]},
+      "then": {"properties": {"evidence": {"pattern": "^(MEASURED|CITED|COMPUTED|ESTIMATED)\\b(?=[\\s\\S]*(\\S+:\\d+|`[^`]+`))"}}}
+    },
+    {
+      "x-rule": "v3.2 quality gates: a test-auditor or completion-auditor PASS opens with MEASURED",
+      "if": {"properties": {"verdict": {"const": "PASS"}, "agent": {"enum": ["test-auditor", "completion-auditor"]}}, "required": ["verdict", "agent"]},
+      "then": {"properties": {"evidence": {"pattern": "^MEASURED\\b"}}}
     }
   ]
 }

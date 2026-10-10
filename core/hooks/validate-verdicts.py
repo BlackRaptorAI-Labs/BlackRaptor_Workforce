@@ -179,10 +179,13 @@ def main():
 
     dispatched, results, task_idx = {}, {}, {}
     all_dispatched = {}        # tool_use_id -> slug, EVERY Task/Agent dispatch (R22 author check)
+    agent_ids = {}             # tool_use_id -> the subagent's agentId (toolUseResult.agentId)
     notifications = {}         # tool_use_id -> {"summary": str|None, "output_file": str|None}
     draft_writes = []          # [(index, abs_path)] — DRAFT writes under a marked directory
     claims_gate_at = []        # [index, ...] — every claims-gate dispatch, in transcript order
     md_writes = []             # [(index, abs_path, content)] — every Write of a *.md file
+    verdict_file_writes = []   # [(index, abs_path, content-or-None)] — Write/Edit/MultiEdit of *.verdict.md (R2)
+    marked_md_writes = []      # [(index, abs_path)] — Write/Edit/MultiEdit of a plain .md under a marked dir (R2)
     for idx, line in enumerate(lines):
         line = line.strip()
         if not line:
@@ -207,10 +210,19 @@ def main():
                     task_idx[blk.get("id")] = idx
                 if slug == "claims-gate":
                     claims_gate_at.append(idx)
-            elif blk.get("type") == "tool_use" and blk.get("name") == "Write":
+            elif blk.get("type") == "tool_use" and blk.get("name") in ("Write", "Edit", "MultiEdit"):
                 try:
                     inp = blk.get("input") or {}
                     fp = inp.get("file_path") or ""
+                    if fp.endswith(".md"):
+                        ap = os.path.realpath(fp if os.path.isabs(fp) else os.path.join(project_dir, fp))
+                        if ap.endswith(".verdict.md"):
+                            verdict_file_writes.append(
+                                (idx, ap, inp.get("content") if blk.get("name") == "Write" else None))
+                        elif not ap.endswith(".DRAFT.md") and find_marker_dir(os.path.dirname(ap), project_dir):
+                            marked_md_writes.append((idx, ap))
+                    if blk.get("name") != "Write":
+                        continue
                     if fp.endswith(".DRAFT.md"):
                         abs_path = fp if os.path.isabs(fp) else os.path.join(project_dir, fp)
                         abs_path = os.path.realpath(abs_path)
@@ -227,16 +239,30 @@ def main():
                 if isinstance(c, list):
                     c = "\n".join(x.get("text", "") for x in c if isinstance(x, dict))
                 results[blk.get("tool_use_id")] = c if isinstance(c, str) else ""
+                tur = ev.get("toolUseResult")
+                if isinstance(tur, dict) and tur.get("agentId"):
+                    agent_ids[blk.get("tool_use_id")] = str(tur.get("agentId"))
+
+    last_error = {"msg": ""}   # the validator's first error from the latest validates() call (2.3.3: say why a gate's text failed)
 
     def validates(text):
-        """Run validate_verdict.py over `text`; True if it contains at least one valid block."""
+        """Run validate_verdict.py over `text`; True if it contains at least one valid block. Keeps the
+        validator's first error in last_error so a block message says WHY (no block vs a bad block)."""
         tmp = None
+        last_error["msg"] = ""
         try:
             fd, tmp = tempfile.mkstemp(suffix=".md")
             with os.fdopen(fd, "w", encoding="utf-8") as fh:
                 fh.write(text)
             p = subprocess.run([sys.executable, validator, tmp, "--require", "--json"],
                                capture_output=True, text=True, timeout=30)
+            if p.returncode != 0:
+                try:
+                    errs = json.loads(p.stdout or "{}").get("errors") or []
+                    last_error["msg"] = ("no ```verdict block in the returned text" if p.returncode == 3
+                                         else str(errs[0]) if errs else "validator rc=%d" % p.returncode)
+                except Exception:
+                    last_error["msg"] = "validator rc=%d" % p.returncode
             return p.returncode == 0
         except Exception:
             return False       # fail-closed on THIS lookup only; caller still tries other locations
@@ -285,7 +311,7 @@ def main():
         if validates(out):
             continue
 
-        locations_checked = [out_location]
+        locations_checked = ["%s (%s)" % (out_location, last_error["msg"][:160]) if last_error["msg"] else out_location]
         found_valid = False
 
         seat_path_suffix = os.path.join("council", "%s.verdict.md" % slug)
@@ -319,9 +345,10 @@ def main():
             continue
 
         detail = ("no valid verdict found in: %s. Every gate ends its output with a valid "
-                   "```verdict block (schema v3.1: verdict, integer confidence 0-10, falsifier, "
+                   "```verdict block (schema v3.2: verdict, integer confidence 0-10, falsifier, "
                    "evidence opening with MEASURED, CITED, COMPUTED, ESTIMATED or ASSUMED, "
-                   "standards[]), or — for a council seat or the claims gate — writes "
+                   "standards[]; a PASS also needs a path:line or a backticked command and "
+                   "never rests on ASSUMED), or — for a council seat or the claims gate — writes "
                    "one to the file location this hook checked." % "; ".join(locations_checked))
         problems.append("%s: %s" % (slug, detail))
 
@@ -347,6 +374,89 @@ def main():
                         "%s: returned a verdict block signed by agent '%s'; a verdict block must "
                         "carry the agent of the dispatch that returned it" % (slug or "?", agent))
 
+    # Check 1c (D-117, R2, audit F2): a *.verdict.md written or edited this turn must carry blocks a gate
+    # actually returned this turn — same agent, same verdict — so no producer or main session can write
+    # its own PASS. Write content comes from the transcript; an Edit/MultiEdit is read from disk.
+    def _norm_v(v):
+        return "COULD NOT ASSESS" if v == "COULD_NOT_ASSESS" else v
+
+    returned = set()           # {(agent slug, verdict)} from every dispatch's returned text this turn
+    for tuid, slug in all_dispatched.items():
+        texts = []
+        note = notifications.get(tuid) or {}
+        if (note.get("summary") or "").strip():
+            texts.append(note.get("summary"))
+        out = results.get(tuid)
+        if isinstance(out, str) and not out.startswith(STUB_PREFIX):
+            texts.append(out)
+        for text in texts:
+            for raw in FENCE.findall(text):
+                try:
+                    obj = json.loads(raw)
+                except Exception:
+                    continue
+                if isinstance(obj, dict) and str(obj.get("agent") or "").split(":")[-1].strip() == slug:
+                    returned.add((slug, _norm_v(obj.get("verdict"))))
+    # A dispatched subagent's own writes live in its own transcript, beside the main one:
+    # <transcript_path minus .jsonl>/subagents/agent-<agentId>.jsonl, linked by the dispatch's
+    # toolUseResult.agentId (measured on client 2.1.288). Read them for every dispatch of this turn, so a
+    # producer subagent with Write cannot write a verdict file or a marked .md unseen (D-117).
+    sub_dir = os.path.join(tpath[: -len(".jsonl")] if tpath.endswith(".jsonl") else tpath, "subagents")
+    for tuid in all_dispatched:
+        aid = agent_ids.get(tuid)
+        if not aid or not all(c.isalnum() or c in "-_" for c in aid):
+            continue
+        try:
+            sub_lines = open(os.path.join(sub_dir, "agent-%s.jsonl" % aid), encoding="utf-8",
+                             errors="replace").read().splitlines()
+        except Exception:
+            continue
+        for sl in sub_lines:
+            try:
+                sev = json.loads(sl)
+            except Exception:
+                continue
+            content_blocks = (sev.get("message") or {}).get("content")
+            for sblk in content_blocks if isinstance(content_blocks, list) else []:
+                if not (isinstance(sblk, dict) and sblk.get("type") == "tool_use"
+                        and sblk.get("name") in ("Write", "Edit", "MultiEdit")):
+                    continue
+                inp = sblk.get("input") or {}
+                fp = inp.get("file_path") or ""
+                if not fp.endswith(".md"):
+                    continue
+                ap = os.path.realpath(fp if os.path.isabs(fp) else os.path.join(project_dir, fp))
+                if ap.endswith(".verdict.md"):
+                    verdict_file_writes.append(
+                        (-1, ap, inp.get("content") if sblk.get("name") == "Write" else None))
+                elif not ap.endswith(".DRAFT.md") and find_marker_dir(os.path.dirname(ap), project_dir):
+                    marked_md_writes.append((-1, ap))
+
+    for _w_idx, ap, content in verdict_file_writes:
+        if content is None:
+            try:
+                content = open(ap, encoding="utf-8", errors="replace").read()
+            except Exception:
+                continue           # nothing to compare; the PreToolUse sibling rule still applies
+        for raw in FENCE.findall(content or ""):
+            try:
+                obj = json.loads(raw)
+            except Exception:
+                continue
+            if not isinstance(obj, dict):
+                continue
+            key = (str(obj.get("agent") or "").split(":")[-1].strip(), _norm_v(obj.get("verdict")))
+            if key not in returned:
+                problems.append(
+                    "'%s': verdict file not produced by a gate dispatch this turn (block agent '%s', "
+                    "verdict %s; no dispatch of that agent returned that verdict in this turn)" % (
+                        os.path.relpath(ap, project_dir), key[0] or "?", key[1]))
+    for _w_idx, ap in marked_md_writes:
+        if not claims_gate_at:
+            problems.append(
+                "DRAFT/GATED: '%s' was written under a marketing-asset directory with no claims-gate "
+                "dispatch this turn." % os.path.relpath(ap, project_dir))
+
     # Check 2 (the 2.1.0 claims-gate change): a DRAFT under a marked directory needs a LATER claims-gate dispatch.
     for idx, abs_path in draft_writes:
         if not any(g > idx for g in claims_gate_at):
@@ -354,6 +464,14 @@ def main():
                 "DRAFT/GATED: '%s' was written under a marketing-asset directory with no "
                 "claims-gate dispatch afterward in this session." % (
                     os.path.relpath(abs_path, project_dir)))
+
+    if not problems and dispatched:
+        # W-09 completion signal (2.3.3): one line after a clean turn that dispatched gates, so a
+        # quiet Stop hook is distinguishable from an absent one. Not a block: no "decision" key.
+        n = len(set(dispatched.values()))
+        print(json.dumps({"systemMessage": "BlackRaptor verdict check: gates checked %d, verdicts valid %d."
+                          % (n, n)}))
+        return 0
 
     if problems:
         # De-duplicate while preserving order (P3-FOLLOWON-v2 §3): a same-turn retry dispatches the

@@ -17,6 +17,12 @@ orchestrator can enforce "fail-closed until every gate shows PASS", and a FAIL
 surfaces the §5 risk-acceptance requirement.
 
 Usage: validate_verdict.py <file.md> [--require] [--json]
+       validate_verdict.py --cr-mode <change-record.md> [--require]
+
+--cr-mode (D-118, audit F5): the Change Record gate. On top of the checks above, a CR whose aggregate
+state is HAS_FAIL or HAS_COULD_NOT_ASSESS fails (exit 1) unless its "## 5. Deviations & risk
+acceptance" table has a row whose "What" cell names each FAIL / COULD NOT ASSESS gate (by its `gate`
+or `agent` value). A missing gate is still a missing gate: --cr-mode implies --require.
 """
 import json
 import re
@@ -29,6 +35,9 @@ from pathlib import Path
 FENCE = re.compile(r"^[ \t]*```verdict[ \t]*\n(.*?)\n[ \t]*```", re.S | re.M)
 
 SCHEMA_PATH = Path(__file__).with_name("verdict-schema.json")
+
+# Gates whose PASS must rest on a run (schema v3.2): their evidence opens with MEASURED.
+QUALITY_GATES = {"test-auditor", "completion-auditor"}
 
 # The exact literal strings the CR template ships. A copy that changes only
 # verdict '___' → PASS but leaves these is a two-character rubber stamp; reject them.
@@ -151,7 +160,7 @@ def validate_block(obj, idx, schema):
             if pat is not None and re.search(pat, v) is None:
                 if k == "evidence" and pat.startswith("^(MEASURED"):
                     errs.append(f"block {idx}: evidence must open with a provenance label — MEASURED, CITED, "
-                                f"COMPUTED, ESTIMATED or ASSUMED (schema v3.1) — got '{v[:40]}'")
+                                f"COMPUTED, ESTIMATED or ASSUMED (schema v3.1+) — got '{v[:40]}'")
                 else:
                     errs.append(f"block {idx}: {k} must match /{pat}/ (e.g. non-blank — not just whitespace)")
 
@@ -167,6 +176,21 @@ def validate_block(obj, idx, schema):
     if v == "N/A":
         errs.append(f"block {idx}: 'N/A' is not a verdict in schema v3. A gate that does not apply "
                     f"emits no verdict block; the Change Record row carries the N/A and its reason.")
+
+    # v3.2 PASS evidence rules (PLAN-WF-2026-10-v2 R3, audit F4). Hand-applied like the rules above;
+    # the same rules are written as allOf entries in verdict-schema.json.
+    ev = obj.get("evidence")
+    if v == "PASS" and isinstance(ev, str):
+        if re.match(r"^ASSUMED\b", ev):
+            errs.append(f"block {idx}: a PASS cannot rest on ASSUMED evidence (schema v3.2) — run or cite "
+                        f"something, or return CONCERNS or COULD NOT ASSESS")
+        elif not re.search(r"\S+:\d+|`[^`]+`", ev):
+            errs.append(f"block {idx}: a PASS needs evidence someone can re-check (schema v3.2) — at least one "
+                        f"path:line reference or a backticked command, got '{ev[:60]}'")
+        agent = str(obj.get("agent") or "").split(":")[-1].strip()
+        if agent in QUALITY_GATES and not re.match(r"^MEASURED\b", ev):
+            errs.append(f"block {idx}: a {agent} PASS must open with MEASURED (schema v3.2) — it rests on a run, "
+                        f"not a trace")
 
     # anti-rubber-stamp: reject the unmodified CR-template placeholder strings
     for field in ("artifact", "falsifier"):
@@ -200,6 +224,26 @@ def aggregate_state(verdicts):
     if any(v == "COULD NOT ASSESS" for v in non_na):
         return "HAS_COULD_NOT_ASSESS"
     return "HAS_CONCERNS"
+
+
+def uncovered_blockers(text, blocks):
+    """--cr-mode: the FAIL / COULD NOT ASSESS blocks whose gate is not named in a §5 row's "What" cell."""
+    m = re.search(r"^##\s*5\.[^\n]*\n(.*?)(?=^##\s|\Z)", text, re.S | re.M)
+    whats = []
+    if m:
+        for line in m.group(1).splitlines():
+            cells = [c.strip() for c in line.strip().strip("|").split("|")] if line.strip().startswith("|") else []
+            if not cells or not cells[0] or re.match(r"^:?-+:?$", cells[0]) or cells[0].lower() == "what":
+                continue
+            whats.append(cells[0].lower())
+    out = []
+    for b in blocks:
+        if not isinstance(b, dict) or aggregate_state([b.get("verdict")]) not in ("HAS_FAIL", "HAS_COULD_NOT_ASSESS"):
+            continue
+        names = {str(b.get(k) or "").strip().lower() for k in ("gate", "agent")} - {""}
+        if not any(n in w for n in names for w in whats):
+            out.append(b)
+    return out
 
 
 def self_test():
@@ -247,8 +291,38 @@ def self_test():
                 print(f"         {e}")
         elif want == "FAIL":
             print(f"         caught: {errs[0]}")
-    print(f"\n  {len(expectations) - bad}/{len(expectations)} fixtures behaved as expected")
+    # --cr-mode fixtures (D-118): fixtures/cr-*.md with fixtures/CR-EXPECTATIONS.json -> expected rc.
+    cr_exp_path = fx / "CR-EXPECTATIONS.json"
+    cr_exp = json.loads(cr_exp_path.read_text()) if cr_exp_path.exists() else {}
+    for name in sorted(cr_exp):
+        want = cr_exp[name]
+        got = cr_mode_rc((fx / name).read_text(), schema)
+        ok = (got == want)
+        bad += 0 if ok else 1
+        print(f"  {'ok  ' if ok else 'BAD '} {name:<42} want rc {want:<2} got rc {got}")
+    total = len(expectations) + len(cr_exp)
+    print(f"\n  {total - bad}/{total} fixtures behaved as expected")
     return 1 if bad else 0
+
+
+def cr_mode_rc(text, schema, report=None):
+    """The --cr-mode exit code for a Change Record's text (0 pass, 1 fail, 3 no blocks)."""
+    raw_blocks = FENCE.findall(text)
+    if not raw_blocks:
+        return 3
+    blocks, errs = [], []
+    for i, raw in enumerate(raw_blocks, 1):
+        try:
+            obj = json.loads(raw)
+        except json.JSONDecodeError as e:
+            errs.append(f"block {i}: invalid JSON — {e}")
+            continue
+        errs += validate_block(obj, i, schema)
+        blocks.append(obj)
+    unc = uncovered_blockers(text, blocks)
+    if report is not None:
+        report["errors"], report["uncovered"] = errs, unc
+    return 1 if (errs or unc) else 0
 
 
 def main():
@@ -262,6 +336,21 @@ def main():
         return 2
     schema = load_schema()
     text = Path(args[0]).read_text()
+    if "--cr-mode" in flags:
+        rep = {}
+        rc = cr_mode_rc(text, schema, rep)
+        if rc == 3:
+            print("no ```verdict blocks found (required!)")
+            return 3
+        for e in rep["errors"]:
+            print(f"  ERROR: {e}")
+        for b in rep["uncovered"]:
+            print(f"  ERROR: gate '{b.get('gate')}' ({b.get('agent')}) returned {b.get('verdict')} and no row in "
+                  f"'## 5. Deviations & risk acceptance' names it in the What column — rework, or record the "
+                  f"human risk acceptance there")
+        if rc == 0:
+            print("  OK — verdict blocks well-formed; every FAIL / COULD NOT ASSESS gate has a §5 risk-acceptance row.")
+        return rc
     raw_blocks = FENCE.findall(text)
 
     if not raw_blocks:

@@ -58,8 +58,8 @@ def block(msg):
     sys.stderr.write(
         "BLOCKED (DRAFT/GATED convention): %s\n"
         "Write the asset as '<name>.DRAFT.md'; it becomes '<name>.md' only once an isolated "
-        "claims-gate dispatch writes a validating '<name>.verdict.md' (PASS or CONCERNS, no "
-        "BLOCK-graded claim). See the compliance-claims-gate skill.\n"
+        "claims-gate dispatch writes a validating '<name>.verdict.md' whose verdict is PASS. "
+        "See the compliance-claims-gate skill.\n"
         "(Set BR_CLAIMS_HOOK=off to disable this check for the session.)\n" % msg
     )
     return 2
@@ -121,8 +121,9 @@ def main():
         return 0
 
     verdicts = report.get("verdicts") or []
-    ok = bool(report.get("ok")) and len(verdicts) >= 1 and all(
-        v in ("PASS", "CONCERNS") for v in verdicts)
+    # PASS only (D-119, R5, audit F9): claims-gate SHIPs only when every claim is PASS, so a CONCERNS
+    # verdict is a HOLD and never promotes the asset.
+    ok = bool(report.get("ok")) and len(verdicts) >= 1 and all(v == "PASS" for v in verdicts)
     if not ok:
         return block(
             "'%s' exists but does not validate as a cleared verdict (errors: %s; verdicts: %s)."

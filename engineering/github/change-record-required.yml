@@ -143,11 +143,11 @@ jobs:
           git fetch --no-tags --depth=1 origin "$BASE" >/dev/null 2>&1 || git fetch --no-tags origin "$BASE"
           VDIR="${RUNNER_TEMP:-/tmp}/gvf"; mkdir -p "$VDIR"
           if ! git show "origin/$BASE:.claude/skills/gate-verdict-format/validate_verdict.py" > "$VDIR/validate_verdict.py" 2>/dev/null; then
-            echo "::error::could not read the validator from the base ref (origin/$BASE). Failing closed."; exit 1
+            echo "::error::could not read validate_verdict.py (in .claude/skills/gate-verdict-format/) from the base ref (origin/$BASE). Failing closed. A plugin install does not put it in your repo: copy validate_verdict.py and verdict-schema.json from the blackraptor-core pack's skills/gate-verdict-format/ into .claude/skills/gate-verdict-format/ and commit them (engineering CUSTOMIZATION.md, step 1)."; exit 1
           fi
           # the validator loads verdict-schema.json next to itself — take it from the base ref too.
           if ! git show "origin/$BASE:.claude/skills/gate-verdict-format/verdict-schema.json" > "$VDIR/verdict-schema.json" 2>/dev/null; then
-            echo "::error::could not read verdict-schema.json from the base ref. Failing closed."; exit 1
+            echo "::error::could not read verdict-schema.json (in .claude/skills/gate-verdict-format/) from the base ref. Failing closed. Copy it beside validate_verdict.py from the blackraptor-core pack and commit it (engineering CUSTOMIZATION.md, step 1)."; exit 1
           fi
           V="$VDIR/validate_verdict.py"
           echo "Using base-ref validator: origin/$BASE:.claude/skills/gate-verdict-format/validate_verdict.py"
@@ -157,6 +157,10 @@ jobs:
             echo "== $f =="
             # --require: a gated CR with ZERO verdict blocks is a missing gate = FAIL
             # (TEAM.md: a missing gate is treated as a FAIL). Malformed blocks also fail.
-            python3 "$V" "$f" --require || rc=1
+            # --cr-mode: a FAIL or COULD NOT ASSESS gate also fails the check unless the CR's
+            # "## 5. Deviations & risk acceptance" table has a row naming that gate (D-118).
+            # --require stays explicit so an older base-ref validator without --cr-mode still
+            # requires at least one block.
+            python3 "$V" --cr-mode "$f" --require || rc=1
           done <<< "$CR_FILES"
           exit "$rc"

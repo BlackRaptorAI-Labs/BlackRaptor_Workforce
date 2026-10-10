@@ -2,8 +2,14 @@
   "invalid-concerns-no-conditions.md": "FAIL",
   "invalid-evidence-array.md": "FAIL",
   "invalid-extra-key.md": "FAIL",
+  "invalid-hollow-pass-assumed.md": "FAIL",
+  "invalid-hollow-pass-cited-bare.md": "FAIL",
+  "invalid-hollow-pass-computed-by-eye.md": "FAIL",
+  "invalid-hollow-pass-measured-bare.md": "FAIL",
+  "invalid-hollow-pass-measured-nothing-run.md": "FAIL",
   "invalid-missing-falsifier.md": "FAIL",
   "invalid-na-verdict.md": "FAIL",
+  "invalid-quality-pass-not-measured.md": "FAIL",
   "invalid-standards-uncited.md": "FAIL",
   "invalid-word-confidence.md": "FAIL",
   "valid-cna-state.md": {
@@ -12,5 +18,6 @@
   },
   "valid-cna.md": "PASS",
   "valid-concerns-spaced-cna-vocab.md": "PASS",
-  "valid-pass.md": "PASS"
+  "valid-pass.md": "PASS",
+  "valid-quality-pass-measured.md": "PASS"
 }

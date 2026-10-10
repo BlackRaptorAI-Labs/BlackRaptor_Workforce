@@ -1,3 +1,22 @@
+## 2.3.3 — 2026-10-09 — Verdicts must be signed by the gate that gave them
+
+### Changed
+- **A PASS needs evidence someone can re-check.** Verdict schema 3.2: a PASS opens with MEASURED,
+  CITED, COMPUTED or ESTIMATED (never ASSUMED) and names at least one `path:line` or a command in
+  backticks. A test-quality or completion gate's PASS opens with MEASURED. A bare label such as
+  `MEASURED` no longer carries a PASS.
+- **A verdict file must come from the gate.** Any `.verdict.md` written during a turn, by the main
+  session or by a subagent, must carry the same agent and verdict that a gate returned in that turn,
+  or the `Stop` hook sends the turn back.
+- **Only a PASS promotes a marketing asset.** A CONCERNS verdict now holds the asset until it is fixed
+  and gated again.
+- **The `Stop` hook says why it blocked:** no verdict block, or the validator's first error. After a
+  clean turn that ran gates it prints one line: gates checked and verdicts valid.
+
+### Fixed
+- `workforce-doctor` no longer says Stop hooks may not run in print mode. They do; the doctor now
+  states what the verdict check covers.
+
 ## 2.3.2 — 2026-10-07 — The verdict check sees every gate in the turn
 
 ### Fixed

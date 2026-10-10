@@ -43,7 +43,7 @@ name it explicitly rather than silently narrowing scope; "none" if fully scoped>
 **Model/agent version:** <if the agent definition changed recently>
 ```
 
-## Machine-parseable verdict block (schema v3.1 — required)
+## Machine-parseable verdict block (schema v3.2 — required)
 
 Immediately after the prose above, emit a fenced `verdict` block. One vocabulary,
 replacing the old per-gate APPROVE/READY/CHANGES words. `validate_verdict.py`
@@ -55,7 +55,7 @@ gate result and **blocks the turn** on a missing or invalid block.
 {"gate":"security","agent":"<gate-agent-slug>","artifact":"PR #123 / <file/diff>","verdict":"FAIL","confidence":3,"falsifier":"a rate-limit middleware on the login route with a test asserting 429 after N attempts","evidence":"CITED login.ts:42@3f9c2a1 \"router.post('/login', login)\" has no rate limiter; MEASURED rg -n rateLimit src/ returned 0 lines, so no test asserts lockout","standards":[{"designation":"ISO/IEC 27001","edition":"2022","clause":"A.8.5 Secure authentication","access":"full text","verified":"2026-08-14"}],"conditions":["add rate limiting to the login route","add the 429 lockout test"]}
 ```
 
-Fields (schema: `verdict-schema.json`, v3.1):
+Fields (schema: `verdict-schema.json`, v3.2):
 
 | Field | Shape | Note |
 |---|---|---|
@@ -64,6 +64,7 @@ Fields (schema: `verdict-schema.json`, v3.1):
 | `confidence` | **integer 0-10** | a number, so a threshold can be written against it |
 | `falsifier` | non-blank string | the one fact that would flip it |
 | `evidence` | **a string opening with a label** | `MEASURED`, `CITED`, `COMPUTED`, `ESTIMATED` or `ASSUMED`, then `path:line@sha` and the exact quote (v3.1; the schema rejects an unlabelled string). A hand-trace is COMPUTED, never MEASURED. |
+| `evidence` on a PASS (v3.2) | label + something to re-check | a PASS opens with `MEASURED`, `CITED`, `COMPUTED` or `ESTIMATED` (never `ASSUMED`) and holds at least one `path:line` or a backticked command. A test-quality or completion gate's PASS opens with `MEASURED`. Detail: `references/finding-contract.md`. |
 | `standards` | **required array** | each entry `{designation, edition, clause, access, verified}`, or the single literal `"none: practice applied: <x>"` |
 | `conditions[]` | required, non-empty, on CONCERNS and FAIL | specific and testable |
 | `reason` | **present only on `COULD NOT ASSESS`** | omit the key entirely on every other verdict; never emit it blank. What blocked it, and what would unblock it. A blank `reason` fails the schema (`pattern: "\S"`) and the `Stop` hook sends the block back. |

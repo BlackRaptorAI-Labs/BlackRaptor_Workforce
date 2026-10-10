@@ -1,3 +1,12 @@
+## 2.3.3 — 2026-10-09 — CI fails on a FAIL verdict
+
+### Changed
+- **The Change Record check fails when a gate says FAIL or COULD NOT ASSESS,** unless section 5
+  (Deviations & risk acceptance) has a row naming that gate. Before, a well-formed FAIL passed.
+- **A clearer error when the validator is missing.** A plugin install does not put the validator in
+  your repo; the check's message now says which two files to copy and points to `CUSTOMIZATION.md`.
+- This pack inherits the Core 2.3.3 verdict rules; see the Core pack's changelog.
+
 ## 2.3.2 — 2026-10-07 — /gate-review sends each change to the right reviewer
 
 ### Fixed

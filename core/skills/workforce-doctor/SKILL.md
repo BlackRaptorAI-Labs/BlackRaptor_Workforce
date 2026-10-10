@@ -73,9 +73,11 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    Report the wiring status for all three hooks; a missing/non-executable hook means that rule won't
    auto-fire (for onboarding, the in-skill R3/R7 triggers still apply as the backstop) — note it,
    non-blocking.
-   Print mode (`claude -p`) allowance: the client may not run Stop hooks in print mode, so a print-mode
-   session that shows no Stop-hook activity is not an anomaly. This check covers wiring only; never
-   report Stop-hook silence as a defect.
+   Stop-hook scope: the verdict hook checks verdict blocks that a gate dispatched in the turn returned,
+   and verdict files written in that turn. It does not check a block the main session writes itself, and
+   a turn that dispatched no gate shows no Stop-hook activity. Stop hooks do run in print mode
+   (`claude -p`). This check covers wiring only; never report a quiet Stop hook on a turn with no gate
+   as a defect.
 
 5. **Client version.** Record `claude --version`. Note it in the report — hook-loading and
    marketplace behavior have varied across client versions.
