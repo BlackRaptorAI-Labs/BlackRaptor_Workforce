@@ -1,3 +1,10 @@
+## 2.5.0 — 2026-10-10 — How long a convening takes
+
+### Changed
+- **The council skill says what a convening costs:** about 10 minutes and several dollars on Opus,
+  with the measured numbers, and why picking only the seats the decision needs keeps it down.
+- This pack inherits the Core 2.5.0 changes; see the Core pack's changelog.
+
 ## 2.4.0 — 2026-10-10 — Inherits the Core 2.4.0 changes
 
 ### Changed

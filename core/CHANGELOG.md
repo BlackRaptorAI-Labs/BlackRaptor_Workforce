@@ -1,3 +1,17 @@
+## 2.5.0 — 2026-10-10 — Language references and a clearer pricing split
+
+### Added
+- **Language references for reviews.** `enforcement-liveness` gains short references for Go, Rust,
+  Python and TypeScript: the tools to run first, then what blocks a merge, what should be fixed, and
+  what is a nit. Reviewers load one only when the diff is in that language.
+
+### Changed
+- **`pricing-strategy-analyst` produces pricing analysis; it does not make the pricing decision.** The
+  decision belongs to the executive pricing seat when the council pack is installed, otherwise to
+  `product-manager`.
+- The verdict validator's self-test covers two more broken `standards[]` shapes (a list never closed,
+  and a blank entry), so they stay rejected.
+
 ## 2.4.0 — 2026-10-10 — Project values, a clearer doctor, and tidier sessions
 
 ### Changed

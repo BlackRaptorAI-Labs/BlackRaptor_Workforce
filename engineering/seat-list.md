@@ -5,6 +5,7 @@ The change-record template (core) names gate ROLES; this maps each to this pack'
 - compliance: compliance-officer
 - domain: domain-compliance
 - schema: schema-reviewer
+- infra: infra-reviewer
 - operational-readiness: operational-readiness
 - ux: ux-designer
 - quality: test-auditor

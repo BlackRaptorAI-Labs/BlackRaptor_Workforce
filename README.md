@@ -38,7 +38,7 @@
 > cites before the chair convenes, replacing seat-to-seat cross-review.
 > **Details → [docs/UPDATING-YOUR-WORKFORCE.md](docs/UPDATING-YOUR-WORKFORCE.md).**
 
-![agents](https://img.shields.io/badge/agents-63-6E56CF) ![skills](https://img.shields.io/badge/skills-29-6E56CF) ![packs](https://img.shields.io/badge/packs-5-6E56CF) ![license](https://img.shields.io/badge/license-Apache--2.0-blue)
+![agents](https://img.shields.io/badge/agents-64-6E56CF) ![skills](https://img.shields.io/badge/skills-29-6E56CF) ![packs](https://img.shields.io/badge/packs-5-6E56CF) ![license](https://img.shields.io/badge/license-Apache--2.0-blue)
 
 **Specialist agent packs with read-only review gates: they judge the work and record a cited verdict, machine-checked as it is written.**
 
@@ -95,13 +95,13 @@ Installing either one pulls in **`blackraptor-core`** automatically. Then add, w
 
 | Pack | id | Agents | What it is |
 |---|---|---|---|
-| Engineering | `blackraptor-engineering` | 23 | Governed software-engineering team: architect, engineers, and blocking-gate reviewers (security, privacy, compliance, red-team) + the advisory completion-auditor. |
+| Engineering | `blackraptor-engineering` | 24 | Governed software-engineering team: architect, engineers, and blocking-gate reviewers (security, privacy, compliance, red-team) + the completion-auditor, which re-checks work before it is called done. |
 | Executive Council | `blackraptor-council` | 12 | Executive advisory council convened through a challenge protocol (sourced evidence, counter-case, voice-of-customer). |
 | Marketing | `blackraptor-marketing` | 12 | Full-stack marketing department; producer agents are instructed to route external-facing copy to the isolated claims-gate agent, which you can also invoke explicitly on anything that ships. |
 | Hardware Engineering | `blackraptor-hardware` | 9 | Hardware-engineering department + an adversarial design-review gate before any board spin, tooling, or purchase. |
 | Core | `blackraptor-core` | 7 | Seven cross-cutting agents shared by every team — `product-manager`, `evidence-auditor`, `claims-gate`, `product-docs-writer`, and the market, pricing and competitive-intel analysts — plus the shared skills. Auto-installed with any team. |
 
-**63 agents · 29 skills · 5 packs** across the marketplace.
+**64 agents · 29 skills · 5 packs** across the marketplace.
 
 ## How it works
 

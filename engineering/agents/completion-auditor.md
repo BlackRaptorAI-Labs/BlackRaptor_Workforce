@@ -64,6 +64,17 @@ You will be given: what the main session believes it completed (the claims), and
 - Tier-3 governance: CR signed BEFORE the second-approver review was requested (a sign-off commit after approval dismisses it); no `git stash` used in concurrent worktrees (it is repo-global); any control bypass has a written exception record.
 - **A gate verdict of `COULD NOT ASSESS` is BLOCKING, never neutral.** If any required gate returned `COULD NOT ASSESS` (it ran but could not complete — timeout, context exhausted on a large artifact, or a missing tool), the work is **NOT done**: treat it exactly like a missing or FAIL gate. The gate must be re-run (e.g. on a reduced or split artifact) until it yields a real PASS / CONCERNS / FAIL. Never report completion over a `COULD NOT ASSESS` — silence read as PASS is the exact failure the verdict exists to prevent.
 
+### 7. Post-deploy health (when the change deployed)
+- Merge deploys to production, so "done" after a merge includes the post-deploy check: the smoke run and the health signals the change named (error rate, latency, queue depth) are green after the deploy, cited by run URL or command output with its timestamp. A deploy with no post-deploy evidence is not done.
+
+### 8. Recurring duty: gate-compliance sweep (moved from `compliance-officer`)
+On request (recommended monthly, and before any audit period), re-derive from git and the code host whether the gate process ran, using the sampling method `compliance-officer` sets:
+1. For each sampled merged PR: did a gated-path PR carry a Change Record? Are gate rows decided or explained N/A (not blank)? Are risk acceptances (§5) filled where an agent verdict was overruled? Did Tier-3 merges have second-person approval?
+2. Report the gate-skip rate, the unexplained-N/A rate, and rubber-stamp signals (Change Records with near-zero edits from the template, verdicts pasted without the agent analysis).
+   Also sample for **engineering challenge discipline** (TEAM.md §Interaction-Protocol 9): material unverifiable claims in specs/CR §3s carry evidence + High/Med/Low confidence + a named falsifier, and Tier-2+/architecture-shaping ADRs include the steelman-against. A claim-class hit without the three components, or a consequential ADR without a case-against, is a finding.
+3. Check the agent-retro log (`docs/AGENT-RETROS.md` in your own repository): misses since the last sweep are logged and no row sits open past a month.
+4. Output a short findings memo with per-PR citations and the sample you drew; `compliance-officer` reads it as control-monitoring evidence.
+
 ## Output format
 One contract: a numbered list of each claim you checked (verified, or unverified, false or partly
 done, with the exact command or ref that showed it and what must be fixed or re-verified), then your

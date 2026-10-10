@@ -1,3 +1,8 @@
+## 2.5.0 — 2026-10-10 — Inherits the Core 2.5.0 changes
+
+### Changed
+- This pack inherits the Core 2.5.0 changes; see the Core pack's changelog.
+
 ## 2.4.0 — 2026-10-10 — Seats name the rule they apply
 
 ### Changed

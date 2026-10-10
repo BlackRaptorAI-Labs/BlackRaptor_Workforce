@@ -25,6 +25,7 @@ claim Mechanical if the paths do not cover the concern.
 | `code-reviewer` | Mechanical (nature) | required CI review check on PRs | style/architecture judgment beyond CI |
 | `test-auditor` | Checklist-only (quality) | — (read-only; `completion-auditor` supplies the MEASURED runs) | test honesty (tautological/over-mocked) |
 | `schema-reviewer` | Partial (schema) | CODEOWNERS on migration paths, where the install enables that line | migration safety (expand/contract, lock impact, rollback) |
+| `infra-reviewer` | Partial (infrastructure) | CODEOWNERS on infrastructure and `.github/` paths, where the install enables that line | rollback path, blast radius, least privilege, required checks still gating the deploying branch |
 | `security-architect` | Partial (nature) | CODEOWNERS on auth/remote/tenant paths | new attack surfaces outside listed paths |
 | `privacy-counsel` | Partial (nature) | CODEOWNERS on data-collection paths | PII-to-LLM / cross-border data-flow |
 | `domain-compliance` | Checklist-only | — | regulated-output eligibility judgments |

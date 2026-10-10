@@ -55,13 +55,14 @@ import subprocess
 import sys
 import tempfile
 
-# Keep in sync with verify.sh GATE_AGENTS (16 as of 2.3.0; verify.sh [gp] fails on any drift). A name here that is not a gate would
+# Keep in sync with verify.sh GATE_AGENTS (17 as of 2.5.0; verify.sh [gp] fails on any drift). A name here that is not a gate would
 # block a turn for no reason; a gate missing here is simply not enforced.
 GATES = {
     "code-reviewer", "security-architect", "red-team-reviewer", "compliance-officer",
     "domain-compliance", "privacy-counsel", "operational-readiness", "completion-auditor",
     "ux-designer", "ethics-governance", "evidence-auditor",
     "compliance-cert", "hw-design-reviewer", "claims-gate", "schema-reviewer", "test-auditor",
+    "infra-reviewer",
 }
 
 # The fixed prefix of a backgrounded Agent/Task dispatch's async-launch tool_result (D-65). Never

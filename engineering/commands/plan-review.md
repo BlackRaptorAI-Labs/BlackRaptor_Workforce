@@ -17,7 +17,7 @@ by id. If the prior findings exist, this is a delta re-review (step 6).
 
 3. **Roster.**
    - **Core 8, always:** `security-architect`, `red-team-reviewer`, `principal-architect`,
-     `devops-sre`, `security-operations`, `operational-readiness`, `test-auditor`, `code-reviewer`.
+     `infra-reviewer`, `security-operations`, `operational-readiness`, `test-auditor`, `code-reviewer`.
      `completion-auditor` runs the facts pack (step 2) and pairs with `test-auditor` on every
      test-quality question, executing the suite or mutation `test-auditor` names.
    - **Specialists, only when the plan or diff triggers them:**
@@ -33,7 +33,7 @@ by id. If the prior findings exist, this is a delta re-review (step 6).
      a trigger above names one as a findings-only seat.
    - **The plan's author never reviews that plan.** If an agent wrote the plan or design (often
      `principal-architect`, who authors specs), drop it from the roster and say so.
-   - **Findings-only seats (no verdict block):** `principal-architect`, `devops-sre`,
+   - **Findings-only seats (no verdict block):** `principal-architect`,
      `security-operations`, `ip-counsel`, `legal-docs-writer`, `edge-agent-engineer`,
      `frontend-engineer`. They return the findings table only. Every other reviewer named here is a
      gate and ends with a verdict block.

@@ -56,7 +56,7 @@ CHANGELOG.md       what changed, and credit to the ideas we borrowed
 | Engineering | `backend-engineer`, `frontend-engineer`, `data-engineer`, `ai-ml-engineer`, `edge-agent-engineer` (on-device/customer-premises tier) |
 | Quality & Assurance | `qa-test-engineer`, `code-reviewer`, `red-team-reviewer` (adversarial pre-pentest review), `completion-auditor` (verifies claimed-complete work before it is reported done) |
 | Compliance | `compliance-officer`, `privacy-counsel`, `domain-compliance` (your regulated domain: HIPAA, SOX, PCI, …) |
-| Operations | `devops-sre`, `security-operations` (runtime security: SIEM, WAF, IR), `operational-readiness` (fit-for-operation + human-in-the-loop) |
+| Operations | `devops-sre` (authors infra and CI changes), `infra-reviewer` (the read-only gate on them), `security-operations` (runtime security: SIEM, WAF, IR), `operational-readiness` (fit-for-operation + human-in-the-loop) |
 | Communication & GTM | `product-marketing`, `technical-writer` (spec/code-drift) |
 | Legal & IP | `legal-docs-writer` (public legal/policy docs, prepare-never-file), `ip-counsel` (patentability research, disclosure packages, trademark/copyright prep) |
 
@@ -78,7 +78,7 @@ model for high-volume execution.
 | Tier | Model | Agents | Why |
 |---|---|---|---|
 | Orchestration & Architecture | `opus` | `principal-architect` | The main-session `dev-team` skill routes every change and enforces the challenge discipline — a routing miss silently skips a gate — but it is a skill run by the human's session, not an agent, so it carries no `model:` of its own. `principal-architect` shapes every architecture-level decision — the costliest kind to get wrong — and merits the strongest model available. |
-| Deep judgment (gates & adversarial review) | `opus` | `security-architect`, `privacy-counsel`, `compliance-officer`, `domain-compliance`, `red-team-reviewer`, `security-operations`, `code-reviewer`, `operational-readiness`, `legal-docs-writer`, `ip-counsel`, `completion-auditor` | Blocking gates and adversarial passes: being wrong is expensive and call volume is low, so the premium is worth it. `code-reviewer` sits here deliberately — it is the last gate before a merge-to-prod deploy and runs once per PR, so the premium buys judgment at the single point where everything converges. |
+| Deep judgment (gates & adversarial review) | `opus` | `security-architect`, `privacy-counsel`, `compliance-officer`, `domain-compliance`, `red-team-reviewer`, `security-operations`, `code-reviewer`, `operational-readiness`, `legal-docs-writer`, `ip-counsel`, `completion-auditor`, `infra-reviewer` | Blocking gates and adversarial passes: being wrong is expensive and call volume is low, so the premium is worth it. `code-reviewer` sits here deliberately — it is the last gate before a merge-to-prod deploy and runs once per PR, so the premium buys judgment at the single point where everything converges. |
 | Everyday build | `sonnet` | `backend-engineer`, `frontend-engineer`, `data-engineer`, `ai-ml-engineer`, `edge-agent-engineer`, `qa-test-engineer`, `devops-sre`, `ux-designer`, `product-marketing`, `technical-writer` | High-volume execution from already-approved specs; strong and cost-efficient. |
 
 Two notes:

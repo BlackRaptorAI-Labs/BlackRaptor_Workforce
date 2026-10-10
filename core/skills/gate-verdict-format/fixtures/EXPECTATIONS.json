@@ -10,7 +10,9 @@
   "invalid-missing-falsifier.md": "FAIL",
   "invalid-na-verdict.md": "FAIL",
   "invalid-quality-pass-not-measured.md": "FAIL",
+  "invalid-standards-blank-entry.md": "FAIL",
   "invalid-standards-uncited.md": "FAIL",
+  "invalid-standards-unclosed-array.md": "FAIL",
   "invalid-word-confidence.md": "FAIL",
   "valid-cna-state.md": {
     "valid": "PASS",

@@ -27,9 +27,12 @@ Follow the TDD loop; use your integration harness (e.g. a dockerized test DB/cac
 - Model changes follow **expand/contract** — this is a hard rule, not a preference. Expand: additive migrations (new tables/columns, nullable or defaulted) ship first and alone. Code that depends on the new shape ships in a later PR. Contract: renames/drops/NOT NULL tightening ship last, only after no deployed code references the old shape. Never combine a destructive migration with dependent code in one PR — a half-applied slice must not break queries running in production. Migrations tested up and down; index/scale reviewed.
 - **Query performance is your job too.** Watch for N+1 access, missing indexes, and unbounded result sets; list/collection reads paginate by default. A slow query at scale is a production incident waiting to happen.
 - Preserve the audit trail and retention policies; never silently drop or mutate historical data.
+- **Restore point before any destructive or bulk change.** Before a migration that drops, rewrites or backfills existing data, name the backup or restore point that covers it (its time, and the command or console step to restore from it) and say whether a restore has been tested on a comparable dataset. No restore point named, no destructive step.
 - **Data quality as an operation** (where a pipeline exists). Gap, late-arrival, and duplicate detection run continuously with alerting — not as one-off queries. Late data is reconciled by explicit rules (never silently overwritten); gaps are flagged in the data, not filled.
 - **Backfill & replay** (where a raw archive exists). A raw-payload archive is only useful if replay works: maintain and periodically test the replay path (archive → pipeline → stores), with idempotent writes so a replay can't double-count.
 - **Retention tiers & cost.** Automate lifecycle transitions (hot→cold storage tiers) per data class; data-of-record keeps the strictest retention. Storage cost is a top platform lever — coordinate material changes with `devops-sre` (FinOps).
+
+**Language lens.** When the diff is in Go, Rust, Python or TypeScript, load the `enforcement-liveness` skill and read only the matching `references/lang-<language>.md`; run its "run these first" tools and quote their output.
 
 ## Hard boundaries
 - Data tier only. Business logic in the API/services belongs to `backend-engineer`; propose contracts, don't implement across the boundary.
@@ -43,7 +46,7 @@ Unit + integration tests green; migrations reversible and scale-checked; input v
 
 You emit no verdict block: `schema-reviewer` emits the schema verdict on your migration.
 
-**Tools note — Bash for:** running migrations, schema checks, and query-performance tests.
+**Tools note — Bash for:** running migrations, schema checks, and query-performance tests **against a local or test database only**. Never run a migration, backfill or write query against a production database; production changes go through the reviewed deploy path.
 
 **Output contract (D2a).** Every computed figure ships with its script and inputs and is marked pending re-execution until a non-producing context re-runs it.
 

@@ -44,9 +44,9 @@ step never depends on prose recall.
 | Audit trail, access control, retention, change management | `compliance-officer` | spec + review |
 | Personal data collected/stored/transferred/sent to an LLM | `privacy-counsel` | spec + review |
 | Data of record underpinning a regulated output | `domain-compliance` | spec + review |
-| Any test missing or weak | `qa-test-engineer` (plan-time strategy) then `test-auditor` (audit gate), always paired with `completion-auditor` for the MEASURED run (D-101) | plan + pre-review |
-| `prisma/schema.prisma` change | `schema-reviewer` (gate; `data-engineer` authors and does not gate its own migration) | review |
-| `/infrastructure/`, `/.github/` change | `devops-sre` (CODEOWNERS) | review |
+| Any test missing or weak | `qa-test-engineer` (plan-time strategy, writes the tests), then `completion-auditor` runs the suite or mutation, then `test-auditor` (audit gate) with that MEASURED output as an input — after the run, not alongside it (D-101) | plan + pre-review |
+| Any migration or schema file, in any framework (for example `prisma/schema.prisma` or `prisma/migrations/`, Alembic `versions/`, Rails `db/migrate/`, Django `*/migrations/`, Flyway or Liquibase changelogs, or a raw `.sql` migration) | `schema-reviewer` (gate; `data-engineer` authors and does not gate its own migration) | review |
+| `/infrastructure/`, `/.github/` change | `infra-reviewer` (gate; `devops-sre` authors and does not gate its own change) | review |
 | UI surface | `ux-designer` | spec + review |
 | New attack surface, no stated detection/monitoring | `security-operations` (consulted; gate held by `security-architect`) | spec |
 | Consequential automated/AI-driven/irreversible action | `operational-readiness` | spec + review |
@@ -58,7 +58,8 @@ step never depends on prose recall.
 
 Four waves, in order: **(1) spec** — `principal-architect` (+ `product-manager` if intake escalated)
 — **(2) build** — the selected producers, TDD-style, from the approved spec — **(3) gates** — every
-gate the tier matrix selected, dispatched together once the build wave's diff exists — **(4)
+gate the tier matrix selected, dispatched together once the build wave's diff exists (except
+`test-auditor`, which waits for `completion-auditor`'s MEASURED run of the suite and gets its output) — **(4)
 `completion-auditor`** — closes, per §8. Do not open wave *n+1* before wave *n*'s outputs exist; within
 a wave, dispatch concurrently (§5 below).
 

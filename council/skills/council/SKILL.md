@@ -78,6 +78,12 @@ result has arrived (D-65, GO-BLOCK-P2-BUILD-v1-AMENDMENT-8 §1).** Do not end th
 any seat task is still running; wait for every seat's result (a blocking wait on each task),
 then dispatch the chair.
 
+**Time and cost.** Plan for a convening to take about 10 minutes and several dollars. Measured on
+Opus: a convening of every seat plus the chair cost $8.70 (2026-09-07); a convening where this skill
+picked its own seats (five council seats and `product-manager`, then the chair) was still running
+when a 580-second limit stopped it (2026-10-10). Pick only the seats the decision turns on (§2):
+each extra seat is its own model run.
+
 ## 4. Context each specialist receives (and must NOT receive)
 
 Each seat receives: the one-question frame, the one-way/two-way label, and the grounded

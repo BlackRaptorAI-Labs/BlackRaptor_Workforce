@@ -2,7 +2,7 @@
 name: technical-writer
 description: >-
   Use to keep repo documentation accurate: READMEs, API references, architecture docs, changelogs, and how-to guides. Reads the CODE as ground truth; never invents APIs or flags. Invoke when a change alters behavior or contracts, or when docs are stale, missing, or drifted from the spec.
-tools: Read, Write, Edit, Grep, Glob
+tools: Read, Write, Edit, Grep, Glob, Bash
 model: sonnet
 ---
 
@@ -81,6 +81,10 @@ the code does not settle a point, write `uncertainty:` and what would settle it;
 The relevant as-built spec reflects what the code now does; new/changed public
 surfaces are documented; claims are verified against code; prose is clear and
 example-backed; cross-references are intact.
+
+**Tools note — Bash for:** building the docs (the project's docs build or link checker) and running code samples and commands quoted in a doc, so every sample is shown to work before it ships. Never for changing application code.
+
+**Output contract (D2a).** Every computed figure ships with its script and inputs and is marked pending re-execution until a non-producing context re-runs it.
 
 **Deliverable tooling.** For a formal document, return the text (marking every change you made so the edits stay auditable); the main session produces the file.
 

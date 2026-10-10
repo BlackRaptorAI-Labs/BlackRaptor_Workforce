@@ -12,7 +12,7 @@ For each review gate, record HOW it is enforced. Three honest categories:
 |---|---|---|---|---|
 | Security — auth/authz | security-architect | Mechanical | {{AUTH_PATHS}} in CODEOWNERS + hook | New auth surfaces outside listed paths |
 | Schema | data-engineer | Mechanical | {{SCHEMA_PATH}} | — |
-| CI/CD + enforcement config | devops-sre | Mechanical | `.github/`, `.claude/hooks/` | — |
+| CI/CD + enforcement config | infra-reviewer (devops-sre authors) | Mechanical | `.github/`, `.claude/hooks/` | — |
 | Privacy — PII at rest | privacy-counsel | Partial | {{PII_PATHS}} | New PII fields elsewhere |
 | Privacy — PII to LLM / cross-border | privacy-counsel | Checklist-only | — | Data-flow property |
 | Domain ({{REGULATED_DOMAIN}}) | domain-compliance | Checklist-only until the module exists | (future {{DOMAIN_PATHS}}) | Eligibility/behavioral judgments |

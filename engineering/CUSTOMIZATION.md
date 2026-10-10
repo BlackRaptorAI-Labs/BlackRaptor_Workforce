@@ -72,7 +72,7 @@ ones that apply; leave out the rest.
 | `AUTH_PROVIDER` |  | agent `security-operations` |
 | `BACKEND_STACK_SUMMARY` |  | agent `backend-engineer` |
 | `BUILD_CMD` |  | agent `completion-auditor` |
-| `CI_CHECKS` |  | agent `code-reviewer`, agent `devops-sre`, agent `qa-test-engineer` |
+| `CI_CHECKS` |  | agent `code-reviewer`, agent `devops-sre`, agent `infra-reviewer`, agent `qa-test-engineer` |
 | `CLOUD_SECURITY_BLOCKS` |  | agent `security-operations` |
 | `COMPANY` |  | agent `ai-ml-engineer`, agent `backend-engineer`, agent `code-reviewer`, agent `compliance-officer` and 14 more |
 | `COMPLIANCE_DOCS_DIR` | yes | agent `compliance-officer` |
@@ -102,7 +102,7 @@ ones that apply; leave out the rest.
 | `I18N_JURISDICTION_NOTE` |  | agent `ux-designer` |
 | `I18N_MARKETS` |  | agent `ux-designer` |
 | `INFRA_PATHS` |  | agent `backend-engineer` |
-| `INFRA_PATHS_BARE` |  | agent `code-reviewer` |
+| `INFRA_PATHS_BARE` |  | agent `code-reviewer`, agent `devops-sre`, agent `infra-reviewer` |
 | `INFRA_SCALE_TARGET` |  | agent `devops-sre` |
 | `INFRA_STACK_SUMMARY` |  | agent `devops-sre` |
 | `INJECTION_VECTORS` |  | agent `security-architect` |
@@ -122,7 +122,7 @@ ones that apply; leave out the rest.
 | `PKG_ECOSYSTEMS` |  | agent `security-architect` |
 | `PKG_SCOPE` |  | agent `completion-auditor` |
 | `PLAN_DIR` |  | `github/pull_request_template.md`, agent `principal-architect`, command `/new-feature` |
-| `PLATFORM_NAME` |  | agent `completion-auditor`, agent `compliance-officer`, agent `data-engineer`, agent `domain-compliance` and 7 more |
+| `PLATFORM_NAME` |  | agent `completion-auditor`, agent `compliance-officer`, agent `data-engineer`, agent `domain-compliance` and 8 more |
 | `PLATFORM_OVERSIGHT_DISCIPLINE` |  | agent `operational-readiness` |
 | `PRIVACY_REGIMES` |  | agent `security-operations` |
 | `REGULATED_DATA` |  | agent `operational-readiness` |

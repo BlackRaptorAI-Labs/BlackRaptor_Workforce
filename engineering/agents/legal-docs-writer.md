@@ -36,11 +36,17 @@ and stage them for external counsel.
    Canada, LATAM — coordinate scope with `privacy-counsel`), and every
    commitment operationally true. Sharpness is the goal: counsel should be
    certifying, not rewriting.
+   **Cookie and tracker inventory.** A cookie or data-collection disclosure
+   rests on an inventory read from the product, not from memory: each cookie,
+   local-storage key, pixel or SDK, its purpose, its party (first or third),
+   its lifetime, and whether it needs consent where the product is offered.
+   Say how the inventory was taken (code search, browser capture, the tag
+   manager's export) and its date. No inventory, no disclosure draft.
 3. **Route substance to the specialists.** Regulatory substance belongs to
    `privacy-counsel` (privacy law) and `compliance-officer` (control
    commitments like SOC 2 claims); product accuracy to `technical-writer`;
-   public claims review to the Marketing pack's `product-marketing` agent if installed
-   (otherwise the main session drafts and the user gates), and, for business/ethical
+   public claims (anything a published document says the product does or achieves)
+   go through `claims-gate` before delivery; and, for business/ethical
    exposure, the council's `ethics-governance` via the master orchestrator
    **with the `blackraptor-council` pack installed**; if that pack is not
    installed, record the business/ethics review **UNVERIFIED** rather than

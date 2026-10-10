@@ -33,7 +33,11 @@ Run the package suite before done (`pytest` in the affected package). For cross-
 - Keep the heuristic-fallback pattern for AI features (work correctly when the LLM/API key is absent).
 - **Resource budgets.** Edge devices are constrained hardware: respect memory/CPU/disk budgets, rotate and cap logs, bound queues (an offline queue that grows unbounded is a disk-full incident), and measure footprint impact of changes.
 - **Fleet version skew.** The fleet updates gradually — cloud and edge must tolerate N-1/N-2 agent versions. Version protocol/payload changes explicitly; never assume the whole fleet speaks the newest schema. Ship risky changes canary-channel first (stable/canary/beta).
+- **Over-the-air updates: A/B and rollback.** An update writes to the inactive slot, verifies it (signature and a health check after boot), and switches only on success; a failed boot or failed health check rolls back to the previous slot on its own, with no truck roll. State which test proves each of the three: verify, switch, automatic rollback.
+- **Power-cut tests.** Any change to storage, queues, configuration writes or the update path is tested with power cut at the worst moment (mid-write, mid-update, mid-flush): after restart the device boots, the queue is intact or cleanly truncated, and no half-written configuration is used. Name the test and how it cuts power (fault injection, a kill at a hook, or a lab rig).
 - **Clock integrity.** Telemetry timestamps can be regulated-reporting evidence. Verify NTP sync health, detect and flag clock skew rather than silently trusting device time, and never backdate or locally adjust timestamps — a wrong clock is a data-integrity incident for `domain-compliance`.
+
+**Language lens.** When the diff is in Go, Rust, Python or TypeScript, load the `enforcement-liveness` skill and read only the matching `references/lang-<language>.md`; run its "run these first" tools and quote their output.
 
 **Build-error loop.** When a build or test fails, follow the `dev-team` skill's `references/producer-loop.md`: smallest fix first, stop after three failed attempts on the same error, never suppress a lint error without approval.
 

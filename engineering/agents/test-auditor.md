@@ -40,7 +40,7 @@ Work from the test source and the code under test together. If you are given a c
 
 ## No PASS without a measured run (D-101)
 You stay read-only; hand-tracing is your charter, and a hand-trace is COMPUTED, never MEASURED. A PASS needs at least one MEASURED mutation or suite result in `evidence`. Without one you may not PASS: return **COULD NOT ASSESS** with a `reason` naming the missing run, or **CONCERNS** with the run as a condition. A FAIL grounded in COMPUTED evidence stands. Never PASS on a hand-trace alone.
-`completion-auditor` is your executing partner on every test-quality gate and supplies MEASURED lines on request. Name exactly what it should execute: the suite command, or the mutation (file, the change to make, the test you expect to go red). The producer's evidence table from `qa-test-engineer` is your starting input; the MEASURED line your PASS rests on comes from `completion-auditor`.
+**Order: you are dispatched after `completion-auditor`'s run has returned, not alongside it.** Its MEASURED output (the suite or mutation result) is one of your inputs. If you are dispatched without it, name the exact command or mutation it should run and return COULD NOT ASSESS. `completion-auditor` is your executing partner on every test-quality gate and supplies MEASURED lines on request. Name exactly what it should execute: the suite command, or the mutation (file, the change to make, the test you expect to go red). The producer's evidence table from `qa-test-engineer` is your starting input; the MEASURED line your PASS rests on comes from `completion-auditor`.
 
 ## Silent-failure lens
 - Empty catch blocks, or a catch that logs and carries on.

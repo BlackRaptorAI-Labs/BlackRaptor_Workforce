@@ -1,3 +1,46 @@
+## 2.5.0 — 2026-10-10 — A separate infrastructure gate, and sharper agent cards
+
+### Added
+- **`infra-reviewer`, a read-only gate on infrastructure and CI/CD changes.** It judges the rollback
+  path, blast radius, access grants, pinned actions, secrets, and whether required checks still gate
+  the branch that deploys. It never edits what it reviews.
+
+### Changed
+- **`devops-sre` writes infrastructure and pipeline changes; it no longer gates them.** It hands each
+  change to `infra-reviewer` with its plan or diff output and its rollback step. `/plan-review` and
+  `/gate-review` use `infra-reviewer` for this seat.
+- **`ai-ml-engineer`** can read model-provider documentation, and reports an eval table row for every
+  prompt or model change.
+- **`backend-engineer`** stops when there is no approved spec, and reads your test command from your
+  project values.
+- **`code-reviewer`** checks every added or upgraded dependency (lockfile, pinned version, license,
+  known vulnerabilities) and routes infrastructure paths to `infra-reviewer`.
+- **`completion-auditor`** checks health after a deploy, and now runs the gate-compliance sweep.
+- **`compliance-officer`** sets how the sweep samples merged changes; its vendor list names no
+  specific vendors.
+- **`data-engineer`** names a restore point before a destructive or bulk change, and runs commands
+  against a local or test database only.
+- **`edge-agent-engineer`** requires A/B updates with automatic rollback, and power-cut tests.
+- **`frontend-engineer`** adds cross-site scripting, content security policy and translation checks,
+  and no longer assumes a specific component library or test stack.
+- **`ip-counsel`** covers freedom to operate, inventorship, and open-source license obligations.
+- **`legal-docs-writer`** builds a cookie and tracker inventory from the product before drafting a
+  disclosure, and sends public claims through `claims-gate`.
+- **`operational-readiness`** lists each consequential action with its human checkpoint and a test
+  that proves the checkpoint blocks.
+- **`privacy-counsel`** works from a data-flow table and checks processor agreements.
+- **`schema-reviewer`** is triggered by any migration file, and reads the query plan or dry-run output.
+- **`security-operations`** keeps a detection table: log source, threshold, a test event that fires
+  it, and the response.
+- **`technical-writer`** can run commands to check docs against the code.
+- **`test-auditor`** runs after `completion-auditor`'s run and judges with its measured output.
+- **`ux-designer`** asks for screenshots and automated page-scan output, and says it could not assess
+  without them.
+- **`/red-team`:** `qa-test-engineer` writes each proof test and `completion-auditor` runs it.
+- **The dev-team lifecycle** sends any migration, in any framework, to `schema-reviewer`, and runs
+  `test-auditor` after `completion-auditor`.
+- This pack inherits the Core 2.5.0 changes; see the Core pack's changelog.
+
 ## 2.4.0 — 2026-10-10 — Clear roles, your own values, and a customization guide that fits the plugin
 
 ### Changed

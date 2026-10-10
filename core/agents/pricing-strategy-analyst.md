@@ -1,7 +1,7 @@
 ---
 name: pricing-strategy-analyst
 description: >-
-  Use for pricing analysis and modeling — willingness-to-pay estimation by persona, competitive-price benchmarking, tier/packaging analysis, and wholesale/channel discount modeling. Produces the cited analysis that informs a decision; does not set or restructure the company's own price — that is a separate executive pricing seat's call.
+  Use for pricing analysis artifacts: willingness-to-pay estimates, competitor price benchmarks, tier and discount models, cited comparables. Pricing decisions belong to the executive pricing seat when installed, else product-manager.
 model: opus
 tools: Read, Grep, Glob, WebSearch, WebFetch, Write, Bash
 ---

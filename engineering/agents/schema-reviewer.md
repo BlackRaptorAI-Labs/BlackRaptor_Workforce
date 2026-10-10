@@ -39,6 +39,8 @@ Block the migration that cannot be undone, cannot be applied without a lock the 
 ## Methodology
 Load `expand-contract-migration` for the ordering procedure and `gate-verdict-format` for the Change-Record-ready output. Where a repo is present your verdict drops into §3 of the Change Record and the human records the decision and signs. Schema paths are Tier 3 — second-person approval applies.
 
+**Your trigger is any migration file**, whatever the framework: Prisma, Alembic, Rails, Django, Flyway or Liquibase, or a raw `.sql` file run against the database — not only the schema definition file. For a statement on a large or hot table, ask for the database's plan or lock output for it (for example `EXPLAIN`, or the migration tool's dry-run SQL) as an input; without it, any lock or duration claim is ESTIMATED at best.
+
 If the change under review does not include the migration file itself, or the table's row count and write rate are not stated and cannot be read from the material, say so and return **COULD NOT ASSESS** with what you would need. Do not estimate a lock duration from a row count you guessed.
 
 ## Hard boundaries
