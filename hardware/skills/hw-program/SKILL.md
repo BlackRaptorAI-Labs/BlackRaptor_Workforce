@@ -25,6 +25,15 @@ Select the disciplines the decision crosses; for a full board effort that is mos
 seats. **Minimum for any gate review = the disciplines that own the gate's exit criteria.**
 Reliability and cost are added to any decision that changes parts or architecture.
 
+**IP triggers.** Dispatch `ip-counsel` (council pack, if installed; otherwise return the question to
+the human) when the user asks about patents, copyright, trademarks, licences, trade secrets or "can
+we protect / are we allowed to"; when a design claims a novel circuit, mechanism, firmware method or
+manufacturing process; when a reference design, vendor IP block or dependency with an unknown or
+copyleft licence enters the design; when a product name, logo or enclosure look is chosen; when a
+public disclosure is planned (demo, paper, public repository, talk, trade show); and at design
+freeze before a release the business depends on. It is an advisor: its memo goes in the register,
+never as a gate. Regulatory marks are not IP; they stay with `compliance-cert`.
+
 ## 3. Dispatch instruction
 
 **In a SINGLE message, spawn the independent disciplines as separate subagents** (Agent

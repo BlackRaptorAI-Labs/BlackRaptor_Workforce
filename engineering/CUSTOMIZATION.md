@@ -106,7 +106,6 @@ ones that apply; leave out the rest.
 | `INFRA_SCALE_TARGET` |  | agent `devops-sre` |
 | `INFRA_STACK_SUMMARY` |  | agent `devops-sre` |
 | `INJECTION_VECTORS` |  | agent `security-architect` |
-| `IP_PORTFOLIO` |  | agent `ip-counsel` |
 | `LINT_CMD` |  | agent `backend-engineer` |
 | `LOG_LIB` |  | agent `backend-engineer`, agent `code-reviewer` |
 | `MONOREPO_UNIT` |  | agent `backend-engineer` |
@@ -139,7 +138,7 @@ ones that apply; leave out the rest.
 | `SECRETS_STORE` |  | agent `security-architect` |
 | `SEC_ATTACK_SURFACES` |  | agent `security-architect` |
 | `SHELL` |  | agent `completion-auditor` |
-| `SPEC_DIR` | yes | `github/pull_request_template.md`, agent `code-reviewer`, agent `legal-docs-writer`, agent `principal-architect` and 3 more |
+| `SPEC_DIR` | yes | `github/pull_request_template.md`, agent `code-reviewer`, agent `legal-docs-writer`, agent `principal-architect` and 4 more |
 | `SPEC_RANGE` |  | agent `technical-writer` |
 | `TENANT_FILTERS` |  | agent `security-architect` |
 | `TENANT_ROLES` |  | agent `security-architect` |
@@ -152,7 +151,7 @@ ones that apply; leave out the rest.
 | `VALIDATION_LIB` |  | agent `ai-ml-engineer`, agent `backend-engineer`, agent `code-reviewer`, agent `qa-test-engineer` and 1 more |
 | `YOUR_HANDLE` |  | `github/pull_request_template.md` |
 
-85 slots, generated from the built tree.
+84 slots, generated from the built tree.
 <!-- PLACEHOLDER-TABLE-END -->
 
 ## 3. Define your Tier-3 paths (10 min — the important part)

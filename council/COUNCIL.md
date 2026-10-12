@@ -141,6 +141,9 @@ every seat's result has arrived (D-65, GO-BLOCK-P2-BUILD-v1-AMENDMENT-8 §1).** 
 while any seat task is still running; wait for every seat's result (a blocking wait on each task),
 then dispatch the chair.
 
+`ip-counsel` is **exempt from this section** too: it is an advisor, not a seat (§5). It returns an
+advisory memo with provenance labels and no verdict block, and it is never a gate.
+
 Every seat's output contract cites this section.
 
 ### Worked example (one domain seat, abbreviated)
@@ -217,6 +220,17 @@ request naming a title resolves to its slug.
 | Title | Seat (slug) |
 |---|---|
 | Chair / Chief of Staff | `chair` |
+
+**Advisor (council pack, not a seat and not a gate):**
+
+| Title | Seat (slug) |
+|---|---|
+| IP Counsel (advisory) | `ip-counsel` |
+
+The chair may ask for `ip-counsel` when a decision turns on patents, copyright, trademarks,
+licences or trade secrets; the main session dispatches it. It does not count toward the 2–4
+domain seats, carries no vote and no verdict, and its memo goes to the chair and the Change Record
+as an attachment.
 
 **Core-pack anchor (not one of the 12 council seats):**
 

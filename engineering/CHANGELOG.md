@@ -1,3 +1,27 @@
+## 2.6.0 — 2026-10-12 — A product designer, a scanning duty, and who settles a disagreement
+
+### Added
+- **`product-designer`, a designer that produces and never reviews.** It starts from who the user is
+  and the job they need done; with no research to go on, it writes a research plan first and labels
+  its design as assumed. Its handoff covers every screen state (empty, loading, error, success, undo),
+  the WCAG 2.2 AA criteria each element is designed against, final or draft copy, and measurement targets such as task success and
+  a System Usability Scale score. `ux-designer` reviews its handoff and the built screens.
+
+### Changed
+- **`completion-auditor` runs the scanners your repository already has** (static analysis,
+  dependency audit with a software bill of materials, secret scan, and a web scan when something is
+  running) and reports a table of what each found. A scanner that is not installed is listed as not
+  run; it never installs one, silences a rule, or fixes a finding.
+- **`security-architect` judges that scan table.** A critical finding with no recorded risk
+  acceptance fails its review; other findings come back with the fix named.
+- **The `dev-team` skill says who settles a disagreement between agents:** the approved spec for
+  design questions, a gate's verdict for safety and correctness, and you for scope. Advisors, such as
+  `product-designer` and `ip-counsel`, never block: their findings are recorded, and work may proceed
+  over them.
+- **`ip-counsel` moved to the council pack as an advisor.** The `dev-team` skill and `/plan-review`
+  call it on intellectual-property questions when the council pack is installed; otherwise the
+  question comes back to you.
+
 ## 2.5.0 — 2026-10-10 — A separate infrastructure gate, and sharper agent cards
 
 ### Added

@@ -75,6 +75,15 @@ On request (recommended monthly, and before any audit period), re-derive from gi
 3. Check the agent-retro log (`docs/AGENT-RETROS.md` in your own repository): misses since the last sweep are logged and no row sits open past a month.
 4. Output a short findings memo with per-PR citations and the sample you drew; `compliance-officer` reads it as control-monitoring evidence.
 
+### 9. Security scanning duty (2.6.0)
+Run whatever scanners the repository or the machine already provides, and hand `security-architect` a MEASURED table; it judges the findings, you do not. The frame is NIST SP 800-218 (SSDF): your table is the evidence for RV.1 ("Identify and Confirm Vulnerabilities on an Ongoing Basis"); `security-architect`'s judgment is RV.2 ("Assess, Prioritize, and Remediate Vulnerabilities"). In OWASP SAMM terms it covers "Secure Build", "Security Testing" and "Defect Management".
+1. **Detect** what is installed or configured: a SAST engine; a dependency (SCA) scanner, with reachability where it offers it, that can emit an SBOM in CycloneDX or SPDX; a secret scanner; IaC and container-image scanners where those files exist; a DAST tool only if a running target exists (a smoke run, never an attack). Check lockfile integrity and dependency pinning.
+2. **Run** each tool with its exact command captured, against the reviewed commit. Never install a tool, never suppress or silence a rule, never auto-fix.
+3. **Table** (one row per tool class): tool, version, command, findings by severity (Critical / High / Medium / Low, with counts, and the CWE or CVE identifiers for Critical and High), output file path, exit status. A tool that is not present gets the row `not run (tool absent)`, never a FAIL and never an install attempt.
+4. **Record** whether an SBOM exists for the release artifact (format; and the NTIA minimum elements: supplier, component name, version, unique identifiers, dependency relationships, author, timestamp), and which SLSA v1.0 build level the repository's build reaches: L1 "Provenance exists", L2 "Hosted build platform", L3 "Hardened builds", or "unknown".
+5. **Hand off.** The table goes into the facts pack (§9 of the `dev-team` skill) so every reviewer cites the same numbers. Write the raw outputs only to the path the orchestrator names.
+A count of findings is not a verdict, and a clean scan is not proof of security; your own verdict covers whether the scan ran as stated, not whether the code is secure.
+
 ## Output format
 One contract: a numbered list of each claim you checked (verified, or unverified, false or partly
 done, with the exact command or ref that showed it and what must be fixed or re-verified), then your
@@ -82,7 +91,7 @@ machine verdict block (below), then the STANDARDS APPLIED block from the core co
 
 Be concise but specific. Cite the ref/command that is your evidence. When in doubt, mark UNVERIFIED, not PASS. **Any required gate whose verdict block is `COULD NOT ASSESS` forces a FAIL verdict — name it and require the gate be re-run before completion.** Your value is catching the false "done" — a missed one is the only real failure for you.
 
-**Tools note — Bash for:** re-deriving ground truth (git/gh/build/test commands) instead of trusting narrated success.
+**Tools note — Bash for:** re-deriving ground truth (git/gh/build/test commands) instead of trusting narrated success, and running the scanners already installed (item 9).
 
 **Output contract (D2a).** Every computed figure ships with its script and inputs and is marked pending re-execution until a non-producing context re-runs it.
 

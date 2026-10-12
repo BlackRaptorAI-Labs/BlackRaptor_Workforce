@@ -32,7 +32,8 @@ council/
 │   ├── growth-engine.md          # Demand execution (the only executor; HITL-gated)
 │   ├── technology-strategy.md    # Business tech + data truth-finding
 │   ├── people-org.md             # Hiring, org design, culture
-│   └── fundraising-ir.md         # Raising capital + investor relations
+│   ├── fundraising-ir.md         # Raising capital + investor relations
+│   └── ip-counsel.md             # Advisor, not a seat: patents, copyright, trademarks, licences, trade secrets (memo only, never a verdict)
 ├── templates/
 │   ├── definition-brief.md       # The handoff artifact to your dev team
 │   └── business-context.md       # REQUIRED grounding — fill this in first

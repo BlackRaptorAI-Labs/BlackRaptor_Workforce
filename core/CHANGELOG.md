@@ -1,3 +1,9 @@
+## 2.6.0 — 2026-10-12 — Two usability standards in the anchor map
+
+### Changed
+- **The standards anchor map adds ISO 9241-210 (human-centred design) and ISO 9241-11 (usability)**,
+  which the new engineering `product-designer` names.
+
 ## 2.5.0 — 2026-10-10 — Language references and a clearer pricing split
 
 ### Added

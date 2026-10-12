@@ -1,3 +1,11 @@
+## 2.6.0 — 2026-10-12 — When to call the intellectual-property advisor
+
+### Changed
+- **`hw-program` says when to call `ip-counsel`** (council pack, if installed): a novel circuit,
+  mechanism or firmware method, a reference design or licence question, a product name or enclosure
+  look, a planned public demo, and design freeze. Regulatory marks stay with `compliance-cert`.
+- This pack inherits the Core 2.6.0 changes; see the Core pack's changelog.
+
 ## 2.5.0 — 2026-10-10 — Inherits the Core 2.5.0 changes
 
 ### Changed

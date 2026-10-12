@@ -80,6 +80,15 @@ These are named in agent bodies (`compliance-officer`, `security-architect`, `po
 | IPC-9592 (Rev. B, 2012) | current revision (IPC-9592B, Nov 2012; replaces Rev A:2010 and the 2008 original) | 2026-08-12 | shop.ipc.org/general-electronics/standards/9592-0-b-english (IPC) |
 | IEC 61000-4-5 (2014+AMD1:2017, Ed. 3.0) | current (2014 3rd ed + Amendment 1:2017; surge immunity) | 2026-08-12 | webstore.iec.ch/en/publication/4223 (+ /29449 for AMD1:2017) |
 
+### 2.6.0 additions — named by `product-designer` (2026-10-12)
+
+iso.org refused a direct fetch on 2026-10-12 (HTTP 403). The status below was read from the iso.org pages' own catalogue entries as returned by a web search restricted to iso.org; no reseller or secondary source was used. Re-check at iso.org directly at the next stamp refresh.
+
+| Designation | Status | Verified | Source (issuing body) |
+|---|---|---|---|
+| ISO 9241-210:2019 Ed. 2 | current (published 2019-07; reviewed and confirmed 2025; replaces 9241-210:2010, withdrawn) | 2026-10-12 | iso.org/standard/77520.html |
+| ISO 9241-11:2018 | current (replaces 9241-11:1998, withdrawn) | 2026-10-12 | iso.org/standard/63500.html |
+
 ---
 
 ## WITHDRAWN / superseded designations — `[4f]` reads this table
@@ -164,6 +173,8 @@ Verified 3 August 2026 against issuing bodies. **Re-verify before relying on any
 | AI risk | AI Risk Management Framework | **NIST AI 100-1 (AI RMF 1.0)** (Jan 2023) | Framework | **Free** |
 | AI risk (international) | AI — Guidance on risk management | ISO/IEC 23894:2023 | Standard | Paywalled |
 | Quality management | Quality management systems — Requirements | ISO 9001:2015 + Amd 1:2024 | Standard | Paywalled |
+| Human-centred design | Ergonomics of human-system interaction — Human-centred design for interactive systems | ISO 9241-210:2019 Ed. 2 | Standard | Paywalled |
+| Usability | Ergonomics of human-system interaction — Usability: definitions and concepts | ISO 9241-11:2018 | Standard | Paywalled |
 | Configuration management | CM process clauses of 12207:2026 / 15288:2023; ISO 10007:2017 in a QMS context | — | Standard | Paywalled |
 
 **Development caveats:**

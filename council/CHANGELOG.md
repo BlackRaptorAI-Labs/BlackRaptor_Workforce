@@ -1,3 +1,15 @@
+## 2.6.0 — 2026-10-12 — An intellectual-property advisor
+
+### Added
+- **`ip-counsel`, an advisor on patents, copyright, trademarks, licences and trade secrets**, for
+  software and electronics hardware. It helps protect what is new (invention disclosures,
+  provisional filings, what to do before a public demo) and lowers the risk of colliding with
+  others' rights (freedom-to-operate reviews by product stage, design-arounds, open-source licence
+  inventories). It writes a memo for an attorney, never a legal conclusion and never a verdict, and
+  it is not a licensed attorney. The council can call it when a decision turns on intellectual
+  property; it does not count as a seat.
+- This pack inherits the Core 2.6.0 changes; see the Core pack's changelog.
+
 ## 2.5.0 — 2026-10-10 — How long a convening takes
 
 ### Changed

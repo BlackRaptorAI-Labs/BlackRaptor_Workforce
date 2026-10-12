@@ -32,7 +32,8 @@ repo** ⇒ no welcome; offer a short "review and fill gaps" pass. Same provenanc
 ladder, which escalates to **`product-manager`** when a change needs a defined problem statement, user
 stories, and acceptance criteria before design — Intake → `product-manager` → `principal-architect`.
 With that brief in hand, start with **`principal-architect`** for the spec on any new feature. Then
-select the producers the change needs (backend / frontend / data / ai-ml / edge-agent engineers) and
+select the producers the change needs (`product-designer` first for a new or changed user-facing
+flow, then backend / frontend / data / ai-ml / edge-agent engineers) and
 the **blocking gates** from the table below — a surface present in the diff with its gate omitted is
 an incomplete selection. This table is derived from `TEAM.md`'s "Blocking gates" table (the source of
 record if the two ever disagree, fix here) and is the one this skill actually reads, so the routing
@@ -53,6 +54,14 @@ step never depends on prose recall.
 | Operator-facing workflow readiness | `operational-readiness` | spec + definition-of-done |
 | As-built spec drift | `technical-writer` (checked by `code-reviewer`) | review |
 | Every change, no exception — unconditional, not surface-matched; include it even when the ask is framed as "just the gate wave" or names only the surface-matched gates (D-78) | `code-reviewer` + green CI, then `completion-auditor` last (§8) | review + close |
+
+**IP triggers.** Dispatch `ip-counsel` (council pack, if installed; otherwise return the question to
+the human) when the user asks about patents, copyright, trademarks, licences, trade secrets or "can
+we protect / are we allowed to"; when a spec claims a novel algorithm, mechanism or process; when a
+dependency with an unknown or copyleft licence enters the tree; when a product name, logo or
+distinctive look is chosen; when a public disclosure is planned (demo, paper, public repository,
+talk); and at design freeze before a release the business depends on. Otherwise do not dispatch it.
+Its memo is an attachment to the Change Record, never a gate row.
 
 ## 3. Wave order, and FAIL / COULD NOT ASSESS handling
 
@@ -108,6 +117,15 @@ Enforce the **engineering challenge** on every claim: no "it works" without the 
 that shows it. Collect each gate's verdict (PASS / CONCERNS / FAIL) into the **Change
 Record**; preserve dissent; a single blocking FAIL stops the merge. Never average a
 FAIL into a soft pass.
+
+**Content authority.** When producers disagree on content, content authority sits with one of
+three: the approved spec (`principal-architect`'s, as accepted by the human) settles design
+questions, a gate verdict settles safety and correctness questions, and the human settles scope. Name which of the three settled it and record an ADR-style
+line in the state file (context, decision, consequence). No agent directs another agent.
+
+**Advisors never block.** `product-designer`, `ip-counsel` and any seat whose body says advisory
+return findings only. A producer may proceed over an advisory; record the advisory and the decision
+in the state file and the Change Record. An advisory is never converted into a gate row.
 
 ## 8. Closing gate
 

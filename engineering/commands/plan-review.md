@@ -24,7 +24,8 @@ by id. If the prior findings exist, this is a delta re-review (step 6).
 
      | Trigger in the plan or diff | Add |
      |---|---|
-     | Personal data, data retention, or terms and agreements | `privacy-counsel`, `ip-counsel`, `legal-docs-writer` |
+     | Personal data, data retention, or terms and agreements | `privacy-counsel`, `legal-docs-writer` |
+     | Patents, licences, trademarks, trade secrets, or a planned public disclosure | `ip-counsel` (council pack, if installed; otherwise return the question to the human), as an advisor: a memo with no verdict, attached to the record, never a gate row |
      | Telemetry, or measurement, reporting and verification of regulated outputs | `domain-compliance` (and the carbon seat, where the install has one) |
      | Field devices, device messaging (for example MQTT) | `edge-agent-engineer` |
      | Web flows or user-facing screens | `frontend-engineer`, `ux-designer` |
@@ -34,7 +35,7 @@ by id. If the prior findings exist, this is a delta re-review (step 6).
    - **The plan's author never reviews that plan.** If an agent wrote the plan or design (often
      `principal-architect`, who authors specs), drop it from the roster and say so.
    - **Findings-only seats (no verdict block):** `principal-architect`,
-     `security-operations`, `ip-counsel`, `legal-docs-writer`, `edge-agent-engineer`,
+     `security-operations`, `ip-counsel` (advisory, if installed), `legal-docs-writer`, `edge-agent-engineer`,
      `frontend-engineer`. They return the findings table only. Every other reviewer named here is a
      gate and ends with a verdict block.
    - State the roster and why each specialist was added before dispatching.

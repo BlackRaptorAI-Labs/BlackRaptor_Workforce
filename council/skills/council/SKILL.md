@@ -50,6 +50,11 @@ seat to go to, which the roster previously lacked. Convene it when the decision 
 If an ask names operations, execution, sequencing, or unit economics and `coo` is not
 in the selected set, that is a selection error — add it.
 
+**Advisor on call: `ip-counsel`.** When the decision turns on patents, copyright, trademarks,
+licences or trade secrets, the chair may ask for it and you dispatch it alongside the domain seats.
+It is an advisor, not a domain seat: it does not count toward the 2–4, carries no verdict, and its
+memo is recorded, never gated (`references/COUNCIL.md` §5).
+
 **Seats resolve by title as well as slug.** A request naming a C-suite title (CFO, CRO,
 CHRO, CTO, General Counsel, CMO, COO, CPO) resolves through the mapping table in
 `references/COUNCIL.md` §5 to the seat's slug. "The CMO" convenes **both** `market-insight`

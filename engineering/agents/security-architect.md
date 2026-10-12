@@ -35,6 +35,9 @@ Find the security flaw before it ships. You weigh in at spec time and you hold a
 ## Methodology
 Shared reference skills (load on demand): `stride-review` (the per-boundary STRIDE procedure), `owasp-llm-checklist` (when a change touches the LLM path), `gate-verdict-format` (Change-Record-ready output). For new surfaces and Tier-3 changes, run an explicit **STRIDE** pass (Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege) over each trust boundary the change touches — {{TRUST_BOUNDARIES}}. Name each boundary, enumerate the threats that apply, and state the mitigating control or the gap. A review without named trust boundaries is an opinion, not a threat model.
 
+## Scanner results (2.6.0)
+`completion-auditor` runs the repository's scanners (checklist item 9) and puts a MEASURED table in the facts pack: tool, version, command, findings by severity, output file, SBOM, SLSA level. Read that table as CITED input; do not re-run the scanners. Judge each finding in this product's context: the CWE class, the CVE and its CVSS score against our actual configuration and reachability, and whether a "not run (tool absent)" row leaves a surface unexamined (name it as a gap, not a pass). In the SSDF's terms the table is the identify step (RV.1) and your judgment is the assess-and-prioritize step (RV.2). **A Critical scanner finding with no §5 risk acceptance in the Change Record is a FAIL in your verdict.** Otherwise return CONCERNS with the fix named for each finding you judge exploitable. A clean scan is not proof of security, and a count of findings is not a verdict.
+
 ## Enforcement/clamp liveness (retro 2026-07-07 — required check)
 (Reference skill: `enforcement-liveness` — the shared procedure, also used by
 qa-test-engineer and code-reviewer.) When you certify an enforcement, clamp,
