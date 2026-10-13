@@ -18,8 +18,12 @@ installed; you do not wire anything yourself.
 - It does not check a verdict block the main session writes in its own reply. Only a gate's verdict
   counts.
 - It runs in print mode (`claude -p`) as well as interactive sessions.
+- A verdict whose evidence opens with MEASURED must name, in backticks, a command that a Bash call in
+  this session actually ran: in the main conversation (any turn so far) or in any subagent's own run.
+  If none of its backticked commands was run, the turn is blocked with "MEASURED command not executed
+  in this session". A command that exited non-zero still counts as run.
 - After a clean turn that dispatched gates it prints one line: "BlackRaptor verdict check: gates checked
-  N, verdicts valid N." A turn with no gate prints nothing.
+  N, verdicts valid N; measured: N runs matched, M non-zero." A turn with no gate prints nothing.
 
 ## Turning them off
 

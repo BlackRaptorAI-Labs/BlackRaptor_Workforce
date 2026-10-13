@@ -41,6 +41,15 @@ BLOCKS with "<slug>: gate seat still running; wait for its result before ending 
 falling through to (b)/(c) or silently permitting — a still-running gate is not the same as one whose
 text simply failed to validate.
 
+A MEASURED VERDICT MUST POINT AT A REAL RUN (D-146, 2.7.0). For every verdict block that validates, if
+its `evidence` opens with MEASURED, at least one backticked span in it must match the `command` of a
+Bash `tool_use` anywhere in this SESSION: the main transcript (every turn so far, not only this one) and
+every `subagents/agent-*.jsonl` beside it. Whole session, because a test gate cites the run another
+gate made, in an earlier turn or a sibling subagent. Match = after collapsing whitespace, the span is
+a substring of the executed command or the command is a substring of the span. No match blocks with
+"MEASURED command not executed in this session". A non-zero exit is counted, never blocked: a mutation
+run is supposed to go red.
+
 LOOP GUARD: `stop_hook_active` is honoured. If the turn is already continuing because this hook
 blocked, do not block again. Claude Code cuts a hook off after 8 consecutive blocks; that is a
 backstop, not a design.
@@ -173,6 +182,7 @@ def main():
         if ev.get("type") == "user" and not ev.get("isSynthetic") and not ev.get("isMeta") \
                 and not _carries_tool_result(ev):
             turn_start = idx
+    session_lines = lines      # the whole session, for the executed-command check (D-146)
     lines = lines[turn_start:]
 
     project_dir = os.path.realpath(
@@ -275,6 +285,7 @@ def main():
                     pass
 
     problems = []
+    validated = []             # [(slug, text)] — every gate text or file content that validated (D-146)
 
     # Check 1: every dispatched gate's verdict validates — inline (2.0.0), or in a file it wrote
     # (D-57, 2.1.0): council/<slug>.verdict.md for any GATES member dispatched as a seat, or
@@ -310,6 +321,7 @@ def main():
         t_idx = task_idx.get(tuid, -1)
 
         if validates(out):
+            validated.append((slug, out))
             continue
 
         locations_checked = ["%s (%s)" % (out_location, last_error["msg"][:160]) if last_error["msg"] else out_location]
@@ -322,6 +334,7 @@ def main():
             if abs_path.endswith(seat_path_suffix):
                 locations_checked.append(os.path.relpath(abs_path, project_dir))
                 if validates(content):
+                    validated.append((slug, content))
                     found_valid = True
                     break
         if found_valid:
@@ -340,16 +353,17 @@ def main():
                 if stem in draft_stems:
                     locations_checked.append(os.path.relpath(abs_path, project_dir))
                     if validates(content):
+                        validated.append((slug, content))
                         found_valid = True
                         break
         if found_valid:
             continue
 
         detail = ("no valid verdict found in: %s. Every gate ends its output with a valid "
-                   "```verdict block (schema v3.2: verdict, integer confidence 0-10, falsifier, "
+                   "```verdict block (schema v3.3: verdict, integer confidence 0-10, falsifier, "
                    "evidence opening with MEASURED, CITED, COMPUTED, ESTIMATED or ASSUMED, "
                    "standards[]; a PASS also needs a path:line or a backticked command and "
-                   "never rests on ASSUMED), or — for a council seat or the claims gate — writes "
+                   "never rests on ASSUMED; MEASURED names the backticked command it ran), or — for a council seat or the claims gate — writes "
                    "one to the file location this hook checked." % "; ".join(locations_checked))
         problems.append("%s: %s" % (slug, detail))
 
@@ -458,6 +472,60 @@ def main():
                 "DRAFT/GATED: '%s' was written under a marketing-asset directory with no claims-gate "
                 "dispatch this turn." % os.path.relpath(ap, project_dir))
 
+    # Check 3 (D-146): a MEASURED verdict must cite a command this session ran. Executed commands come
+    # from every Bash tool_use in the main transcript (all turns) and every subagent transcript.
+    measured_matched = set()
+    failed_ids = {"ids": set()}
+    try:
+        executed, failed = {}, set()   # tool_use_id -> whitespace-collapsed command; ids whose result is_error
+
+        def _scan(src_lines):
+            for sl in src_lines:
+                try:
+                    sev = json.loads(sl)
+                except Exception:
+                    continue
+                cb = (sev.get("message") or {}).get("content")
+                for b in cb if isinstance(cb, list) else []:
+                    if not isinstance(b, dict):
+                        continue
+                    if b.get("type") == "tool_use" and b.get("name") == "Bash":
+                        c = (b.get("input") or {}).get("command")
+                        if isinstance(c, str) and c.strip():
+                            executed[b.get("id")] = " ".join(c.split())
+                    elif b.get("type") == "tool_result" and b.get("is_error") is True:
+                        failed.add(b.get("tool_use_id"))
+
+        failed_ids["ids"] = failed
+        _scan(session_lines)
+        if os.path.isdir(sub_dir):
+            for fn in sorted(os.listdir(sub_dir)):
+                if fn.startswith("agent-") and fn.endswith(".jsonl"):
+                    try:
+                        _scan(open(os.path.join(sub_dir, fn), encoding="utf-8",
+                                   errors="replace").read().splitlines())
+                    except Exception:
+                        continue
+        for slug, text in validated:
+            for raw in FENCE.findall(text or ""):
+                try:
+                    obj = json.loads(raw)
+                except Exception:
+                    continue
+                ev = obj.get("evidence") if isinstance(obj, dict) else None
+                if not (isinstance(ev, str) and re.match(r"^MEASURED\b", ev)):
+                    continue
+                spans = [" ".join(x.split()) for x in re.findall(r"`([^`]+)`", ev)]
+                spans = [x for x in spans if x]
+                hits = [tid for tid, cmd in executed.items() for sp in spans if sp in cmd or cmd in sp]
+                if hits:
+                    measured_matched.update(hits)
+                else:
+                    problems.append("%s: MEASURED command not executed in this session: %s" % (
+                        slug, ", ".join("`%s`" % x[:120] for x in spans[:3]) or "(no backticked command)"))
+    except Exception:
+        pass                   # fail open on the lookup itself, never on a judgement it made
+
     # Check 2 (the 2.1.0 claims-gate change): a DRAFT under a marked directory needs a LATER claims-gate dispatch.
     for idx, abs_path in draft_writes:
         if not any(g > idx for g in claims_gate_at):
@@ -470,8 +538,9 @@ def main():
         # W-09 completion signal (2.3.3): one line after a clean turn that dispatched gates, so a
         # quiet Stop hook is distinguishable from an absent one. Not a block: no "decision" key.
         n = len(set(dispatched.values()))
-        print(json.dumps({"systemMessage": "BlackRaptor verdict check: gates checked %d, verdicts valid %d."
-                          % (n, n)}))
+        print(json.dumps({"systemMessage": "BlackRaptor verdict check: gates checked %d, verdicts valid %d; "
+                          "measured: %d runs matched, %d non-zero."
+                          % (n, n, len(measured_matched), len(measured_matched & failed_ids["ids"]))}))
         return 0
 
     if problems:

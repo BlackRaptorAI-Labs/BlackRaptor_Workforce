@@ -57,7 +57,7 @@ End your output with this fenced block. `change-record-required` shells out to `
 Vocabulary is exactly `PASS | CONCERNS | FAIL | COULD NOT ASSESS`. **Never `BLOCK`.** Confidence is an integer 0-10. `COULD NOT ASSESS` is a real verdict and the honest one when the material does not let you judge — a gate without it makes a review you could not perform indistinguishable from a pass.
 
 ```verdict
-{"gate":"schema","agent":"schema-reviewer","artifact":"<PR # / migration files reviewed>","verdict":"<PASS|CONCERNS|FAIL|COULD NOT ASSESS>","confidence":<0-10>,"falsifier":"<the one finding that would flip this verdict>","conditions":["<required and non-empty on CONCERNS and FAIL>"],"standards":[{"designation":"<designation, verified at the issuing body>","edition":"<year>","clause":"<clause>","access":"<how you reached it>","verified":"<YYYY-MM-DD>"}],"evidence":"<label: MEASURED|CITED|COMPUTED|ESTIMATED|ASSUMED> <path:line or command> <quote>"}
+{"gate":"schema","agent":"schema-reviewer","artifact":"<PR # / migration files reviewed>","verdict":"<PASS|CONCERNS|FAIL|COULD NOT ASSESS>","confidence":<0-10>,"falsifier":"<the one finding that would flip this verdict>","conditions":["<required and non-empty on CONCERNS and FAIL>"],"standards":[{"designation":"<designation, verified at the issuing body>","edition":"<year>","clause":"<clause>","access":"<how you reached it>","verified":"<YYYY-MM-DD>"}],"evidence":"<MEASURED|CITED|COMPUTED|ESTIMATED|ASSUMED> <path:line or `command`> <quote>"}
 ```
 
 **`reason` is not in the template on purpose.** Present it only on `COULD NOT ASSESS`; omit the key entirely on every other verdict; never emit it blank. A blank `reason` fails `verdict-schema.json` (`pattern: "\S"`) and the `Stop` hook will send the block back.

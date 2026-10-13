@@ -1,3 +1,9 @@
+## 2.7.0 — 2026-10-13 — Clearer evidence wording in the verdict template
+
+### Changed
+- The `ethics-governance` verdict template shows the evidence label and command in the form the verdict
+  validator expects, so the seat no longer writes a literal `label:` prefix.
+
 ## 2.6.0 — 2026-10-12 — An intellectual-property advisor
 
 ### Added

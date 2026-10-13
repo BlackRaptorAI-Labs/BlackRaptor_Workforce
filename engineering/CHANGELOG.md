@@ -1,3 +1,20 @@
+## 2.7.0 — 2026-10-13 — Cheap checks before gates, and no weakened tests
+
+### Changed
+- **`dev-team` runs the cheap checks before any gate.** After the build, `completion-auditor` runs lint,
+  typecheck, the tests for the changed files, then the full suite, and stops at the first failure. No
+  gate is dispatched while one of those checks is red; the failure goes back to the producer. Each check
+  is a measured row in the facts pack. `LINT_CMD` and `TYPECHECK_CMD` are optional project values; an
+  unset one is reported as "not configured".
+- **Producers never weaken a check to pass it.** They do not delete, skip or loosen a test, an
+  assertion, a lint rule, a threshold or a CI step. After three failed attempts at the same error, a
+  producer stops and names the failing command and its output file.
+- **`test-auditor` scans the diff for weakened tests:** removed assertions, added skip or only markers,
+  lowered thresholds, new lint suppressions and deleted test files. An unexplained one is a FAIL.
+- **`completion-auditor` tries the package manager's own SBOM command first** (for npm, `npm sbom`),
+  then other installed tools. A command that runs and fails is reported with its exit status.
+- The gate verdict templates show the evidence label and command in the form the validator expects.
+
 ## 2.6.0 — 2026-10-12 — A product designer, a scanning duty, and who settles a disagreement
 
 ### Added

@@ -60,6 +60,10 @@ COULD NOT ASSESS and names it, and a producer stops and replies `MISSING VALUE: 
 | `SPEC_DIR` | the folder where feature specs live |
 | `TEST_CMD` | the command that runs your test suite |
 
+`LINT_CMD` and `TYPECHECK_CMD` are optional. `dev-team` runs them, with `TEST_CMD`, as cheap checks
+before any gate (lint, typecheck, changed-file tests, full suite). An unset one is reported as "not
+configured" and skipped; it is never a COULD NOT ASSESS.
+
 Every slot the engineering and core packs use is listed below, with the files that use it. Fill the
 ones that apply; leave out the rest.
 
@@ -106,7 +110,7 @@ ones that apply; leave out the rest.
 | `INFRA_SCALE_TARGET` |  | agent `devops-sre` |
 | `INFRA_STACK_SUMMARY` |  | agent `devops-sre` |
 | `INJECTION_VECTORS` |  | agent `security-architect` |
-| `LINT_CMD` |  | agent `backend-engineer` |
+| `LINT_CMD` |  | agent `backend-engineer`, skill `dev-team` |
 | `LOG_LIB` |  | agent `backend-engineer`, agent `code-reviewer` |
 | `MONOREPO_UNIT` |  | agent `backend-engineer` |
 | `MSG_BUS` |  | agent `edge-agent-engineer` |
@@ -142,16 +146,17 @@ ones that apply; leave out the rest.
 | `SPEC_RANGE` |  | agent `technical-writer` |
 | `TENANT_FILTERS` |  | agent `security-architect` |
 | `TENANT_ROLES` |  | agent `security-architect` |
-| `TEST_CMD` | yes | agent `backend-engineer` |
+| `TEST_CMD` | yes | agent `backend-engineer`, skill `dev-team` |
 | `TEST_FRAMEWORK` |  | agent `ai-ml-engineer`, agent `backend-engineer`, agent `frontend-engineer`, agent `qa-test-engineer` |
 | `TRUST_BOUNDARIES` |  | agent `security-architect` |
+| `TYPECHECK_CMD` |  | skill `dev-team` |
 | `TYPES_PKG` |  | agent `backend-engineer`, agent `frontend-engineer` |
 | `TYPOGRAPHY` |  | agent `ux-designer` |
 | `UI_INTERACTION_EXAMPLES` |  | agent `ux-designer` |
 | `VALIDATION_LIB` |  | agent `ai-ml-engineer`, agent `backend-engineer`, agent `code-reviewer`, agent `qa-test-engineer` and 1 more |
 | `YOUR_HANDLE` |  | `github/pull_request_template.md` |
 
-84 slots, generated from the built tree.
+85 slots, generated from the built tree.
 <!-- PLACEHOLDER-TABLE-END -->
 
 ## 3. Define your Tier-3 paths (10 min — the important part)

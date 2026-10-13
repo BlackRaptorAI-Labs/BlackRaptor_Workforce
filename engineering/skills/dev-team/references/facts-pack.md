@@ -54,6 +54,22 @@ git show "$REVIEWED":<plan path> | grep -oE '[A-Za-z0-9_./-]+\.[a-z]{1,5}' | sor
 
 Each number in the pack is followed by the command that produced it and its raw output.
 
+## Check ladder (dev-team wave 2b)
+
+Run after the build wave and before any gate, in this order; stop at the first red rung. Every row is
+MEASURED: the command as run, its exit status and the path of its full output.
+
+| rung | command | exit status | output path | result |
+|---|---|---|---|---|
+| lint | `<LINT_CMD>` | <0 or N> | <path> | green / red / not configured |
+| typecheck | `<TYPECHECK_CMD>` | <0 or N> | <path> | green / red / not configured |
+| changed-file tests | `<TEST_CMD scoped to the diff>` | <0 or N> | <path> | green / red / not scopable |
+| full suite | `<TEST_CMD>` | <0 or N> | <path> | green / red / not configured |
+
+An unset command is "not configured", not red. A rung after the first red one reads "not run (stopped
+at <rung>)". While any configured rung is red, no gate is dispatched; the red rung goes back to the
+producer. `test-auditor` receives this table as its MEASURED input.
+
 ## Test evidence table (from the producer)
 
 When the change includes tests, attach the producer's table. `test-auditor` and `completion-auditor`

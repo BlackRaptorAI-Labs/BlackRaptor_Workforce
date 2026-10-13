@@ -18,8 +18,15 @@ Keep a short table as you go, one row per error:
   - three attempts on the same error have failed;
   - a fix introduces new errors;
   - the fix needs an architecture change or a change outside your slice.
+- The stop report names the failing command (in backticks) and the path of its output file. The main
+  session records both and does not dispatch a fourth attempt at the same error.
 - Never silence a lint or type error (a suppression comment, a rule disabled) without the human's
   approval, named in the report.
+
+## Never weaken a check to make it pass
+A producer never deletes, skips or loosens a test, an assertion, a lint rule, a coverage or
+performance threshold, or a CI step to make a check pass. If you believe a test is wrong, stop and say
+which test (`path:line`) and why; the spec or the human decides, not the producer.
 
 ## Retries and flaky results
 - Two retries on a unit, then stop and replan the unit instead of trying a third way.

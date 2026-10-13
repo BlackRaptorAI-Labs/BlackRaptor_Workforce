@@ -1,3 +1,19 @@
+## 2.7.0 — 2026-10-13 — A measured result must point at a real run
+
+### Changed
+- **A verdict that claims a measured result must point at a command this session actually ran.** When
+  a gate's evidence opens with MEASURED, it now names the command in backticks, and the `Stop` hook
+  checks that a Bash call in the session ran it: in the main conversation (any turn so far) or in any
+  subagent. If none did, the turn is sent back with "MEASURED command not executed in this session". A
+  run that exited non-zero still counts, because a mutation run is meant to fail.
+- The completion line after a gated turn now also reports how many measured runs it matched and how many
+  of them exited non-zero.
+- The verdict schema is version 3.3. MEASURED evidence that cites only a file and line is a citation
+  (CITED), and a run made outside the session (CI, another terminal) is CITED with its log path.
+  `gate-verdict-format` explains the rule, and the validator's self-test covers it.
+- The gate verdict templates show the label and the command in the form the validator expects, so a
+  gate no longer writes a literal `label:` prefix.
+
 ## 2.6.0 — 2026-10-12 — Two usability standards in the anchor map
 
 ### Changed

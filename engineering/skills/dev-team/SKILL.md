@@ -66,9 +66,16 @@ Its memo is an attachment to the Change Record, never a gate row.
 ## 3. Wave order, and FAIL / COULD NOT ASSESS handling
 
 Four waves, in order: **(1) spec** — `principal-architect` (+ `product-manager` if intake escalated)
-— **(2) build** — the selected producers, TDD-style, from the approved spec — **(3) gates** — every
-gate the tier matrix selected, dispatched together once the build wave's diff exists (except
-`test-auditor`, which waits for `completion-auditor`'s MEASURED run of the suite and gets its output) — **(4)
+— **(2) build** — the selected producers, TDD-style, from the approved spec — **(2b) check ladder** —
+`completion-auditor` runs the cheap checks before any gate, in this order, and stops at the first red
+rung: lint (`{{LINT_CMD}}`), typecheck (`{{TYPECHECK_CMD}}`), the tests for the changed files
+(`{{TEST_CMD}}` scoped to the diff where the runner supports it, else the rung reads "not scopable"),
+the full suite (`{{TEST_CMD}}`). Each rung is a MEASURED row in the facts pack (command, exit status,
+output path; `references/facts-pack.md`). An unset command is one row, "not configured", never a red.
+**No wave-3 gate is dispatched while a configured rung is red:** the red rung goes back to the owning
+producer as wave 2, the same as a gate FAIL. — **(3) gates** — every gate the tier matrix selected,
+dispatched together once the ladder is green (except `test-auditor`, which waits for
+`completion-auditor`'s MEASURED run of the suite and gets the ladder table as its input) — **(4)
 `completion-auditor`** — closes, per §8. Do not open wave *n+1* before wave *n*'s outputs exist; within
 a wave, dispatch concurrently (§5 below).
 

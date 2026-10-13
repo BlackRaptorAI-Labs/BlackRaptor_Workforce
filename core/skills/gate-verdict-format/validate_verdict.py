@@ -192,6 +192,12 @@ def validate_block(obj, idx, schema):
             errs.append(f"block {idx}: a {agent} PASS must open with MEASURED (schema v3.2) — it rests on a run, "
                         f"not a trace")
 
+    # v3.3 MEASURED rule (D-146), every verdict: MEASURED evidence names the command it ran, in backticks.
+    # A path:line alone is a citation (CITED); a run outside this session is CITED with its log path.
+    if isinstance(ev, str) and re.match(r"^MEASURED\b", ev) and not re.search(r"`[^`]+`", ev):
+        errs.append(f"block {idx}: MEASURED evidence needs the backticked command that was run (schema v3.3); "
+                    f"a path:line alone is CITED, got '{ev[:60]}'")
+
     # anti-rubber-stamp: reject the unmodified CR-template placeholder strings
     for field in ("artifact", "falsifier"):
         val = obj.get(field)

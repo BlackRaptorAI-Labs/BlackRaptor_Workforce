@@ -1,3 +1,9 @@
+## 2.7.0 — 2026-10-13 — Clearer evidence wording in the verdict templates
+
+### Changed
+- The `compliance-cert` and `hw-design-reviewer` verdict templates show the evidence label and command
+  in the form the verdict validator expects, so a gate no longer writes a literal `label:` prefix.
+
 ## 2.6.0 — 2026-10-12 — When to call the intellectual-property advisor
 
 ### Changed

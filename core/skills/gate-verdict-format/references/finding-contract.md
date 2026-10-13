@@ -1,4 +1,4 @@
-# Finding contract (gate-verdict-format v3.2, long form)
+# Finding contract (gate-verdict-format v3.3, long form)
 
 The SKILL states the rules. This file holds the detail a gate needs while writing a row.
 
@@ -95,4 +95,13 @@ It accepts, for example, `CITED reports.ts:27 tenant_id taken from req.auth` or
 ``MEASURED `npm test -- dedupe` 14 passed, 0 failed``. For the test-quality and completion gates the
 PASS opens with `MEASURED`: a quality gate's PASS rests on a run. If you cannot meet this, the honest
 verdict is CONCERNS (with the run as a condition) or COULD NOT ASSESS (with a `reason`).
+
+## MEASURED evidence (schema v3.3)
+
+`MEASURED` means the command ran in this session, so the evidence names it in backticks, on any
+verdict: ``MEASURED `npm test` 7 passed, 0 failed``. A `path:line` alone is `CITED`. A run you did not
+make here (CI, another terminal, a log someone sent) is `CITED` with the log's path. In a live session
+the `Stop` hook checks that at least one backticked command in a `MEASURED` line matches a Bash call
+in the session (the main conversation or any subagent, any turn so far); citing another gate's run is
+fine. A run that exited non-zero still counts: a mutation run is meant to go red.
 
