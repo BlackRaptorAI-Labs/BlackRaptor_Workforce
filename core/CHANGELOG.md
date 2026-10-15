@@ -1,3 +1,19 @@
+## 2.8.1 — 2026-10-15 — Fewer false blocks, a quieter repo
+
+Harmless read commands are no longer blocked; the hook's log no longer shows up as a new file in your
+repo; the doctor tells you when your repo copies are behind.
+
+### Changed
+- **The Tier-3 hook's log stays out of `git status`.** When `/workforce-init` installs the engineering
+  hook, it adds `.claude/hooks/tier3-attempts.log` to the repo's `.gitignore` (it creates the file if
+  there is none and adds the line only if it is missing). The log itself still records every blocked
+  attempt and override. `--remove` takes out only that line, and `--upgrade` adds it to a repo set up
+  with 2.8.0.
+- **`workforce-doctor` tells you when your repo copies are behind.** In copy mode it compares the pack
+  versions your copies were made from with the packs you have installed, and if the copies are older
+  it says so and names the fix, `/workforce-init --upgrade`. An older vendored install is now pointed
+  at `/workforce-init --mode copy`. Both are warnings, never failures.
+
 ## 2.8.0 — 2026-10-14 — One command sets up a repo
 
 ### Added

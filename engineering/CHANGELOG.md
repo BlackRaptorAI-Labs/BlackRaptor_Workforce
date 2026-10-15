@@ -1,3 +1,13 @@
+## 2.8.1 — 2026-10-15 — Harmless reads are no longer blocked
+
+### Changed
+- **The Tier-3 hook no longer blocks harmless read commands.** A shell command that only reads a
+  protected file, such as `cat .github/workflows/ci.yml 2>&1 | head`, was blocked because of the `>` in
+  `2>&1`. Joining output streams (`2>&1`, `>&2`) and sending output to `/dev/null` no longer count as
+  writes. A real write is still blocked, including one that also has `2>&1` in it.
+- The hook's log no longer shows up as a new file in your repo: `/workforce-init` (Core) adds it to
+  `.gitignore`.
+
 ## 2.8.0 — 2026-10-14 — The cheap checks run before every gate
 
 ### Changed

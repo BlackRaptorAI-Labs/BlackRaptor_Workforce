@@ -45,6 +45,7 @@ What it writes (every file is listed with its checksum in `.claude/workforce-ins
 | `.claude/hooks/protect-tier3.py` | plugin, copy | the Tier-3 protection hook |
 | `.claude/settings.json` | plugin, copy | the hook entry, the sandbox (if you said yes), and in plugin mode the marketplace and packs; merged key by key into an existing file |
 | `.github/workflows/change-record-required.yml` | plugin, copy | the Change Record CI check |
+| `.gitignore` | plugin, copy | one line, `.claude/hooks/tier3-attempts.log`, so the hook's log of blocked attempts stays out of `git status`; created if absent, added only if missing, and the only line `--remove` takes out |
 | `.claude/skills/gate-verdict-format/validate_verdict.py` and `verdict-schema.json` | plugin, copy | the verdict validator the CI check runs |
 | `.claude/agents/*.md`, `.claude/skills/<name>/` | copy | the engineering agents and the skills they name |
 | `.claude/review-copies.sha256`, `.claude/check-review-copies.py`, `.github/workflows/review-copies.yml` | copy | the checksum file, the guard script and its CI job |

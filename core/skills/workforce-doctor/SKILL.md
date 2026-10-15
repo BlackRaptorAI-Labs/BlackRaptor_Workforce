@@ -105,13 +105,18 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    Non-blocking / cosmetic, like check 6; it keeps the state index honest without any scheduler. If no
    state files exist, skip silently.
 
-8. **Vendored-core staleness (R3 / D-02c, only on a vendored install, report-only).** A vendored
-   (install.sh, non-marketplace) project carries the shared core bundled into `.claude/`, stamped with
-   `.claude/.blackraptor-core-version`. If that marker exists, read it and compare against the core
-   version the installed team pack expects (its `blackraptor-core` dependency / the version you can see
-   for core): if the vendored core is **older**, flag "stale vendored core `<found>` (< `<expected>`) —
-   reinstall the pack from the marketplace to refresh it." Non-blocking / cosmetic; skip silently if no marker
-   (marketplace installs resolve core through the dependency and have no marker).
+8. **Repo copies behind the packs (report-only).** Two cases; skip silently if neither applies.
+   - **Copy mode.** If `.claude/workforce-installed.json` exists and its `"mode"` is `"copy"`, read its
+     `"packs"` object (the pack versions the repo copies were made from) and compare each with the
+     installed version of the same pack (check 1), as version numbers (2.8.0 < 2.8.1 < 2.10.0). If any
+     recorded version is **older**, report a **WARNING** per pack: "repo copies are `<found>`, packs are
+     `<installed>`: run `/workforce-init --upgrade`". Otherwise report "repo copies current" with the
+     versions. Quote the file and the values you compared.
+   - **Older vendored install.** If `.claude/.blackraptor-core-version` exists, read it and compare it
+     with the installed core version. If it is older, report a **WARNING**: "older vendored install:
+     core `<found>` in the repo, `<installed>` installed. Fix: run `/workforce-init --mode copy` to
+     replace it."
+   Never an anomaly and never a FAIL.
 
 9. **Engineering repo files (only when `blackraptor-engineering` is installed).** The Tier-3 hook and
    the Change Record CI check run from your repo, not from the pack, so these five files must exist under

@@ -25,6 +25,10 @@ Rules it keeps:
   - --upgrade in copy mode stops before deleting a file the newer packs no longer ship, and names
     it (and where it went, if it moved to another pack). Re-run with --confirm-removals to go on.
   - A repo-owned file that is not in any pack is never touched.
+  - When it installs the Tier-3 hook it adds the hook's log, .claude/hooks/tier3-attempts.log, to
+    the repo's .gitignore (creating it if absent, appending only if the line is missing); --remove
+    takes out only that line, and deletes .gitignore only if this command created it and it is
+    otherwise empty.
 
 Exit codes: 0 done; 1 usage or environment error; 3 stopped (upgrade needs confirmation, or a
 check failed). Nothing is written on --dry-run or on exit 3.
@@ -48,6 +52,8 @@ CONTEXT = "BUSINESS-CONTEXT.md"
 CHECKSUMS = ".claude/review-copies.sha256"
 GUARD = ".claude/check-review-copies.py"
 GUARD_CI = ".github/workflows/review-copies.yml"
+GITIGNORE = ".gitignore"
+HOOK_LOG = ".claude/hooks/tier3-attempts.log"   # the Tier-3 hook's audit log of blocks and overrides
 MARKETPLACE = "blackraptor"
 MARKETPLACE_SOURCE = {"source": {"source": "github", "repo": "BlackRaptorAI-Labs/BlackRaptor_Workforce"}}
 PACKS = ["core", "engineering", "council", "marketing", "hardware"]
@@ -409,6 +415,7 @@ class Plan(object):
         self.settings = {}   # dict merged into .claude/settings.json
         self.values = {}
         self.copied = {}     # repo path -> pack (copy mode only)
+        self.ignore = []     # lines the repo's .gitignore must hold
         self.notes = []
 
 
@@ -435,6 +442,7 @@ def build_plan(repo, packs, mode, sandbox, values, market=None):
             except (OSError, ValueError) as exc:
                 die("cannot read engineering %s: %s" % (ENG_SETTINGS, exc))
             plan.settings["hooks"] = eng_settings.get("hooks", {})
+            plan.ignore.append(HOOK_LOG)
         if sandbox:
             plan.settings["sandbox"] = {"enabled": True, "filesystem": {"allowWrite": ["./"]}}
     elif sandbox:
@@ -632,6 +640,29 @@ def apply_install(repo, packs, plan, mode, sandbox, dry, prior=None, market=None
     elif prior_files.get(SETTINGS):
         rec["files"][SETTINGS] = prior_files[SETTINGS]
 
+    # .gitignore: the hook's log stays out of git status (D-162)
+    if plan.ignore:
+        path = w.abs(GITIGNORE)
+        old = prior_files.get(GITIGNORE)
+        existed = os.path.isfile(path)
+        data = read_bytes(path) if existed else b""
+        have = set(l.strip() for l in data.splitlines())
+        missing = [l for l in plan.ignore if l.encode("utf-8") not in have]
+        if missing:
+            added = (b"\n" if data and not data.endswith(b"\n") else b"") + "".join(l + "\n" for l in missing).encode("utf-8")
+            new = data + added
+            w.write(GITIGNORE, new)
+            rec["files"][GITIGNORE] = {"kind": "gitignore-lines", "owned": old.get("owned") if old else not existed,
+                                       "lines": sorted(set((old or {}).get("lines", []) + missing)),
+                                       "added": added.decode("utf-8"), "sha256": sha_bytes(new)}
+            report.append("%s %s (%s)" % ("edited  " if existed else "wrote   ", GITIGNORE, ", ".join(missing)))
+        elif old:
+            rec["files"][GITIGNORE] = dict(old, sha256=sha_bytes(data))
+        else:
+            report.append("present  %s (already ignores %s)" % (GITIGNORE, ", ".join(plan.ignore)))
+    elif prior_files.get(GITIGNORE):
+        rec["files"][GITIGNORE] = prior_files[GITIGNORE]
+
     # project values in BUSINESS-CONTEXT.md
     vals = dict((k, v) for k, v in plan.values.items() if v)
     if vals:
@@ -727,6 +758,26 @@ def do_remove(repo, dry):
             if n:
                 w.write(rel, new.encode("utf-8"))
             report.append("edited   %s (%d added row(s) taken out; the rest kept)" % (rel, n))
+        elif kind == "gitignore-lines":
+            data = read_bytes(path)
+            added = e.get("added", "").encode("utf-8")
+            if added and data.endswith(added):        # nothing after our lines: back to the bytes before
+                new = data[:-len(added)]
+            else:                                      # you edited it since: take out only our lines
+                keep, drop = [], set(e.get("lines", []))
+                for line in data.splitlines(True):
+                    s = line.decode("utf-8", "replace").strip()
+                    if s in drop:
+                        drop.discard(s)
+                        continue
+                    keep.append(line)
+                new = b"".join(keep)
+            if not new.strip() and e.get("owned"):
+                w.delete(rel)
+                report.append("removed  %s (only the added line was in it)" % rel)
+            elif new != data:
+                w.write(rel, new)
+                report.append("edited   %s (added line taken out; your lines kept)" % rel)
     if not dry:
         os.remove(w.abs(INSTALLED))
     report.append("removed  %s" % INSTALLED)

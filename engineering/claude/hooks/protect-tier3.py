@@ -12,7 +12,8 @@ Coverage:
   - Bash: heuristic — blocked when the command references a protected path AND
     contains a write-shaped operation (redirect, sed -i, tee, mv, cp, rm, git
     checkout/restore/apply, patch, chmod, dd, truncate). Reads (cat/grep/ls)
-    pass. This catches accidents, not determined adversaries.
+    pass, including reads with 2>&1 or a redirect to /dev/null. This catches
+    accidents, not determined adversaries.
   - Malformed input or a missing file path on an edit tool: BLOCKED (fail
     closed). If a Claude Code update changes the hook payload shape, edits to
     anything will be blocked until this hook is updated — that is deliberate.
@@ -60,6 +61,10 @@ WRITE_CMD = re.compile(
     r"(>>?|\bsed\b[^|;&]*\s-i|\btee\b|\bmv\b|\bcp\b|\brm\b|\btouch\b"
     r"|\bgit\s+(apply|checkout|restore)\b|\bpatch\b|\bchmod\b|\bdd\b|\btruncate\b)"
 )
+# Redirects that write no file (D-161): fd duplications such as 2>&1, >&2, 1>&- and redirects to
+# /dev/null. They are removed from a copy of the command before WRITE_CMD is tested; the Tier-3 path
+# match still runs on the full command. The lookahead keeps `>&2x` (a write to file "2x") a write.
+NO_WRITE_REDIRECT = re.compile(r"[0-9]*(>&[0-9-]+|>>?\s*/dev/null)(?=$|[\s;|&)<>])")
 
 # Lowercased views for case-insensitive matching. macOS and Windows default
 # filesystems are case-insensitive, so a case variant (e.g. .GitHub/) must not
@@ -124,7 +129,7 @@ def main() -> int:
         # hits the same file as packages/api/... — mirror the Edit-path lowercasing.
         cmd_lc = cmd.lower()
         refs = [p for p in TIER3_FILES + TIER3_PREFIXES if p.lower() in cmd_lc]
-        if refs and WRITE_CMD.search(cmd):
+        if refs and WRITE_CMD.search(NO_WRITE_REDIRECT.sub(" ", cmd)):
             action = "OVERRIDE-ALLOWED" if allow else "BLOCKED"
             log(project_dir, {"path": ";".join(refs), "tool": "Bash", "action": action,
                               "session": session, "cmd": cmd[:200]})
