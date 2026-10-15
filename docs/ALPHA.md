@@ -63,12 +63,7 @@ If anything in these four steps is confusing or fails — that itself is the mos
   ```
   Each collaborator still needs read access to the private repo (they install under their own GitHub auth).
 
-- **(c) Vendored into a repo's `.claude/` (no marketplace).** For a repo that should carry the agents directly, run the pack's `install.sh` — **available for the Engineering and Marketing packs only**:
-  ```
-  ./engineering/install.sh /path/to/your/repo
-  ./marketing/install.sh   /path/to/your/repo
-  ```
-  Each appends one idempotent `@.claude/blackraptor-workforce.md` line to your `CLAUDE.md` (your existing content is preserved; both packs merge into that one file).
+- **(c) Copied into a repo's `.claude/`.** For a repo that should carry the Engineering agents directly, install the packs, then run `/workforce-init --mode copy` from the repo root. It copies the engineering agents and the skills they use into `.claude/`, with a checksum file and a CI job that fails when a copy is edited; `/workforce-init --upgrade` and `--remove` update or undo it (see `engineering/CUSTOMIZATION.md` §1).
 
 ---
 

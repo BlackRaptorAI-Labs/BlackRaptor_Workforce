@@ -36,7 +36,6 @@ github/            change-record-required CI workflow, CODEOWNERS + PR templates
 docs/              Change Record template, branch-protection checklist,
                    gate-enforcement map, agent-retro log, workflow diagram
 agent-evals/       proactive agent-quality convention (pairs with agent-retros)
-install.sh         one-command install into your repo
 CUSTOMIZATION.md   the 30-minute adaptation guide
 CHANGELOG.md       what changed, and credit to the ideas we borrowed
 ```
@@ -60,8 +59,8 @@ CHANGELOG.md       what changed, and credit to the ideas we borrowed
 | Communication & GTM | `product-marketing`, `technical-writer` (spec/code-drift) |
 | Legal | `legal-docs-writer` (public legal/policy docs, prepare-never-file). Intellectual-property questions go to `ip-counsel`, an advisor in the council pack (if installed; otherwise they return to you). |
 
-Six agents hold **blocking gates** (security, privacy, compliance, domain,
-schema, human oversight of consequential automated actions). Gate agents output
+Eight agents hold **blocking gates** (security, privacy, compliance, domain,
+schema, infrastructure, tests, human oversight of consequential automated actions). Gate agents output
 Change-Record-ready verdicts: PASS / CONCERNS / FAIL. Overruling a FAIL forces
 a written risk acceptance with a revisit date. `red-team-reviewer` is read-only
 by design and **complements, never replaces, a human penetration test**. See
@@ -173,11 +172,18 @@ prompts.
 
 ## Quickstart
 
-```bash
-git clone https://github.com/BlackRaptorAI-Labs/BlackRaptor_Workforce.git
-cd blackraptor/development
-./install.sh /path/to/your/repo
+In Claude Code:
+
 ```
+/plugin marketplace add BlackRaptorAI-Labs/BlackRaptor_Workforce
+/plugin install blackraptor-engineering@blackraptor
+```
+
+Then, from your repo root, run `/workforce-init`. In plugin or copy mode it writes the Tier-3 hook,
+the Change Record CI check and the verdict validator into your repo; user mode writes only your
+project values and the installed list, so the hook and the CI check do not run there.
+`/workforce-init --upgrade` or `--remove` later updates or undoes it. See
+[CUSTOMIZATION.md](CUSTOMIZATION.md) §1 for what each mode writes.
 
 Then spend ~30 minutes with [CUSTOMIZATION.md](CUSTOMIZATION.md): fill the
 placeholders (your stack, your Tier-3 paths, your second approver), delete the
@@ -200,12 +206,11 @@ This kit practices what it preaches, so here's its own CONCERNS verdict:
 
 - The local hook is a **seatbelt, not a wall** — a determined actor can bypass
   it. Server-side controls (CI + CODEOWNERS + branch protection) are the real
-  enforcement; the hook catches accidents. It also ships **only via `install.sh`**
-  (which copies `protect-tier3.py` and wires the `settings.json` PreToolUse
-  matcher into your repo) — the marketplace plugin deliberately does not register
-  a global blocking hook. Agents, skills, and the slash-commands load from the
-  plugin; add the hook with `install.sh` (or by copying the settings block) if you
-  want the local guard.
+  enforcement; the hook catches accidents. It runs from your repo, not from the
+  plugin: `/workforce-init` copies `protect-tier3.py` and merges the
+  `settings.json` PreToolUse entry into your repo — the marketplace plugin
+  deliberately does not register a global blocking hook. Agents, skills, and the
+  slash-commands load from the plugin.
 - Agent verdicts are only as good as the model and the context you give them.
   The Change Record exists precisely because a human must stay accountable.
 - The solo-mode design (0 blanket approvals + code-owner-only review) depends

@@ -4,6 +4,16 @@ description: Run the applicable gate agents on the current diff and produce a Ch
 
 Run gate reviews for the current branch's changes.
 
+0. **Check ladder first (the same rungs and rules as `dev-team` wave 2b).** Before any other
+   subagent, dispatch `completion-auditor` to run the check ladder on this branch, in order, stopping
+   at the first red rung: lint (`{{LINT_CMD}}`), typecheck (`{{TYPECHECK_CMD}}`), the tests for the
+   changed files (`{{TEST_CMD}}` scoped to the diff where the runner supports it, else "not
+   scopable"), the full suite (`{{TEST_CMD}}`). It returns the ladder table defined in
+   `${CLAUDE_PLUGIN_ROOT}/skills/dev-team/references/facts-pack.md`: one MEASURED row per rung
+   (command, exit status, output path); an unset command is "not configured", never red. **While a
+   configured rung is red, dispatch no gate:** stop, show completion-auditor's table, and name the
+   red rung and its command; write no verdict block of your own for the ladder. Otherwise pass the
+   table to every gate you dispatch (`test-auditor` takes it as its MEASURED input).
 1. Get the diff: `git diff main...HEAD` plus the list of changed files
    (`git diff main...HEAD --name-only`).
 2. Map changed files to gates (see docs/gate-enforcement-map.md):

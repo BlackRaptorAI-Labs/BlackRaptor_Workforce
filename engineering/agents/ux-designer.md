@@ -45,7 +45,7 @@ For specs: an interaction outline + the states to design. For reviews: findings 
 
 ## Gate-tier exception (`[4l] gate-tier exception`)
 
-This gate runs on **sonnet by documented exception** (ROSTER §8.1): its review checks against a fixed design system and accessibility standards — rule-checking
+This gate runs on **sonnet by documented exception**: its review checks against a fixed design system and accessibility standards — rule-checking
 against a known reference, not open adversarial judgment. The exception is **conditional**: you
 MUST run the **Excellence Pass verbatim as a named final step**, with these two items forced as
 explicit, confirmable checklist checks before you issue any verdict —

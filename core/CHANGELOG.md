@@ -1,3 +1,25 @@
+## 2.8.0 — 2026-10-14 — One command sets up a repo
+
+### Added
+- **`/workforce-init`: one command now installs, upgrades and removes the Workforce in a repo, in the
+  mode you choose.** `plugin` (the default) records the marketplace and your packs in the repo's
+  `.claude/settings.json`, so a collaborator who opens and trusts the repo is offered the same packs.
+  `copy` puts the engineering agents and the skills they use into `.claude/`, with a checksum file and a
+  CI job that fails when a copy is edited. `user` writes only your project values and the installed list.
+  It asks at most three questions (mode, sandbox, test command) and suggests the test, lint and typecheck
+  commands it finds in `package.json`, `pyproject.toml` or a `Makefile`.
+- Every file it writes is listed with its checksum in `.claude/workforce-installed.json`. It merges
+  settings key by key, skips a different file already in place, and never touches an agent of your own.
+  `--upgrade` lists what the new packs add, change and drop, keeps a file you edited, and in copy mode
+  stops before deleting anything; `--remove` takes out only the files still as it wrote them.
+- **Sandbox at install.** If you say yes, the project's settings turn on Claude Code's sandbox, so shell
+  commands can write inside the repo and the temporary folder, and not elsewhere in your home folder.
+
+### Changed
+- `workforce-doctor` reports whether the sandbox is on for the project (a warning when it is off, never
+  a failure), names `/workforce-init` as the fix for missing repo files, and treats those files as a
+  warning in `user` mode, where you chose not to install them.
+
 ## 2.7.0 — 2026-10-13 — A measured result must point at a real run
 
 ### Changed

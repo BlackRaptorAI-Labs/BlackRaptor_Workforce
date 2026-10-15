@@ -29,7 +29,7 @@ Contract (Claude Code hooks):
   exit 0 = allow · exit 2 = block; stderr is fed back to Claude as the reason
 
 Intentional Tier-3 work: run with  BR_ALLOW_TIER3=1 claude
-(ALLOW_TIER3=1 still works in 2.3.x as a deprecated alias; it is removed in the next release.)
+(The old ALLOW_TIER3=1 alias was removed in 2.8.0.)
 Blocked attempts and overrides are logged to .claude/hooks/tier3-attempts.log.
 """
 import json
@@ -102,10 +102,6 @@ def block(msg: str) -> int:
 
 def main() -> int:
     allow = os.environ.get("BR_ALLOW_TIER3") == "1"
-    if not allow and os.environ.get("ALLOW_TIER3") == "1":
-        # Deprecated alias, kept for one release (2.3.x).
-        sys.stderr.write("[blackraptor] ALLOW_TIER3 is deprecated; use BR_ALLOW_TIER3=1.\n")
-        allow = True
     try:
         payload = json.load(sys.stdin)
     except Exception:

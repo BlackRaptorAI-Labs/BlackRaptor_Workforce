@@ -1,3 +1,10 @@
+## 2.8.0 — 2026-10-14 — A tidier tier note
+
+### Changed
+- `compliance-cert`'s tier note no longer cites an internal maintainer record; it says the gate runs on
+  the top tier.
+- This pack inherits the Core 2.8.0 changes; see the Core pack's changelog.
+
 ## 2.7.0 — 2026-10-13 — Clearer evidence wording in the verdict templates
 
 ### Changed

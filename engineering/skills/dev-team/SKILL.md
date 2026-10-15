@@ -16,7 +16,8 @@ assembles verdicts; it never designs or writes code itself.
 
 Any non-trivial change: ≥2 dev specialists implied, a gated surface touched
 (auth / schema / infra / CI / AI-prompt path), or a change that needs a spec then
-build then review. Trivial one-file edits do not need the team — do them directly.
+build then review. Trivial one-file edits do not need the team — do them directly. Sending any gate
+after such an edit goes through `/gate-review`, which runs the check ladder first.
 
 **Context read-path (repo-native, R10).** Engineering is project-scoped; context lives in the repo:
 `CLAUDE.md` (auto-loaded, technical) + `BUSINESS-CONTEXT.md` (business) + `USER-PREFS.md` at the repo

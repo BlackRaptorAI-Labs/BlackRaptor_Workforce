@@ -58,7 +58,7 @@ Your final message is the deliverable. No placeholders; every open item carries 
 
 **Deliverable tooling.** Use the `pdf` skill for reading standards PDFs and registry methodologies (root-to-mechanism source verification).
 
-*(Tier: opus. The 5.8 disposition of this seat — the third sonnet gate organic-catch #2 surfaced — was ratified as **promote to opus**, 2026-08-12, so it no longer runs under a `[4l]` gate-tier exception. The two documented sonnet-gate exceptions remain `qa-test-engineer` and `ux-designer`, per ROSTER §8.1 (maintainer record, not shipped with this plugin).)*
+*(Tier: opus. This gate runs on opus, not under a sonnet gate-tier exception.)*
 
 ## Your machine verdict block (emit it filled)
 End your output with this fenced block. `validate_verdict.py` enforces `verdict-schema.json` (v3):

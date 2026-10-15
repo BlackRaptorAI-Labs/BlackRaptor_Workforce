@@ -121,8 +121,11 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    `.claude/skills/gate-verdict-format/validate_verdict.py` and
    `.claude/skills/gate-verdict-format/verdict-schema.json`.
    Check each with `test -f` and quote the result. Any missing file is an **ANOMALY (blocking)**: name
-   it and point to the engineering pack's `CUSTOMIZATION.md`, step 1. A session launched from a parent
-   folder of the repo shows all five missing; say so, since relaunching from the repo root is the fix.
+   it and say the fix is `/workforce-init` (the engineering pack's `CUSTOMIZATION.md`, step 1). A session
+   launched from a parent folder of the repo shows all five missing; say so, since relaunching from the
+   repo root is the fix. Exception: if `.claude/workforce-installed.json` says `"mode": "user"`, the user
+   chose not to put these files in the repo; report them as a **WARNING** (the Tier-3 hook and the Change
+   Record CI check are not running here), not an anomaly.
 
 10. **Project context file.** The launch directory must hold the project context file the agents read
    their project values from: `BUSINESS-CONTEXT.md` (or, for an engineering repo, a root `CLAUDE.md`
@@ -130,13 +133,21 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    return COULD NOT ASSESS on any gate-critical value they cannot read. Fix: relaunch from the project
    root, or run `context-onboarding` to create the file. (Check 6 still reports per-pack state.)
 
+11. **Sandbox (report-only).** Read `sandbox.enabled` from `.claude/settings.local.json`, then
+   `.claude/settings.json`, then `~/.claude/settings.json` (the first file that sets it wins; quote the
+   file and the value). `true`: report **sandbox on** for this project. Unset or `false`: report a
+   **WARNING**, "sandbox off: shell commands can write outside the repo; set `sandbox.enabled` to `true`
+   in `.claude/settings.json` (or run `/workforce-init`, or `/sandbox`)". Never an anomaly and never a
+   FAIL: the sandbox is the user's choice. The sandbox covers shell commands only; hooks run outside it.
+
 ## Report format
 
 Emit one of:
 
 - **PASS** — list the packs and versions you confirmed, the client version, (in a Cowork
-  session) the snapshot timestamp, and each pack's context state from check 6
-  (ONBOARDED / TEMPLATE / MISSING). One line each. A TEMPLATE or MISSING context state is a
+  session) the snapshot timestamp, each pack's context state from check 6
+  (ONBOARDED / TEMPLATE / MISSING), and the sandbox state from check 11. One line each. A
+  WARNING does not downgrade a PASS. A TEMPLATE or MISSING context state is a
   cosmetic note with a "run context-onboarding" recommendation — it does NOT downgrade a PASS.
 - **STALE SNAPSHOT — CANNOT CERTIFY** — the snapshot predates the change under test (check 0).
   State the snapshot timestamp and tell the user to start a fresh session and re-run. Do not

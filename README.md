@@ -89,7 +89,7 @@ Installing either one pulls in **`blackraptor-core`** automatically. Then add, w
   }
   ```
   Each collaborator still installs under their own GitHub auth.
-- **Vendored into a repo's `.claude/`** (no marketplace) — for the **Engineering and Marketing packs only**: run `./engineering/install.sh /path/to/repo` (and/or `./marketing/install.sh /path/to/repo`). Each appends one idempotent `@.claude/blackraptor-workforce.md` line to your `CLAUDE.md`; your existing content is preserved and both packs merge into that one file.
+- **Copied into a repo's `.claude/`** — for the **Engineering pack**: install the packs, then run `/workforce-init --mode copy` from the repo root. It copies the engineering agents and the skills they use into `.claude/`, with a checksum file and a CI job that fails when a copy is edited. `/workforce-init --upgrade` and `--remove` update or undo it.
 
 ## The packs
 

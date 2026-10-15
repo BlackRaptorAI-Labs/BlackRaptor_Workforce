@@ -5,11 +5,11 @@ lifecycle, the blocking gates, and a RACI so each agent knows its lane. It is
 designed to reinforce the platform's existing spec-driven workflow
 (spec → plan → TDD build → review), not replace it.
 
-> **Install:** run the development-team kit's `install.sh` into your repo (see the README Quickstart). It copies the agent
-> `.md` files to `.claude/agents/`, the hook/skills/commands to `.claude/`, the
-> governance docs (this `TEAM.md`, `gate-enforcement-map.md`, `AGENT-RETROS.md`,
-> the Change Record template, the branch-protection checklist, the `agent-evals/`
-> convention) to `docs/`, and the CI workflow + PR template to `.github/`. The
+> **Install:** install the plugin, then run `/workforce-init` from your repo root (see `CUSTOMIZATION.md` §1). It
+> writes the Tier-3 hook and its settings entry to `.claude/`, the verdict validator to
+> `.claude/skills/gate-verdict-format/`, and the Change Record CI workflow to `.github/workflows/`;
+> in copy mode it also copies the agents and the skills they use into `.claude/`. The PR template,
+> the governance docs and the `CODEOWNERS` template ship in the pack for you to copy as needed. The
 > sparse `CODEOWNERS.solo` is installed manually after your second-approver team
 > exists. Installing agent/`.github/` files is a Tier-3 governed change (Change
 > Record + second-approver approval).

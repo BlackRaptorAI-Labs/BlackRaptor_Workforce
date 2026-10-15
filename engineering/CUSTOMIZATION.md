@@ -4,7 +4,7 @@ The agents carry `{{...}}` slots for facts about your project (your test command
 your regulated domain). You fill them once, in your project context file, and every agent reads them
 from there. This guide takes you from install to a working, governed agent team on your repo.
 
-## 1. Install the pack and copy the repo files
+## 1. Install the pack, then run one command
 
 Install from the marketplace in Claude Code:
 
@@ -13,25 +13,54 @@ Install from the marketplace in Claude Code:
 /plugin install blackraptor-engineering@blackraptor
 ```
 
-This also installs `blackraptor-core`. The agents, skills and commands load from the plugin; you do
-not copy them.
+This also installs `blackraptor-core`. The agents, skills and commands load from the plugin.
 
 The enforcement files must live in your repo, because Claude Code and your CI read them from there.
-Copy them from the installed packs, from your repo root:
+From your repo root, in Claude Code, run:
 
-```bash
-ENG=$(ls -d ~/.claude/plugins/cache/blackraptor/blackraptor-engineering/*/ | tail -1)
-CORE=$(ls -d ~/.claude/plugins/cache/blackraptor/blackraptor-core/*/ | tail -1)
-mkdir -p .claude/hooks .github/workflows .claude/skills/gate-verdict-format
-cp "$ENG/claude/hooks/protect-tier3.py" .claude/hooks/protect-tier3.py
-cp "$ENG/claude/settings.json" .claude/settings.json
-cp "$ENG/github/change-record-required.yml" .github/workflows/change-record-required.yml
-cp "$CORE/skills/gate-verdict-format/validate_verdict.py" "$CORE/skills/gate-verdict-format/verdict-schema.json" .claude/skills/gate-verdict-format/
+```
+/workforce-init
 ```
 
-If the cache holds more than one version folder, use the version `claude plugin list` reports. If you
-already have a `.claude/settings.json`, merge its `hooks` block instead of overwriting the file. The
-validator needs `verdict-schema.json` beside it; the CI check fails without it. Commit all of these.
+It asks at most three questions: the install mode, whether to turn on Claude Code's sandbox for this
+project (default yes), and your test command (it suggests one from `package.json`, `pyproject.toml`
+or a `Makefile`, and records your lint and typecheck commands the same way). Then its script writes the
+files below, and the command runs `workforce-doctor`. You can skip the questions: `/workforce-init --mode copy`.
+
+The three modes:
+
+- **plugin** (default): your repo's `.claude/settings.json` names the BlackRaptor marketplace and the
+  packs you have installed, so a collaborator who opens and trusts the repo is offered the same packs.
+- **copy**: the engineering agents and the skills they use are copied into `.claude/agents/` and
+  `.claude/skills/`, with a checksum file and a CI job that fails when a copy is edited. Use it when
+  the packs must travel with the repo (for example, a cloud session, which does not install plugins
+  that a repo's settings name).
+- **user**: nothing goes into the repo except your project values and the installed list. The
+  Tier-3 hook and the Change Record check do not run in this mode; `workforce-doctor` says so.
+
+What it writes (every file is listed with its checksum in `.claude/workforce-installed.json`):
+
+| File | Mode | What it is |
+|---|---|---|
+| `.claude/hooks/protect-tier3.py` | plugin, copy | the Tier-3 protection hook |
+| `.claude/settings.json` | plugin, copy | the hook entry, the sandbox (if you said yes), and in plugin mode the marketplace and packs; merged key by key into an existing file |
+| `.github/workflows/change-record-required.yml` | plugin, copy | the Change Record CI check |
+| `.claude/skills/gate-verdict-format/validate_verdict.py` and `verdict-schema.json` | plugin, copy | the verdict validator the CI check runs |
+| `.claude/agents/*.md`, `.claude/skills/<name>/` | copy | the engineering agents and the skills they name |
+| `.claude/review-copies.sha256`, `.claude/check-review-copies.py`, `.github/workflows/review-copies.yml` | copy | the checksum file, the guard script and its CI job |
+| `BUSINESS-CONTEXT.md` | all | adds `TEST_CMD`, `LINT_CMD`, `TYPECHECK_CMD` rows to the `## Project values` table; other rows are never touched |
+| `.claude/workforce-installed.json` | all | the installed list: pack versions, mode, date, and every file with its sha256 |
+
+It never overwrites a file of yours: a different file already at one of these paths is skipped and
+reported, and an agent of your own in `.claude/agents/` is never touched. Commit the files it lists.
+
+Later: `/workforce-init --upgrade` after you update the packs (it lists added, changed and removed
+files, and in copy mode stops before deleting a copy the new packs no longer ship), and
+`/workforce-init --remove` to take it all out again (a file you changed since the install is kept and
+reported). `--dry-run` shows what any of these would do without writing.
+
+If the sandbox is on and a later run cannot write under `.claude/` (the sandbox protects that folder),
+Claude asks you before running it outside the sandbox.
 
 ## 2. Record your project values (10 min)
 
@@ -60,9 +89,9 @@ COULD NOT ASSESS and names it, and a producer stops and replies `MISSING VALUE: 
 | `SPEC_DIR` | the folder where feature specs live |
 | `TEST_CMD` | the command that runs your test suite |
 
-`LINT_CMD` and `TYPECHECK_CMD` are optional. `dev-team` runs them, with `TEST_CMD`, as cheap checks
-before any gate (lint, typecheck, changed-file tests, full suite). An unset one is reported as "not
-configured" and skipped; it is never a COULD NOT ASSESS.
+`LINT_CMD` and `TYPECHECK_CMD` are optional. `dev-team`, `/gate-review`, `/pre-merge` and `/red-team`
+run them, with `TEST_CMD`, as cheap checks before any gate (lint, typecheck, changed-file tests, full
+suite). An unset one is reported as "not configured" and skipped; it is never a COULD NOT ASSESS.
 
 Every slot the engineering and core packs use is listed below, with the files that use it. Fill the
 ones that apply; leave out the rest.
@@ -110,7 +139,7 @@ ones that apply; leave out the rest.
 | `INFRA_SCALE_TARGET` |  | agent `devops-sre` |
 | `INFRA_STACK_SUMMARY` |  | agent `devops-sre` |
 | `INJECTION_VECTORS` |  | agent `security-architect` |
-| `LINT_CMD` |  | agent `backend-engineer`, skill `dev-team` |
+| `LINT_CMD` |  | agent `backend-engineer`, command `/gate-review`, command `/pre-merge`, command `/red-team` and 1 more |
 | `LOG_LIB` |  | agent `backend-engineer`, agent `code-reviewer` |
 | `MONOREPO_UNIT` |  | agent `backend-engineer` |
 | `MSG_BUS` |  | agent `edge-agent-engineer` |
@@ -146,10 +175,10 @@ ones that apply; leave out the rest.
 | `SPEC_RANGE` |  | agent `technical-writer` |
 | `TENANT_FILTERS` |  | agent `security-architect` |
 | `TENANT_ROLES` |  | agent `security-architect` |
-| `TEST_CMD` | yes | agent `backend-engineer`, skill `dev-team` |
+| `TEST_CMD` | yes | agent `backend-engineer`, command `/gate-review`, command `/pre-merge`, command `/red-team` and 1 more |
 | `TEST_FRAMEWORK` |  | agent `ai-ml-engineer`, agent `backend-engineer`, agent `frontend-engineer`, agent `qa-test-engineer` |
 | `TRUST_BOUNDARIES` |  | agent `security-architect` |
-| `TYPECHECK_CMD` |  | skill `dev-team` |
+| `TYPECHECK_CMD` |  | command `/gate-review`, command `/pre-merge`, command `/red-team`, skill `dev-team` |
 | `TYPES_PKG` |  | agent `backend-engineer`, agent `frontend-engineer` |
 | `TYPOGRAPHY` |  | agent `ux-designer` |
 | `UI_INTERACTION_EXAMPLES` |  | agent `ux-designer` |

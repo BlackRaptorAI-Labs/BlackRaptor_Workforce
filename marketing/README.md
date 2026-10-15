@@ -24,7 +24,6 @@ sources, not an endorsement by or affiliation with their authors.
 | **Claude Code — recommended** | `claude plugin marketplace add BlackRaptorAI-Labs/BlackRaptor_Workforce` then `claude plugin install blackraptor-marketing@blackraptor` — installing from the main marketplace auto-pulls **blackraptor-core** (evidence-auditor + research-integrity + product-manager) | ✅ Available now |
 | **Claude Code — this repo directly** | `claude plugin marketplace add BlackRaptorAI-Labs/BlackRaptor_Workforce` then `claude plugin install blackraptor-marketing` | ✅ Available now |
 | **Claude Desktop** (no terminal) | **+** next to the prompt box → **Plugins** → **Manage plugins** → **+ Add marketplace** → GitHub repository `BlackRaptorAI-Labs/BlackRaptor_Workforce` → install **blackraptor-marketing** (bridge comes automatically) → restart the session | ✅ Available now |
-| **Any repo, vendored** | `./install.sh <target-repo>` copies agents + skills into the repo's `.claude/` | ✅ Available now |
 | **Claude Cowork** (individual, claude.ai) | via Anthropic's official plugin catalog | ⏳ Pending curation — Cowork has no self-serve marketplace yet |
 | **Claude Cowork** (organization) | your org admin provisions it centrally (managed plugins) | ✅ Available to org admins now |
 | **Claude Cowork** (manual, today) | open **Customize → Skills** and upload a skill's `SKILL.md` from [`marketing/skills/`](marketing/skills/) (upload any bundled `templates/`/`references/` alongside it) | ✅ Available now |

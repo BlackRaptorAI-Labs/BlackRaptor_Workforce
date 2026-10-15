@@ -123,8 +123,7 @@ against 3.1 once your copy of the validator updates, so add the label to any blo
 ### 2. The Tier-3 hook override has a new name (Engineering pack)
 
 If you start sessions with `ALLOW_TIER3=1` to allow intentional Tier-3 edits, switch to
-`BR_ALLOW_TIER3=1`. The old name still works in 2.3.x and prints a notice; it is removed in the next
-release.
+`BR_ALLOW_TIER3=1`. Since 2.8.0 the old name no longer overrides the hook.
 
 ### 3. One switch turns every Core hook off
 
@@ -168,6 +167,21 @@ start `claude` again).
 
 If you installed a pack at **project scope** (tied to one repository), update it from inside
 that project folder and add `--scope project` to the update command.
+
+## Upgrading a repo install
+
+If you ran `/workforce-init` in a repo, update the packs first (above), start a fresh session in the
+repo, then run:
+
+```
+/workforce-init --upgrade
+```
+
+It reads `.claude/workforce-installed.json`, prints the files the new packs add, change and no longer
+ship, updates the ones you have not edited (a file you changed is kept and named), rewrites the
+installed list (and, in copy mode, the checksum file); the command then runs `workforce-doctor`. In copy mode
+it stops before deleting any copy the new packs no longer ship and names it, with the pack it moved
+to if it moved; nothing changes until you say yes. Add `--dry-run` to see the list without writing.
 
 ## How to check what you're running (about 10 seconds)
 

@@ -1,3 +1,17 @@
+## 2.8.0 — 2026-10-14 — The cheap checks run before every gate
+
+### Changed
+- **`/gate-review`, `/pre-merge` and `/red-team` run the cheap checks first.** Before any gate,
+  `completion-auditor` runs lint, typecheck, the tests for the changed files, then the full suite, the
+  same as `dev-team`. No gate is dispatched while one of them is red; the command names the failing
+  check. A gate sent after a small direct edit goes through `/gate-review` for the same reason.
+- **Setting up a repo is one command.** `CUSTOMIZATION.md` step 1 is now `/workforce-init` (from the
+  Core pack) instead of a list of copy commands, with a table of what it writes in each mode.
+- **`completion-auditor` builds an SBOM from the lockfile alone** (`npm sbom --package-lock-only`) when
+  the dependencies are not installed, before trying anything else.
+- The old `ALLOW_TIER3=1` override name is removed; use `BR_ALLOW_TIER3=1`.
+- `ux-designer` no longer cites an internal maintainer record.
+
 ## 2.7.0 — 2026-10-13 — Cheap checks before gates, and no weakened tests
 
 ### Changed
