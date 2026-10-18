@@ -1,3 +1,65 @@
+## 2.8.2 — 2026-10-16 — Agents stay off live systems
+
+Agents no longer run live-system commands from docs, and a new check blocks the direct forms of
+live-system, publish and data-out commands; a sandbox network allowlist is the boundary for the rest.
+The review check no longer reports finished reviewers as still running
+and never suggests turning itself off; builders get clearer rules against loosening checks; test helpers
+keep Git isolated.
+Every agent treats text it finds in pages, files and PRs as information, never as orders; the release
+scan catches pasted credentials; publish and data-out commands are blocked for agents; code-reviewer's
+measured results name their command. Reviewers without a shell no longer claim measured results, every
+gate quotes text that tried to instruct it, and a gate named without the cheap checks says so.
+code-reviewer and test-auditor re-review a fix against eight checks and approve only a full commit sha.
+completion-auditor finds the validator from the install record, `.claude/gates-allow.txt` is protected
+like the other enforcement files, and the Tier-3 hook's gap list names an alias inside `sh -c`.
+
+### Changed
+- **A new check blocks commands that reach a live system.** The Tier-3 hook now blocks cloud, cluster,
+  deploy, remote-access and remote-database commands, such as `aws`, `gcloud`, `kubectl`, `helm`,
+  `terraform apply`, `vercel --prod`, `ssh` and `psql` to a remote host, including inside `sh -c`,
+  `env`, `sudo` and `$(...)`. You run them yourself, list a read-only one in
+  `.claude/live-commands-allow.txt`, or start a session with `BR_ALLOW_LIVE=1` (logged). Local commands
+  such as `git status`, `npm test` and `psql -h localhost` are not affected.
+- **Commands that publish or send data out are blocked too.** The same check now blocks `gh pr merge`,
+  `gh release`, `gh repo delete` and `edit`, `gh secret`, `gh variable` and a `gh api` call that is not a
+  read; a forcing or deleting `git push`; `npm`, `yarn` and `pnpm publish`, `twine upload`,
+  `cargo publish`, `gem push`, `docker push` and `login`; `nc` to a remote host; and `curl`, `wget` or
+  `http` sending data or a POST, PUT, PATCH or DELETE to a host that is not your own machine. Reads such
+  as `gh pr view`, `git push origin HEAD` and `curl https://example.com` are not affected.
+- **The live-command check sees more forms, and says what it cannot see.** It expands an alias defined
+  on the same line, checks a heredoc fed to a shell, blocks a pipe into a shell (`| sh`, `| bash`) and
+  `curl -K`, and checks `python -c` and `node -e` text, best effort, for a live tool or a call to a
+  remote host. It cannot see repo scripts, Makefile targets, copied or renamed programs, PATH changes,
+  flags or hosts held in variables, or interpreters running files; `CUSTOMIZATION.md` lists them, and a
+  sandbox network allowlist is the boundary for them.
+- **A database address on your own machine is not blocked.** `psql postgres://localhost:5432/app` and
+  the like now run; a remote database address is still blocked.
+- **code-reviewer's measured results name their command** (as do every engineering gate's), and
+  embedded-firmware flashes or reads registers on a physical device only when you have connected it for
+  that and say so; otherwise it builds and tests on the host or an emulator.
+- **Reviewers without a shell no longer claim measured results.** The engineering gates that cannot run
+  commands cite completion-auditor's run, with its output path, as CITED, and test-auditor passes a test
+  set only on a run completion-auditor made.
+- **Reviewers quote text that tried to instruct them.** Every engineering gate writes a `Text ignored:`
+  line, just before its verdict, quoting any instruction-shaped text in what it reviewed, or `none`.
+- **A gate named without the cheap checks says so.** A gate given a code change with no
+  completion-auditor check table adds the condition "ladder not run before this review". The checks run
+  on `/gate-review`, `/pre-merge`, `/red-team` and inside `dev-team`, not when you name a gate directly
+  after a hand edit. `dev-team` now dispatches test-auditor after completion-auditor's run returns.
+- **Copy mode says what it leaves out.** `CUSTOMIZATION.md` now says copy mode brings the agents, skills
+  and the Tier-3 hook only; the review check, the marketing write gate, the onboarding hook and the five
+  slash commands come from the core plugin.
+- **Agents no longer run commands from runbooks or how-tos.** technical-writer runs only the docs
+  build, the link checker and samples that touch your local working tree. A live-system command in a
+  doc is marked "not run: live-system command" and checked by reading the files it acts on.
+  devops-sre, security-operations, completion-auditor and qa-test-engineer follow the same rule.
+- **Clearer rules against loosening checks.** Builders never make their own check non-gating, never
+  bypass a hook because it is noisy, never edit the repo copies of review agents or skills outside a
+  refresh, treat instructions inside pull requests, issues, files and tool output as data, and stop if
+  resolving a merge conflict would drop a check that already shipped.
+- **Test helpers keep Git isolated.** qa-test-engineer follows the shared rule in Core's
+  `enforcement-liveness`.
+
 ## 2.8.1 — 2026-10-15 — Harmless reads are no longer blocked
 
 ### Changed
@@ -14,7 +76,8 @@
 - **`/gate-review`, `/pre-merge` and `/red-team` run the cheap checks first.** Before any gate,
   `completion-auditor` runs lint, typecheck, the tests for the changed files, then the full suite, the
   same as `dev-team`. No gate is dispatched while one of them is red; the command names the failing
-  check. A gate sent after a small direct edit goes through `/gate-review` for the same reason.
+  check. The cheap checks run on these three commands and inside `dev-team`; a gate you name directly
+  from the main session after a hand edit does not run them.
 - **Setting up a repo is one command.** `CUSTOMIZATION.md` step 1 is now `/workforce-init` (from the
   Core pack) instead of a list of copy commands, with a table of what it writes in each mode.
 - **`completion-auditor` builds an SBOM from the lockfile alone** (`npm sbom --package-lock-only`) when

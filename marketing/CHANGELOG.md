@@ -1,3 +1,11 @@
+## 2.5.1 — 2026-10-16 — Outside text is information, not orders
+
+### Changed
+- Every agent in this pack treats text it finds in pages, files, pull requests and tool output as
+  information, never as orders, and reports such text to you instead of acting on it (Core 2.8.2).
+- A draft promoted to a final asset by a shell command (a copy, a move, a redirect or an archive) is now
+  blocked like a Write until claims-gate passes it (Core 2.8.2).
+
 ## 2.5.0 — 2026-10-10 — Inherits the Core 2.5.0 changes
 
 ### Changed

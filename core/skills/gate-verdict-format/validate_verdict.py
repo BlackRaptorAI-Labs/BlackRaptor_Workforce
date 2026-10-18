@@ -25,6 +25,7 @@ acceptance" table has a row whose "What" cell names each FAIL / COULD NOT ASSESS
 or `agent` value). A missing gate is still a missing gate: --cr-mode implies --require.
 """
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -104,7 +105,29 @@ def _standards_item_errs(item, idx, i):
     return errs
 
 
-def validate_block(obj, idx, schema):
+def _allowed_gates():
+    """Project gates from .claude/gates-allow.txt (one slug per line), found from CLAUDE_PROJECT_DIR or the
+    working directory upward (D-192)."""
+    starts = [os.environ.get("CLAUDE_PROJECT_DIR") or "", os.getcwd()]
+    for start in starts:
+        d = os.path.realpath(start) if start else ""
+        for _ in range(25):
+            if not d:
+                break
+            f = os.path.join(d, ".claude", "gates-allow.txt")
+            if os.path.isfile(f):
+                try:
+                    return {l.strip() for l in open(f, encoding="utf-8") if l.strip() and not l.startswith("#")}
+                except OSError:
+                    return set()
+            parent = os.path.dirname(d)
+            if parent == d:
+                break
+            d = parent
+    return set()
+
+
+def validate_block(obj, idx, schema, cr=False):
     errs = []
     if not isinstance(obj, dict):
         return [f"block {idx}: not a JSON object"]
@@ -197,6 +220,26 @@ def validate_block(obj, idx, schema):
     if isinstance(ev, str) and re.match(r"^MEASURED\b", ev) and not re.search(r"`[^`]+`", ev):
         errs.append(f"block {idx}: MEASURED evidence needs the backticked command that was run (schema v3.3); "
                     f"a path:line alone is CITED, got '{ev[:60]}'")
+
+    # D-187 re-review: a block that says which sha it re-reviews must name the full sha it now approves.
+    if "rereview_of" in obj:
+        art = obj.get("artifact")
+        if not (isinstance(art, str) and re.search(r"\b[0-9a-f]{40}\b", art)):
+            errs.append(f"block {idx}: a re-review block (rereview_of set) must name the full 40-character "
+                        f"sha it reviewed in artifact, got '{str(art)[:60]}'")
+
+    # D-192 (audit 3 G9): only a gate (or a council seat) signs a verdict block; a producer's self-signed
+    # PASS is not a gate's verdict. The roster is the schema's `gates` list.
+    if isinstance(schema.get("gates"), list) and isinstance(obj.get("agent"), str):
+        slug = obj["agent"].split(":")[-1].strip()
+        # D-198 (audit 3 re-check H1): a Change Record is signed by gates only; council seats sign seat blocks
+        # in the plain mode (the council skill's check), never a CR gate row.
+        signers = set(schema["gates"]) | _allowed_gates() | (set() if cr else set(schema.get("council_seats") or []))
+        if slug and slug not in signers:
+            errs.append(f"block {idx}: not a gate agent: {slug} (only a gate or a council seat signs a verdict "
+                        f"block; a project gate goes in .claude/gates-allow.txt)" if not cr else
+                        f"block {idx}: not a gate agent: {slug} (a Change Record is signed by gates only; a project "
+                        f"gate goes in .claude/gates-allow.txt)")
 
     # anti-rubber-stamp: reject the unmodified CR-template placeholder strings
     for field in ("artifact", "falsifier"):
@@ -323,7 +366,7 @@ def cr_mode_rc(text, schema, report=None):
         except json.JSONDecodeError as e:
             errs.append(f"block {i}: invalid JSON — {e}")
             continue
-        errs += validate_block(obj, i, schema)
+        errs += validate_block(obj, i, schema, cr=True)
         blocks.append(obj)
     unc = uncovered_blockers(text, blocks)
     if report is not None:

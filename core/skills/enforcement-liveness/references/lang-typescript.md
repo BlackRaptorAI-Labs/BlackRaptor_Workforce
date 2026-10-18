@@ -13,6 +13,8 @@ Load this only when the diff contains TypeScript (`*.ts`, `*.tsx`, `tsconfig.jso
 
 Quote each command's output in the evidence. A tool the project does not have installed is a gap to state, not a pass.
 
+Test helpers that create a Git repository, and asserting on full output lines: `test-isolation.md` (shared by every language).
+
 ## Blocking
 - External data (request bodies, query strings, messages, `JSON.parse` results, third-party responses) used through an `as` cast or `any` without runtime validation.
 - A promise that is neither awaited nor handled (`void` or `.catch`) on a path that writes, deletes, pays, or authorizes: errors vanish and work runs out of order.

@@ -59,10 +59,13 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    session-contract hook is off unless `BR_SESSION_CONTRACT=on`, so its silence is expected), the DRAFT/GATED write gate
    (`PreToolUse`), and the verdict validator (`Stop`). The one-shot claims-gate prompt-reminder hook
    that used to run on `UserPromptSubmit` was removed in 2.2.0 (its job is now carried directly in
-   each producer's own instructions) — its absence is expected, not an anomaly. Report whether each
+   each producer's own instructions). Since 2.8.2 the `UserPromptSubmit` entry is the verdict
+   validator recording verdict and asset files at turn start (it prints nothing). Report whether each
    of the four current hooks is wired:
-   - `core/hooks/hooks.json` is present and lists one `SessionStart` entry, one `PreToolUse` entry
-     (matcher `Write|Edit|MultiEdit`), and one `Stop` entry.
+   - `core/hooks/hooks.json` is present and lists one `SessionStart` entry, one `UserPromptSubmit`
+     entry (`validate-verdicts.sh --snapshot turn-start`), one `PreToolUse` entry (matcher
+     `Write|Edit|MultiEdit|Bash`), one `PostToolUse` entry (matcher `Bash`, `validate-verdicts.sh
+     --snapshot bash`), and one `Stop` entry.
    - `core/hooks/inject-onboarding-rule.sh` and `core/hooks/inject-session-contract.sh` (`SessionStart`), `core/hooks/enforce-draft-gate.sh`
      (`PreToolUse`), and `core/hooks/validate-verdicts.sh` (`Stop`) are all present **and executable**
      (`test -x`). A hook the client cannot execute is a silently disabled rule.
@@ -111,7 +114,11 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
      installed version of the same pack (check 1), as version numbers (2.8.0 < 2.8.1 < 2.10.0). If any
      recorded version is **older**, report a **WARNING** per pack: "repo copies are `<found>`, packs are
      `<installed>`: run `/workforce-init --upgrade`". Otherwise report "repo copies current" with the
-     versions. Quote the file and the values you compared.
+     versions. Quote the file and the values you compared. Also report a **WARNING**, "copy mode: verdict
+     Stop hook not installed": copy mode installs the agents, skills and the Tier-3 hook only; the Stop
+     hook, draft gate, onboarding hook and the five slash commands come from the core plugin, so they
+     run only in a session that also has the core plugin installed (say whether check 1 found it here;
+     a cloud session usually does not). Fix: use plugin mode, or run the validator by hand.
    - **Older vendored install.** If `.claude/.blackraptor-core-version` exists, read it and compare it
      with the installed core version. If it is older, report a **WARNING**: "older vendored install:
      core `<found>` in the repo, `<installed>` installed. Fix: run `/workforce-init --mode copy` to
@@ -131,6 +138,20 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    repo root is the fix. Exception: if `.claude/workforce-installed.json` says `"mode": "user"`, the user
    chose not to put these files in the repo; report them as a **WARNING** (the Tier-3 hook and the Change
    Record CI check are not running here), not an anomaly.
+   **Then compare each enforcement file with the pack's (D-191).** Present does not mean intact: a repo copy
+   that differs from the pack's can switch a check off while it still exists. Read `core_root` and
+   `engineering_root` from `.claude/workforce-installed.json`, and run `shasum -a 256` on each pair:
+   `.claude/hooks/protect-tier3.py` with `<engineering_root>/claude/hooks/protect-tier3.py`;
+   `.claude/skills/gate-verdict-format/validate_verdict.py` and `verdict-schema.json` with the same names
+   under `<core_root>/skills/gate-verdict-format/`; and, only if the repo holds them,
+   `.claude/hooks/validate-verdicts.py` and `.claude/hooks/enforce-draft-gate.py` with
+   `<core_root>/hooks/`. Quote both hashes. A mismatch is an **ANOMALY (blocking)**; its first line reads
+   `FAIL: <file> differs from the pack's copy` (that word, so a script can find it). Name the file and say
+   the fix is `/workforce-init --replace-enforcement` (it keeps the repo's copy as
+   `<name>.bak`). If a root is not recorded (a repo set up before 2.8.2), use that pack's `installPath`
+   from `~/.claude/plugins/installed_plugins.json` (the entry for this project, else the user-scope one).
+   In copy mode (`core_root` is `.claude`), or when no pack copy is found, there is nothing to compare
+   with: report a **WARNING** naming the files not compared.
 
 10. **Project context file.** The launch directory must hold the project context file the agents read
    their project values from: `BUSINESS-CONTEXT.md` (or, for an engineering repo, a root `CLAUDE.md`
@@ -140,7 +161,11 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
 
 11. **Sandbox (report-only).** Read `sandbox.enabled` from `.claude/settings.local.json`, then
    `.claude/settings.json`, then `~/.claude/settings.json` (the first file that sets it wins; quote the
-   file and the value). `true`: report **sandbox on** for this project. Unset or `false`: report a
+   file and the value). `true`: the setting alone does not prove the sandbox runs, so probe it. On Linux,
+   run `command -v bwrap socat` and quote the output: if either is missing, report a **WARNING**,
+   "sandbox configured but inactive (missing: <the missing names>)", since Claude Code turns the sandbox
+   off without them; if both are present, report **sandbox on**. On macOS, report "sandbox configured;
+   active state not probed". Unset or `false`: report a
    **WARNING**, "sandbox off: shell commands can write outside the repo; set `sandbox.enabled` to `true`
    in `.claude/settings.json` (or run `/workforce-init`, or `/sandbox`)". Never an anomaly and never a
    FAIL: the sandbox is the user's choice. The sandbox covers shell commands only; hooks run outside it.

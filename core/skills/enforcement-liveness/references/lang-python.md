@@ -14,6 +14,8 @@ Load this only when the diff contains Python (`*.py`, `pyproject.toml`, `require
 
 Quote each command's output in the evidence. A tool the project does not have installed is a gap to state, not a pass.
 
+Test helpers that create a Git repository, and asserting on full output lines: `test-isolation.md` (shared by every language).
+
 ## Blocking
 - SQL built by string formatting or concatenation with any input; use parameters.
 - `subprocess` with `shell=True` on input, `eval`/`exec` on input, or `pickle`/`yaml.load` (without a safe loader) on data the program did not create.

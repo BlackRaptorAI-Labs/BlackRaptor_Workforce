@@ -34,7 +34,9 @@ The three modes:
 - **copy**: the engineering agents and the skills they use are copied into `.claude/agents/` and
   `.claude/skills/`, with a checksum file and a CI job that fails when a copy is edited. Use it when
   the packs must travel with the repo (for example, a cloud session, which does not install plugins
-  that a repo's settings name).
+  that a repo's settings name). Copy mode installs the agents, skills and the Tier-3 hook only; the
+  Stop hook, draft gate, onboarding hook and the five slash commands come from the core plugin and are
+  not present; use plugin mode or run the validator by hand.
 - **user**: nothing goes into the repo except your project values and the installed list. The
   Tier-3 hook and the Change Record check do not run in this mode; `workforce-doctor` says so.
 
@@ -42,7 +44,9 @@ What it writes (every file is listed with its checksum in `.claude/workforce-ins
 
 | File | Mode | What it is |
 |---|---|---|
-| `.claude/hooks/protect-tier3.py` | plugin, copy | the Tier-3 protection hook |
+| `.claude/hooks/protect-tier3.py` | plugin, copy | the Tier-3 protection hook; it also blocks commands that reach a live system (cloud, cluster, deploy, remote host, remote database) |
+| `.claude/live-commands-allow.txt` | plugin, copy | empty; your read-only exceptions to the live-system check, one regular expression per line, each matching one whole command (for example `aws sts get-caller-identity`). Only you edit it: the hook protects it. `--remove` deletes it only while it is still empty |
+| `.claude/gates-allow.txt` | you add it | optional; your project's own gate agents, one name per line. Only an agent on the core gate list, a council seat, or this file may sign a verdict block. Only you edit it: the Tier-3 hook protects it |
 | `.claude/settings.json` | plugin, copy | the hook entry, the sandbox (if you said yes), and in plugin mode the marketplace and packs; merged key by key into an existing file |
 | `.github/workflows/change-record-required.yml` | plugin, copy | the Change Record CI check |
 | `.gitignore` | plugin, copy | one line, `.claude/hooks/tier3-attempts.log`, so the hook's log of blocked attempts stays out of `git status`; created if absent, added only if missing, and the only line `--remove` takes out |
@@ -79,11 +83,12 @@ skill creates that file), one row per slot, and fill the ones your project uses:
 | REGULATED_DOMAIN | HIPAA health records |
 ```
 
-Five slots are gate-critical. If one is unset when an agent needs it, a gate returns
+Six slots are gate-critical. If one is unset when an agent needs it, a gate returns
 COULD NOT ASSESS and names it, and a producer stops and replies `MISSING VALUE: <NAME>`:
 
 | Slot | What it is |
 |---|---|
+| `APPROVED_CLAIMS_DOC` | the file listing the external claims your project has approved; claims-gate passes only claims listed there |
 | `REGULATED_DOMAIN` | the regulated domain your data falls under, or "none" |
 | `CONSEQUENTIAL_ACTIONS` | the automated actions that are hard to undo (remote commands, bulk changes, payments) |
 | `COMPLIANCE_DOCS_DIR` | the folder holding your control standards (token and session lifetimes, MFA, retention) |
@@ -101,6 +106,7 @@ ones that apply; leave out the rest.
 | Slot | Gate-critical | Used in |
 |---|---|---|
 | `AI_STACK_SUMMARY` |  | agent `ai-ml-engineer` |
+| `APPROVED_CLAIMS_DOC` | yes | agent `claims-gate` |
 | `ARCH_STACK_SUMMARY` |  | agent `principal-architect` |
 | `AUDIT_ENTITY` |  | agent `backend-engineer`, agent `compliance-officer`, agent `operational-readiness` |
 | `AUTH_PROVIDER` |  | agent `security-operations` |
@@ -186,7 +192,7 @@ ones that apply; leave out the rest.
 | `VALIDATION_LIB` |  | agent `ai-ml-engineer`, agent `backend-engineer`, agent `code-reviewer`, agent `qa-test-engineer` and 1 more |
 | `YOUR_HANDLE` |  | `github/pull_request_template.md` |
 
-85 slots, generated from the built tree.
+86 slots, generated from the built tree.
 <!-- PLACEHOLDER-TABLE-END -->
 
 ## 3. Define your Tier-3 paths (10 min — the important part)
@@ -240,8 +246,25 @@ verdict block), and give it a distinct reasoning method and a new name.
 Start `claude` from your repo root and ask it to edit a Tier-3 file. It must be blocked. If it isn't:
 check that you launched from the repo root (project config binds at session start) and that the
 `.claude/settings.json` and `.claude/hooks/protect-tier3.py` you copied in step 1 are committed.
-Intentional Tier-3 work: `BR_ALLOW_TIER3=1 claude` (the override is logged). Then run the
-`workforce-doctor` skill to confirm the install.
+Intentional Tier-3 work: `BR_ALLOW_TIER3=1 claude` (the override is logged).
+
+The same hook blocks a command that reaches a live system: `aws`, `gcloud`, `gsutil`, `bq`, `az`,
+`kubectl`, `helm`, `terraform`/`tofu` apply, destroy, import and state, `pulumi` up and destroy,
+`cdk` deploy and destroy, `serverless`/`sls` deploy, `flyctl`, `heroku`, `vercel --prod`, `ssh`,
+`scp`, `sftp`, `rsync` to a remote host, and `psql`, `mysql`, `mongosh` or `redis-cli` given a host
+other than localhost (a connection URL naming localhost or 127.0.0.1 is local). It also blocks commands that
+publish or send data out: `gh pr merge`, `gh release`, `gh repo delete`/`edit`, `gh secret`, `gh variable`,
+a `gh api` call that is not a GET, a forcing or deleting `git push`, `npm`/`yarn`/`pnpm publish`, `twine upload`,
+`cargo publish`, `gem push`, `docker push`/`login`, `nc` to a remote host, and `curl`, `wget` or `http` sending
+data or a POST, PUT, PATCH or DELETE to a host that is not local. It looks through `sh -c`, `env`, `sudo`, `$(...)` and full
+paths, an alias defined on the same line, and a heredoc fed to a shell; it blocks a pipe into a shell
+(`| sh`, `| bash`) and `curl -K`, and checks `python -c` and `node -e` text, best effort, for a live
+tool or a call to a remote host. Agents do not run these; you run them yourself, add a read-only one to
+`.claude/live-commands-allow.txt`, or start a session with `BR_ALLOW_LIVE=1 claude` (logged). Like the
+Tier-3 check, it blocks the direct forms and catches accidents, not a determined actor. It does not see
+repo scripts, Makefile targets, copied or renamed binaries, PATH shadowing, flags held in variables,
+hosts from environment variables, or interpreters running files; a sandbox network allowlist is the
+boundary for those. Then run the `workforce-doctor` skill to confirm the install.
 
 ## 7. First feature
 

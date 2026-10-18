@@ -63,11 +63,13 @@ Fields (schema: `verdict-schema.json`, v3.3):
 | `verdict` | `PASS \| CONCERNS \| FAIL \| COULD_NOT_ASSESS` | `N/A` is **not** a verdict — see below |
 | `confidence` | **integer 0-10** | a number, so a threshold can be written against it |
 | `falsifier` | non-blank string | the one fact that would flip it |
-| `evidence` | **a string opening with a label** | `MEASURED`, `CITED`, `COMPUTED`, `ESTIMATED` or `ASSUMED`, then `path:line@sha` and the exact quote (v3.1; the schema rejects an unlabelled string). A hand-trace is COMPUTED, never MEASURED. |
+| `evidence` | **a string opening with a label** | `MEASURED` then the backticked command you ran and its result; `CITED`, `COMPUTED`, `ESTIMATED` or `ASSUMED` then `path:line@sha` and the exact quote (v3.1; the schema rejects an unlabelled string). A hand-trace is COMPUTED, never MEASURED. |
 | `evidence` on a PASS (v3.2) | label + something to re-check | a PASS opens with `MEASURED`, `CITED`, `COMPUTED` or `ESTIMATED` (never `ASSUMED`) and holds at least one `path:line` or a backticked command. A test-quality or completion gate's PASS opens with `MEASURED`. Detail: `references/finding-contract.md`. |
 | `evidence` opening with `MEASURED` (v3.3) | names the command, in backticks | `MEASURED` means you ran it in this session, so the evidence holds the backticked command. A `path:line` alone is `CITED`; a run elsewhere (CI, another terminal) is `CITED` with its log path. The `Stop` hook blocks a `MEASURED` command that no Bash call in the session ran. |
 | `standards` | **required array** | each entry `{designation, edition, clause, access, verified}`, or the single literal `"none: practice applied: <x>"` |
 | `conditions[]` | required, non-empty, on CONCERNS and FAIL | specific and testable |
+| `agent` | a gate, or a council seat | the validator rejects a block signed by any other agent ("not a gate agent"). The list is `gates` (and `council_seats`) in `verdict-schema.json`; project gates go in `.claude/gates-allow.txt` |
+| `rereview_of` | optional; on a re-review of a fix | the sha last reviewed (7 to 40 hex characters). When present, `artifact` must name the full 40-character sha now reviewed, or the validator rejects the block |
 | `reason` | **present only on `COULD NOT ASSESS`** | omit the key entirely on every other verdict; never emit it blank. What blocked it, and what would unblock it. A blank `reason` fails the schema (`pattern: "\S"`) and the `Stop` hook sends the block back. |
 
 The prose and the block must agree. The canonical machine spelling is

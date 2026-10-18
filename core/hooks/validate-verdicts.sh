@@ -30,5 +30,5 @@ VALIDATOR="${CLAUDE_PLUGIN_ROOT:-$HERE/..}/skills/gate-verdict-format/validate_v
 [ -f "$VALIDATOR" ] || exit 0
 command -v python3 >/dev/null 2>&1 || exit 0
 
-python3 "$HELPER" "$VALIDATOR" 2>/dev/null || exit 0
+python3 "$HELPER" "$VALIDATOR" "$@" 2>/dev/null || exit 0   # "$@": --snapshot turn-start|bash (D-190)
 exit 0

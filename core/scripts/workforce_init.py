@@ -29,6 +29,9 @@ Rules it keeps:
     the repo's .gitignore (creating it if absent, appending only if the line is missing); --remove
     takes out only that line, and deletes .gitignore only if this command created it and it is
     otherwise empty.
+  - With the Tier-3 hook it writes an empty .claude/live-commands-allow.txt: the repo's read-only
+    exceptions to the hook's live-system check, one regular expression per line, edited by the human
+    only (the hook protects it). --remove deletes it only while it is still empty.
 
 Exit codes: 0 done; 1 usage or environment error; 3 stopped (upgrade needs confirmation, or a
 check failed). Nothing is written on --dry-run or on exit 3.
@@ -54,6 +57,7 @@ GUARD = ".claude/check-review-copies.py"
 GUARD_CI = ".github/workflows/review-copies.yml"
 GITIGNORE = ".gitignore"
 HOOK_LOG = ".claude/hooks/tier3-attempts.log"   # the Tier-3 hook's audit log of blocks and overrides
+LIVE_ALLOW = ".claude/live-commands-allow.txt"  # the human's live-command exceptions (2.8.2); installed empty
 MARKETPLACE = "blackraptor"
 MARKETPLACE_SOURCE = {"source": {"source": "github", "repo": "BlackRaptorAI-Labs/BlackRaptor_Workforce"}}
 PACKS = ["core", "engineering", "council", "marketing", "hardware"]
@@ -101,7 +105,7 @@ def main():
         print("review-copies: no files listed in %s (failing closed)" % SUMS); return 1
     if bad:
         print("review-copies: FAIL, %d of %d copied file(s) differ from the checksum file. "
-              "Restore them, or re-run /workforce-init --upgrade to take a new pack version." % (bad, checked))
+              "Restore each file from git, or delete it and re-run /workforce-init --upgrade." % (bad, checked))
         return 1
     print("review-copies: OK, %d copied file(s) match the checksum file" % checked)
     return 0
@@ -443,6 +447,7 @@ def build_plan(repo, packs, mode, sandbox, values, market=None):
                 die("cannot read engineering %s: %s" % (ENG_SETTINGS, exc))
             plan.settings["hooks"] = eng_settings.get("hooks", {})
             plan.ignore.append(HOOK_LOG)
+            plan.files[LIVE_ALLOW] = (b"", "workforce-init live-command allow list (empty)")
         if sandbox:
             plan.settings["sandbox"] = {"enabled": True, "filesystem": {"allowWrite": ["./"]}}
     elif sandbox:
@@ -455,6 +460,7 @@ def build_plan(repo, packs, mode, sandbox, values, market=None):
     if mode == "copy":
         if not eng:
             die("copy mode copies the engineering agents; the engineering pack was not found")
+        plan.notes.append(COPY_MODE_NOTE)
         skill_dirs = {}
         for pack in ("core", "engineering"):
             sroot = os.path.join(packs.get(pack, ""), "skills")
@@ -538,14 +544,58 @@ def load_installed(repo):
         die("%s is not valid JSON (%s); fix or delete it first" % (INSTALLED, exc))
 
 
-def apply_install(repo, packs, plan, mode, sandbox, dry, prior=None, market=None):
-    """Write the plan. Returns the installed-list record. `prior` (upgrade) carries ownership forward."""
+# D-191 (audit 3 G8): the files that ARE the enforcement. A repo copy that differs from the pack's is never
+# silently kept: the install stops (exit 3) unless --replace-enforcement, which keeps the old file as .bak.
+# validate-verdicts.py and enforce-draft-gate.py run from the core plugin in every mode, so no mode writes
+# them into a repo; they are listed so a repo copy (an older vendored install) is checked too.
+ENFORCEMENT = ("protect-tier3.py", "validate-verdicts.py", "enforce-draft-gate.py", "validate_verdict.py",
+               "verdict-schema.json")
+
+
+def enforcement_conflicts(repo, plan, prior=None):
+    """[(rel, repo sha256, pack sha256)] for every planned enforcement file whose repo copy differs from the
+    pack's and is not an untouched copy from an earlier install (that one is updated as usual)."""
+    prior_files = (prior or {}).get("files", {})
+    out = []
+    for rel in sorted(plan.files):
+        if os.path.basename(rel) not in ENFORCEMENT:
+            continue
+        path = os.path.join(repo, rel)
+        if not os.path.isfile(path):
+            continue
+        have, want = sha_file(path), sha_bytes(plan.files[rel][0])
+        old = prior_files.get(rel)
+        if have == want or (old and old.get("owned") and have == old.get("sha256")):
+            continue
+        out.append((rel, have, want))
+    return out
+
+
+def stop_on_enforcement(conflicts):
+    say("STOPPED before writing anything: %d enforcement file(s) in this repo differ from the pack's." % len(conflicts))
+    for rel, have, want in conflicts:
+        say("  %s\n    repo sha256 %s\n    pack sha256 %s" % (rel, have, want))
+    say("A changed enforcement file can switch a check off while every report says it is on. Nothing was changed.")
+    say("To install the pack's file and keep the repo's as <name>.bak, run again with --replace-enforcement.")
+    return 3
+
+
+def apply_install(repo, packs, plan, mode, sandbox, dry, prior=None, market=None, replace=()):
+    """Write the plan. Returns the installed-list record. `prior` (upgrade) carries ownership forward.
+    `replace`: enforcement files to overwrite with the pack's copy, the old one kept as <name>.bak (D-191)."""
     w = Writer(repo, dry)
     prior_files = (prior or {}).get("files", {})
     rec = {"schema": SCHEMA, "mode": mode, "sandbox": bool(sandbox) and mode != "user", "marketplace": market,
            "date": datetime.date.today().isoformat(),
            "packs": dict((p, pack_version(packs[p])) for p in PACKS if p in packs),
            "pack_roots_seen": sorted(packs), "files": {}, "skipped": [], "made_dirs": list((prior or {}).get("made_dirs", []))}
+    # D-194 (audit 3 G3): where the validator lives, so a skill never searches the disk for it. Plugin and
+    # user modes: the installed core pack's folder (<core_root>/skills/gate-verdict-format/validate_verdict.py).
+    # Copy mode: the repo copy's folder, `.claude` (same relative layout). engineering_root lets the doctor
+    # compare the Tier-3 hook with the pack's (D-191).
+    rec["core_root"] = ".claude" if mode == "copy" else os.path.realpath(packs["core"])
+    if "engineering" in packs and mode != "copy":
+        rec["engineering_root"] = os.path.realpath(packs["engineering"])
     report = []
 
     # plain files
@@ -554,6 +604,12 @@ def apply_install(repo, packs, plan, mode, sandbox, dry, prior=None, market=None
         path = w.abs(rel)
         want = sha_bytes(data)
         old = prior_files.get(rel)
+        if rel in replace and os.path.isfile(path):
+            w.write(rel + ".bak", read_bytes(path))
+            w.write(rel, data)
+            rec["files"][rel] = {"sha256": want, "owned": True, "kind": "file", "from": label}
+            report.append("replaced %s (the repo's copy kept as %s.bak)" % (rel, rel))
+            continue
         if os.path.isfile(path):
             have = sha_file(path)
             if old and old.get("owned"):
@@ -836,7 +892,11 @@ def do_upgrade(repo, packs, args):
     if args.dry_run:
         say("Dry run: nothing written.")
         return 0
-    rec, report = apply_install(repo, packs, plan, mode, sandbox, False, prior=prior, market=market)
+    conflicts = enforcement_conflicts(repo, plan, prior)
+    if conflicts and not getattr(args, "replace_enforcement", False):
+        return stop_on_enforcement(conflicts)
+    rec, report = apply_install(repo, packs, plan, mode, sandbox, False, prior=prior, market=market,
+                                replace={c[0] for c in conflicts})
     w = Writer(repo, False)
     for rel in gone:
         e = old_files[rel]
@@ -858,12 +918,18 @@ def do_upgrade(repo, packs, args):
 
 # ---------------------------------------------------------------------------------------------
 
+# D-177 (audit 2 F3): what copy mode does not bring with it, printed on every copy-mode run.
+COPY_MODE_NOTE = ("copy mode installs the agents, skills and the Tier-3 hook only; the Stop hook, draft gate, onboarding hook and the five slash commands come from the core plugin and are not present; use plugin mode or run the validator by hand.")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Install, upgrade or remove the BlackRaptor Workforce in a repo.")
     ap.add_argument("--mode", choices=("plugin", "copy", "user"), default=None)
     ap.add_argument("--upgrade", action="store_true")
     ap.add_argument("--remove", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--replace-enforcement", action="store_true",
+                    help="install the pack's enforcement file over a different repo copy, keeping the old one as <name>.bak")
     ap.add_argument("--confirm-removals", action="store_true", help="with --upgrade: delete copies the packs no longer ship")
     ap.add_argument("--sandbox", choices=("yes", "no"), default=None)
     ap.add_argument("--test-cmd")
@@ -930,7 +996,11 @@ def main(argv=None):
     plan = build_plan(repo, packs, mode, sandbox, vals, market)
     say("Installing the Workforce in %s mode into %s%s." % (mode, repo, " (dry run)" if a.dry_run else ""))
     say("Packs found: %s." % ", ".join("%s %s" % (p, pack_version(packs[p])) for p in PACKS if p in packs))
-    rec, report = apply_install(repo, packs, plan, mode, sandbox, a.dry_run, market=market)
+    conflicts = enforcement_conflicts(repo, plan)
+    if conflicts and not a.replace_enforcement:
+        return stop_on_enforcement(conflicts)
+    rec, report = apply_install(repo, packs, plan, mode, sandbox, a.dry_run, market=market,
+                                replace={c[0] for c in conflicts})
     for line in report:
         say(line)
     for n in plan.notes:

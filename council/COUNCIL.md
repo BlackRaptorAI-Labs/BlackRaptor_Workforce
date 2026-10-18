@@ -61,9 +61,9 @@ dissent and a human signature on consequential calls.
   drafts — independence before synthesis prevents anchoring and groupthink.
 - **Seat-to-seat cross-review is a candidate feature (D4, 4 September 2026); the orchestrator
   review step is the control in force.** Before the chair wave, the orchestrator (the main
-  session — there is no orchestrator subagent, P1/P2) reads every seat's `council/<slug>.verdict.md`
-  file (§3a), re-runs each numbers seat's model per Decision 2a and records match or mismatch
-  beside the figure, and passes the chair the verdict files verbatim. This replaces the
+  session — there is no orchestrator subagent, P1/P2) reads every seat's returned verdict block
+  (§3a), re-runs each numbers seat's model per Decision 2a and records match or mismatch
+  beside the figure, and passes the chair the seat blocks verbatim. This replaces the
   seat-to-seat cross-review this section described before 4 September 2026, at a fraction of the
   token cost of a dispatch round that has every seat read every other seat's draft.
 - **Adversarial mode.** For consequential decisions, the orchestrator assigns
@@ -113,9 +113,8 @@ seat's word; the machine block carries `FAIL`, and the two must agree in substan
 would unblock it. The chair may not resolve a convening by averaging it away, and a decision taken
 over an unresolved COULD NOT ASSESS is recorded as such.
 
-**Every domain seat writes its verdict to `council/<slug>.verdict.md`** (e.g. `council/finance.verdict.md`)
-in the working folder — this is what the orchestrator step (§2) reads before the chair wave, and
-what the chair receives verbatim.
+**Every domain seat returns its verdict inline, at the end of its own returned text.** That block is
+what the orchestrator step (§2) reads before the chair wave, and what the chair receives verbatim.
 
 **The verdict is a machine-parseable fenced block, not prose alone.** Fill the same schema every
 other gate uses (`verdict-schema.json`, enforced by `validate_verdict.py`), naming your own seat as
@@ -125,15 +124,20 @@ both `gate` and `agent`:
 {"gate":"<your seat slug>","agent":"<your seat slug>","artifact":"<the decision or question you reviewed>","verdict":"<PASS|CONCERNS|FAIL|COULD NOT ASSESS>","confidence":<0-10>,"falsifier":"<the one observation that would flip this>","evidence":"MEASURED|CITED|COMPUTED|ESTIMATED|ASSUMED (pick one) — <the concrete basis>","standards":["none: practice applied: <the practice>"],"conditions":["<required and non-empty on CONCERNS and FAIL>"]}
 ```
 
-Write this block to `council/<slug>.verdict.md` if your tool grant includes `Write` (most seats do
-not — check your own frontmatter); if it does not, say so and end your returned text with the block
-instead, so the orchestrator (§2, which always has `Write`) persists the file on your behalf.
+**End your own returned text with this block, verbatim, every time (D-64,
+GO-BLOCK-P2-BUILD-v1-AMENDMENT-7).** No second, different block, and no restatement of it in prose
+substitutes for it. A seat never writes a verdict file, even with `Write` in its grant.
 
-**Either way, end your own returned text with this identical block, verbatim, every time (D-64,
-GO-BLOCK-P2-BUILD-v1-AMENDMENT-7).** The file, when one exists, is the record the orchestrator and
-the chair read; the inline echo in your own returned text is what a live session's Stop hook
-validates, exactly as it validates every other gate's inline block. No second, different block — the
-same fenced block closes both places, and no restatement of it in prose substitutes for it.
+**Who writes `council/<slug>.verdict.md` (D-175, 2.8.2).** Only the orchestrator, and only by copying
+a seat's returned block unchanged with the Write tool, or not at all. It never writes a seat verdict
+file with Bash (a heredoc, `>`, `tee` or a script): the core PreToolUse hook blocks that, and the Stop
+hook treats any verdict file a Bash command names as unverified. Read verdict files with the Read tool.
+
+**Who validates the seat blocks (D-176, 2.8.2).** The council skill, before the chair closes: it runs
+`validate_verdict.py` over every seat's block and records one MEASURED row per seat, and the chair
+does not close while any block is invalid (council SKILL.md §6). The core Stop hook checks only the
+seats that are also gates (`ethics-governance` and `evidence-auditor`); it does not check the other
+seats' blocks.
 
 `chair` is **exempt from this section** — it holds no domain vote, so it carries no verdict block of
 its own; its output is the synthesis in §5, not a seat verdict. **The chair is dispatched only after
@@ -155,8 +159,9 @@ Verdict: CONCERNS · Confidence: 6/10
 Falsifier: a cohort test showing entry-tier conversion is inelastic at the current price
 What You Lose: ~$40k ARR/quarter from existing entry-tier customers grandfathered at the old price
 ```
-Written to `council/pricing-strategy.verdict.md`; the orchestrator re-runs the cited elasticity
-model (D2a) before the chair wave, records "match," and passes the file to `chair` verbatim.
+Returned inline with its fenced block; the orchestrator copies the block unchanged into
+`council/pricing-strategy.verdict.md` with the Write tool, validates it, re-runs the cited elasticity
+model (D2a) before the chair wave, records "match," and passes the block to `chair` verbatim.
 
 ## 4. Co-decisions (never decided in a silo)
 

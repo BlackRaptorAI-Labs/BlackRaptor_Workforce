@@ -35,8 +35,9 @@ Pick the **2–4 domain seats** whose domains the decision actually turns on (se
 **Minimum set = 3** for any consequential decision. Co-decision rule: pricing →
 include pricing-strategy + finance + gtm-strategy + market-insight, and route the
 **final call to `product-manager` (CPO)**; channel → gtm + revenue; raise size/timing →
-fundraising-ir + finance. Ethics has standing on any decision and is added whenever a
-stakeholder or honesty question exists.
+fundraising-ir + finance. **`ethics-governance` is convened on every council decision (D-176)**,
+whatever the ask names and even when the user asks for only the seats a narrow call turns on; it
+is added on top of the 2–4 domain seats.
 
 **Dispatch `coo` on any ops-heavy ask.** The seat exists to give execution questions a real
 seat to go to, which the roster previously lacked. Convene it when the decision turns on
@@ -68,12 +69,12 @@ the CEO; if asked for one, say so and convene `chair` instead.
 in sequence; do not let one seat see another's draft. Each gets the framed question +
 the grounded context, nothing more.
 
-**Never set `run_in_background` on a seat dispatch (D-64, GO-BLOCK-P2-BUILD-v1-AMENDMENT-7).**
-Multiple simultaneous tool calls in the one message already give concurrency; backgrounding a seat
+**Set `run_in_background: false` on every seat dispatch and on the chair (D-64, GO-BLOCK-P2-BUILD-v1-AMENDMENT-7).**
+The client runs a dispatch in the background unless the call says `false`, so leaving the field out is
+not enough. Multiple simultaneous tool calls in the one message already give concurrency; backgrounding a seat
 means its real output arrives only as a task notification, never as this session's own tool result
-for that dispatch — the seat's inline verdict echo (COUNCIL.md §3a) then never reaches a live
-session's Stop hook, which reads this session's transcript only. Wait for every seat's synchronous
-result before moving to §5.
+for that dispatch — the seat's inline verdict echo (COUNCIL.md §3a) then is not there for the
+seat-block check in §6. Wait for every seat's synchronous result before moving to §5.
 
 **`chair` is the exception, and it goes last.** It reads the domain seats' verdicts, so it
 cannot run in the concurrent wave — dispatch it as a **second, separate call** once every
@@ -99,11 +100,16 @@ feature (D4, 4 Sep 2026); the orchestrator review step is the control in force.
 ## 5. Synthesis rule
 
 **The orchestrator step (D4), before the chair wave.** Once every domain seat has reported, the
-main session — not `chair`, not a subagent — reads every seat's `council/<slug>.verdict.md` file
-(§3a), re-runs each numbers seat's model per Decision 2a (a context that did not produce the
+main session — not `chair`, not a subagent — reads every seat's returned verdict block (§3a),
+re-runs each numbers seat's model per Decision 2a (a context that did not produce the
 figure re-executes the same script on the same stated inputs) and records match or mismatch
-beside it, then passes `chair` the verdict files **verbatim**. This is the review the deleted
+beside it, then passes `chair` the seat blocks **verbatim**. This is the review the deleted
 seat-to-seat cross-review mandate used to provide.
+
+**Seat verdict files (D-175).** If you keep a file per seat, copy the seat's returned block
+unchanged into `council/<slug>.verdict.md` with the **Write** tool. Never write a seat verdict file
+with Bash (a heredoc, `>`, `tee` or a script): the core hook blocks it, and the Stop hook treats a
+verdict file any Bash command names as unverified. Read verdict files with the Read tool.
 
 **Route the close through `chair`.** Dispatch `chair`
 with all their verdicts (and the orchestrator's match/mismatch record). It forces the disagreement onto the table, synthesizes
@@ -122,9 +128,27 @@ the chair gate was not run (§7 — degrade, don't dangle).
 
 ## 6. Closing gate
 
-**`ethics-governance` reviews last** on any decision with a stakeholder, honesty, legal,
-or data-use dimension — it has standing to BLOCK. For a decision that will be built, offer
-a Definition Brief (`references/definition-brief.md`) as the seam to the dev team. **With the
+**Validate every seat block before the chair wave (D-176).** The core Stop hook does not check
+council seats' blocks (only seats that are also gates), so this skill does, in the orchestrator step
+(§5) before it dispatches `chair`. For each seat, write its
+returned block unchanged to `council/<slug>.verdict.md` with the Write tool, then run the core
+validator on it, one seat at a time (name the file, not a shell variable):
+`python3 <validator> council/<slug>.verdict.md --require`
+Find the validator without searching (D-194): read `core_root` from `.claude/workforce-installed.json`
+and use `<core_root>/skills/gate-verdict-format/validate_verdict.py`; if that file does not exist, use
+`.claude/skills/gate-verdict-format/validate_verdict.py`. Never run `find` and never use any other path.
+If neither exists, say so (running `/workforce-init` records the path) and treat the blocks as not
+validated.
+Running the validator on a file you wrote with Write is fine: the Stop hook reads it back and checks it
+against the seat's returned block. Record one row per
+seat: the seat, the word MEASURED followed by the exact command you ran in backticks, and the result
+(the exit code and the first error, or "valid"). Pass the table to `chair`. **The chair does not close while any seat block is invalid:** re-dispatch that seat
+once, quoting the validator's error text word for word and the seat's verdict block template
+(COUNCIL.md §3a; product-manager's is in its own instructions), and if it is still invalid, report the
+convening as not closed and name the seat and the error (D-193). A seat that returned no block is invalid.
+
+**`ethics-governance` reviews last** on every decision (D-176) — it has standing to BLOCK.
+For a decision that will be built, offer a Definition Brief (`references/definition-brief.md`) as the seam to the dev team. **With the
 `blackraptor-dev` (Build) pack installed**, let `completion-auditor` verify the synthesis is
 complete before it is reported as the answer; **otherwise the main session records that completion
 check UNVERIFIED** and states the audit gate was not run (§9.3 — degrade, don't dangle).

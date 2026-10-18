@@ -12,6 +12,9 @@
 # unscoped Stop hook lacked and over-blocked trying to approximate; an engineering or council
 # session never touches a marked directory and sees zero blocks from this hook.
 #
+# BASH (D-175, 2.8.2). The hook also runs on Bash and, everywhere, blocks a command that writes a
+# `*.verdict.md` file, so the Stop hook can read every verdict file's content from a Write call.
+#
 # CONTRACT (Claude Code PreToolUse hooks): stdin = JSON {tool_name, tool_input, cwd, ...};
 # exit 0 = allow; exit 2 = block, stderr is the reason fed back to the agent.
 #
@@ -26,7 +29,7 @@ set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 if [ -f "$HERE/br-hooks-env.sh" ]; then
   . "$HERE/br-hooks-env.sh"
-  br_hook_disabled BR_CLAIMS_HOOK "DRAFT/GATED PreToolUse hook" "marketing-asset writes are not being checked this session." && exit 0
+  br_hook_disabled BR_CLAIMS_HOOK "DRAFT/GATED PreToolUse hook" "marketing-asset writes and shell writes of verdict files are not being checked this session." && exit 0
 fi
 HELPER="$HERE/enforce-draft-gate.py"
 VALIDATOR="${CLAUDE_PLUGIN_ROOT:-$HERE/..}/skills/gate-verdict-format/validate_verdict.py"

@@ -16,8 +16,10 @@ assembles verdicts; it never designs or writes code itself.
 
 Any non-trivial change: ≥2 dev specialists implied, a gated surface touched
 (auth / schema / infra / CI / AI-prompt path), or a change that needs a spec then
-build then review. Trivial one-file edits do not need the team — do them directly. Sending any gate
-after such an edit goes through `/gate-review`, which runs the check ladder first.
+build then review. Trivial one-file edits do not need the team — do them directly. The check ladder
+runs on `/gate-review`, `/pre-merge`, `/red-team` and inside this skill; a gate named directly from
+the main session after a hand edit does not run it, so send any gate after such an edit through
+`/gate-review`.
 
 **Context read-path (repo-native, R10).** Engineering is project-scoped; context lives in the repo:
 `CLAUDE.md` (auto-loaded, technical) + `BUSINESS-CONTEXT.md` (business) + `USER-PREFS.md` at the repo
@@ -158,9 +160,9 @@ missing class coverage, minimum fix or proof of closure.
 `git show <sha>:path`), never the working tree. Before publishing, re-check every Critical and a
 random 10 percent of the other findings yourself, and state the sample.
 
-**Test-quality pairing (D-101).** Dispatch `test-auditor` and `completion-auditor` together on every
-test-quality gate: `test-auditor` names the run, `completion-auditor` executes it and hands back the
-MEASURED lines. No MEASURED line, no test-quality PASS.
+**Test-quality pairing (D-101).** On every test-quality gate, dispatch `test-auditor` after
+`completion-auditor` returns: `completion-auditor` executes the run and hands back the MEASURED lines,
+and `test-auditor` judges them. No MEASURED line, no test-quality PASS.
 
 **Re-reviews.** A second review of the same work is a delta re-review (`references/delta-review.md`):
 prior findings marked CLOSED, PARTIAL or OPEN at the new commit, new findings only in changed text

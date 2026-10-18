@@ -12,6 +12,7 @@
   "invalid-missing-falsifier.md": "FAIL",
   "invalid-na-verdict.md": "FAIL",
   "invalid-quality-pass-not-measured.md": "FAIL",
+  "invalid-rereview-short-sha.md": "FAIL",
   "invalid-standards-blank-entry.md": "FAIL",
   "invalid-standards-uncited.md": "FAIL",
   "invalid-standards-unclosed-array.md": "FAIL",
@@ -24,5 +25,6 @@
   "valid-concerns-spaced-cna-vocab.md": "PASS",
   "valid-measured-backticked.md": "PASS",
   "valid-pass.md": "PASS",
-  "valid-quality-pass-measured.md": "PASS"
+  "valid-quality-pass-measured.md": "PASS",
+  "valid-rereview.md": "PASS"
 }

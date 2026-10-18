@@ -13,6 +13,8 @@ Load this only when the diff contains Go (`*.go`, `go.mod`). Use it as a review 
 
 Quote each command's output in the evidence. A tool the project does not have installed is a gap to state, not a pass.
 
+Test helpers that create a Git repository, and asserting on full output lines: `test-isolation.md` (shared by every language).
+
 ## Blocking
 - An error return ignored or assigned to `_` on a path that writes, deletes, pays, or authorizes.
 - A goroutine with no way to stop (no context cancellation, no closed channel): it leaks per request.

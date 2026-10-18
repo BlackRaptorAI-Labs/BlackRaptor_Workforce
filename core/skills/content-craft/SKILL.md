@@ -86,6 +86,8 @@ show what changed rather than repeating the whole piece (provisional rule).
 5. Match the reader's reading level, not the writer's vocabulary; expand acronyms on first use.
 6. End a deliverable or a handoff with one `NEXT:` line: the next action and who takes it. It never
    replaces a material gap (§4).
+7. Comments tell the story: a comment explains the why in plain words with no tracker ID (the core
+   contract's "Comments tell the story").
 
 Dedup: marketing's retired-claims ban and brand-voice register (Marketing Intelligence Core) govern
 marketing claims/voice; this skill does not restate or override them (see `references/ai-tells.md`).

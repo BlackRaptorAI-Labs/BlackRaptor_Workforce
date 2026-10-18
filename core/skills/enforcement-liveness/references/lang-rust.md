@@ -13,6 +13,8 @@ Load this only when the diff contains Rust (`*.rs`, `Cargo.toml`). Use it as a r
 
 Quote each command's output in the evidence. A tool the project does not have installed is a gap to state, not a pass.
 
+Test helpers that create a Git repository, and asserting on full output lines: `test-isolation.md` (shared by every language).
+
 ## Blocking
 - `unwrap()`, `expect()` or indexing that can panic on a request, message, or file the program did not create.
 - An `unsafe` block with no comment stating the invariant that makes it sound, or one whose invariant the surrounding code does not uphold.

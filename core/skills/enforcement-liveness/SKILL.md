@@ -57,3 +57,4 @@ Every gate has a recorded enforcement category in `references/gate-enforcement-m
 
 ## Language references (load one, only when the diff matches)
 For review depth in one language, read the matching file and no other: `references/lang-go.md`, `references/lang-rust.md`, `references/lang-python.md`, `references/lang-typescript.md`. Each has a "run these first" tool table and a Blocking / Should fix / Nit list. A diff in a language with no file here gets no language lens; say so rather than borrowing another language's list.
+In every language, a test helper that creates a temporary Git repository follows `references/test-isolation.md` (clear the inherited Git variables, no hooks, no credential helper, a fail-first test), and a test never asserts on output a runner may shorten.

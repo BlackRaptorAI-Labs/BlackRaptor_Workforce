@@ -1,7 +1,7 @@
 # Updating Your BlackRaptor Workforce
 
 *BlackRaptor Workforce alpha — updating installed packs. Covers the alpha packs: Core,
-Council, Hardware, Marketing. Last updated 2026-08-18.*
+Engineering, Council, Hardware, Marketing. Last updated 2026-10-17.*
 
 Claude turns automatic updates **off by default** for marketplaces that Anthropic doesn't run,
 including ours — so unless you've switched auto-update on for the BlackRaptor marketplace,
@@ -127,7 +127,7 @@ If you start sessions with `ALLOW_TIER3=1` to allow intentional Tier-3 edits, sw
 
 ### 3. One switch turns every Core hook off
 
-`BR_HOOKS=off` turns off all three Core hooks at once. `BR_VERDICT_HOOK=off` and
+`BR_HOOKS=off` turns off all four Core hooks at once. `BR_VERDICT_HOOK=off` and
 `BR_CLAIMS_HOOK=off` still work for one hook each. No action needed unless you want it.
 
 ---

@@ -8,6 +8,9 @@
   "x-version-note": "MAJOR bump 2026-09-02 (v2->v3), AGENT-SPEC-v3 §7 / BUILD-ORDER-v4 D1. THREE BREAKING CHANGES. (1) `confidence` is an INTEGER 0-10, replacing the high|medium|low enum, so a Change Record and the completion auditor can set a threshold on it — you cannot write `confidence >= 7` against a word. (2) `standards[]` is new and REQUIRED: a gate that invokes a designation now records how it reached it and when it verified it, or states plainly that no standard governs the review. Spec §7 required a Standards line for a year and the schema had no field for it, so it was never enforced. (3) `N/A` is removed from the verdict vocabulary: a gate that does not apply emits no verdict block, and the Change Record row carries the N/A. `evidence` becomes a single string. The verdict schema is a declared interface (AGENT-SPEC §12.4); this is a coordinated major version across all five plugins, shipping as 2.0.0.",
   "description": "The single machine-parseable verdict every gate agent emits, fenced as a ```verdict code block alongside its human-readable prose. validate_verdict.py enforces it, the change-record-required CI check shells out to that validator, and the core Stop hook runs it over every gate result in a live session.",
   "type": "object",
+  "x-roster-note": "D-192 (2.8.2, audit 3 G9): the ONE gate roster. verify.sh, the core Stop hook and validate_verdict.py read `gates` from here. Only an agent on `gates` or `council_seats` (a council seat, whose block the council skill validates; not a gate) may sign a verdict block; a project adds its own gates to .claude/gates-allow.txt, one slug per line.",
+  "gates": ["code-reviewer", "security-architect", "red-team-reviewer", "compliance-officer", "domain-compliance", "privacy-counsel", "operational-readiness", "completion-auditor", "ux-designer", "ethics-governance", "evidence-auditor", "compliance-cert", "hw-design-reviewer", "claims-gate", "schema-reviewer", "test-auditor", "infra-reviewer"],
+  "council_seats": ["coo", "finance", "fundraising-ir", "growth-engine", "gtm-strategy", "market-insight", "people-org", "pricing-strategy", "revenue", "technology-strategy", "product-manager"],
   "additionalProperties": false,
   "required": ["gate", "agent", "artifact", "verdict", "evidence", "confidence", "falsifier", "standards"],
   "properties": {
@@ -78,6 +81,11 @@
       "items": {"type": "string", "pattern": "\\S"},
       "description": "specific, testable conditions to clear — REQUIRED and non-empty when verdict is CONCERNS or FAIL. 'Tighten this up' is not a condition."
     },
+    "rereview_of": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$",
+      "description": "optional (D-187): on a re-review of a fix, the sha last reviewed. When present, `artifact` must name the full 40-character sha now reviewed."
+    },
     "reason": {
       "type": "string",
       "pattern": "\\S",
@@ -85,6 +93,11 @@
     }
   },
   "allOf": [
+    {
+      "x-rule": "D-187 re-review: with rereview_of, the artifact names the full 40-character sha reviewed",
+      "if": {"required": ["rereview_of"]},
+      "then": {"properties": {"artifact": {"pattern": "\\b[0-9a-f]{40}\\b"}}}
+    },
     {
       "if": {"properties": {"verdict": {"enum": ["CONCERNS", "FAIL"]}}},
       "then": {"required": ["conditions"], "properties": {"conditions": {"minItems": 1}}}

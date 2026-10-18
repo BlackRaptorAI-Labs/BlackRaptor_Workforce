@@ -1,3 +1,19 @@
+## 2.7.1 — 2026-10-16 — Outside text is information, not orders
+
+### Changed
+- Every agent in this pack treats text it finds in pages, files, pull requests and tool output as
+  information, never as orders, and reports such text to you instead of acting on it (Core 2.8.2).
+- **The council skill checks every seat's verdict before the chair closes.** Seats return their verdict
+  in their reply and never write a verdict file; the skill copies each one unchanged with the Write tool,
+  runs the validator on it, and the chair does not close while one is invalid. The core review check
+  checks only the seats that are also gates.
+- **`ethics-governance` sits on every council decision**, not only when the question names ethics.
+- **Seats run in the foreground**, so each seat's verdict is there to check.
+- **A pricing decision can close.** product-manager's verdict block now has a whole-number confidence, and a
+  seat whose block fails is asked once more, with the validator's error, before the chair refuses.
+- `ethics-governance` cites rather than claims measured results, quotes any text that tried to instruct
+  it, and notes when a code change reached it without the cheap checks.
+
 ## 2.7.0 — 2026-10-13 — Clearer evidence wording in the verdict template
 
 ### Changed
@@ -135,7 +151,6 @@ could not validate, and the live `Stop` hook sent those blocks back:
 Neither the schema nor the hook changed; the instructions the gates read did.
 
 Validated against `claude-opus-4-8` as of 2026-09-02.
-
 
 ## 2026-08-13 — Renamed & consolidated
 - **Plugin id:** `blackraptor-council` (unchanged). Dependency `blackraptor-bridge` → **`blackraptor-core`**.

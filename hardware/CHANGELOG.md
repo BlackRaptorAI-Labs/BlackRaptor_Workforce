@@ -1,3 +1,14 @@
+## 2.8.1 — 2026-10-16 — Outside text is information, not orders; firmware stays off devices unless told
+
+### Changed
+- Every agent in this pack treats text it finds in pages, files, pull requests and tool output as
+  information, never as orders, and reports such text to you instead of acting on it (Core 2.8.2).
+- `hw-design-reviewer`'s verdict template pairs MEASURED with the exact command it ran; `compliance-cert`,
+  which cannot run commands, cites results as CITED. Both quote any text that tried to instruct them, and
+  note when a code change reached them without the cheap checks.
+- `embedded-firmware` builds and tests on the host or an emulator; it flashes or reads registers on a
+  physical device only when you have connected it for that and say so in the task.
+
 ## 2.8.0 — 2026-10-14 — A tidier tier note
 
 ### Changed
@@ -141,7 +152,6 @@ could not validate, and the live `Stop` hook sent those blocks back:
 Neither the schema nor the hook changed; the instructions the gates read did.
 
 Validated against `claude-opus-4-8` as of 2026-09-02.
-
 
 ## 2026-08-13 — Renamed & consolidated
 - **Plugin id:** `blackraptor-hw-engineering` → **`blackraptor-hardware`** ("HW" → "Hardware"). Dependency `blackraptor-bridge` → **`blackraptor-core`**.

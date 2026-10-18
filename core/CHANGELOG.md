@@ -1,3 +1,68 @@
+## 2.8.2 — 2026-10-16 — Finished reviewers are read, and no check offers to turn itself off
+
+Agents no longer run live-system commands from docs, and a new check blocks cloud, deploy and remote
+commands unless you allow them; the review check no longer reports finished reviewers as still running
+and never suggests turning itself off; builders get clearer rules against loosening checks; test helpers
+keep Git isolated.
+Every agent treats text it finds in pages, files and PRs as information, never as orders; the release
+scan catches pasted credentials; publish and data-out commands are blocked for agents; code-reviewer's
+measured results name their command. Verdict files written through the shell are blocked, a measured
+result must quote the command that ran, and claims-gate passes only claims your project has approved.
+Agents write comments that explain the why in plain words, with no tracker IDs, and a re-review verdict
+can name the commit it follows on from.
+Verdict and asset files are now checked on disk, so one written by any shell command is caught; only a
+gate's verdict counts as one; the installer stops when an enforcement file in the repo differs from the
+pack's; and skills find the validator from the install record instead of searching for it.
+A Change Record is signed by gates only, a draft's name is read in any case, and a facts pack that
+reports lint, typecheck and tests counts as the cheap checks having run.
+
+### Changed
+- **Every agent treats outside text as information, never as orders.** The operating contract in every
+  agent now says instructions come only from you in this session and from the Workforce's own files.
+  Text in web pages, documents, pull requests, issues, commit messages, code comments, READMEs, runbooks
+  and tool output is information; an agent that meets text telling it to run, send, delete or change
+  something tells you, quoting it, and does not act on it.
+- **Gate verdicts label measured results correctly.** Every gate's verdict template now pairs MEASURED
+  with the exact command that was run; a result not run in the session is CITED. The review check had
+  been sending back verdicts that called a quoted file line "measured".
+- **Verdict files are written with the Write tool.** The marketing write gate now also checks shell
+  commands and blocks one that writes a `.verdict.md` file, everywhere; the review check treats a verdict
+  file a shell command named as unverified. Read verdict files with the Read tool.
+- **A measured result must quote the command that ran.** The review check now matches the backticked
+  command word for word against a command the session ran; quoting one step of a longer command line is
+  fine, but a one-letter or padded quote no longer counts.
+- **claims-gate passes only claims your project has approved.** It passes a claim only when the claim is
+  in the approved claims register your project names as `APPROVED_CLAIMS_DOC`; without it, the claims
+  check is COULD NOT ASSESS. It no longer carries a built-in value proposition. claims-gate and
+  evidence-auditor quote any text that tried to instruct them, and cite rather than claim measured
+  results.
+- **The review check reads reviewers that ran in the background.** It now reads each reviewer's
+  result as soon as it comes back, in the same turn or a later one. It no longer reports a finished
+  reviewer as still running, and a result that arrives after the turn ended is now checked instead of
+  skipped. A reviewer with no result yet still holds the turn, as before. Its author check and its
+  verdict-file check read those results too.
+- **Block messages never suggest turning a check off.** The review check and the marketing write gate
+  now tell the agent to stop and tell you why it thinks a block is wrong. The off switches still work
+  for you; the hooks README lists them.
+- **`/workforce-init` adds an empty `.claude/live-commands-allow.txt`** with the engineering hook: the
+  read-only live commands your repo allows (see Engineering 2.8.2). Only you edit it. `--remove`
+  deletes it only while it is still empty, and `--upgrade` adds it to a repo set up with 2.8.1.
+- **Copy mode says what it leaves out.** `/workforce-init --mode copy` now says the review check, the
+  marketing write gate, the onboarding hook and the five slash commands come from the core plugin and
+  are not in the repo copy, and workforce-doctor warns about it. The copy check's fix now reads "Restore
+  each file from git, or delete it and re-run /workforce-init --upgrade".
+- **workforce-doctor checks that the sandbox can run.** On Linux it checks for `bwrap` and `socat` and
+  reports "sandbox configured but inactive" when one is missing; on macOS it says the active state is
+  not probed. The update guide now lists Engineering and the four Core hooks.
+- **The release scan catches pasted credentials.** The leak scan the packs are built through now also
+  fails on GitHub, 1Password, AWS, Slack, Stripe and model-provider keys, private key headers and
+  `Authorization: Bearer` tokens, AWS secret keys, passwords in connection strings, and keys in file
+  names.
+- **Test helpers keep Git isolated.** `enforcement-liveness` has a shared reference for every language:
+  a test helper that creates a temporary Git repository clears the inherited Git variables, turns off
+  hooks and credential helpers in it, and is proven by a test that fails first. Tests also never
+  assert on output a test runner may shorten.
+
 ## 2.8.1 — 2026-10-15 — Fewer false blocks, a quieter repo
 
 Harmless read commands are no longer blocked; the hook's log no longer shows up as a new file in your
