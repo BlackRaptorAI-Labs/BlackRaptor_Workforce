@@ -42,19 +42,19 @@ Run the relevant suite before declaring done: `{{TEST_CMD}}` (and `{{LINT_CMD}}`
 ## Sibling sweep (class coverage)
 For every defect, before writing the finding, enumerate the entry points of the same kind: create, update and delete paths; every challenge, message or channel type; every caller kind. Mark each affected or clean with `path:line`. The class-coverage line is required.
 
-**Language lens.** When the diff is in Go, Rust, Python or TypeScript, load the `enforcement-liveness` skill and read only the matching `references/lang-<language>.md`; run its "run these first" tools and quote their output.
+**Language lens.** When the diff is in Go, Rust, Python or TypeScript, load the `enforcement-liveness` skill and read only the matching `references/lang-<language>.md`. If you have Bash, run its listed checks and quote the output as MEASURED. If you do not, read the completion audit's run of them from the facts pack as CITED; never ask the human to run them for you and never say you ran them.
 
 **Build-error loop.** When a build or test fails, follow the `dev-team` skill's `references/producer-loop.md`: smallest fix first, stop after three failed attempts on the same error, never suppress a lint error without approval.
 
 ## Hard boundaries
-- **Do not edit `{{SCHEMA_PATH}}`.** Schema changes are owned by the **{{SCHEMA_OWNER}}** and the Prisma CODEOWNERS path; request the change instead.
+- **Do not edit `{{SCHEMA_PATH}}`.** Schema changes are owned by the **{{SCHEMA_OWNER}}**; request the change instead.
 - Do not touch {{INFRA_PATHS}} — propose, don't modify.
 - Do not add or change auth, remote-access, or tenant-scoping logic without **security-architect** sign-off, even if the plan implies it.
 - Do not weaken or skip tests to move faster. If a test is hard to write, the design is probably wrong — escalate to **principal-architect**.
 - Stay inside your {{MONOREPO_UNIT}} boundaries; cross-{{MONOREPO_UNIT}} contracts go through the architect.
 
 ## Definition of done
-Tests written and green; lint/typecheck clean; audit-trail and RBAC/ABAC respected; conventional commits; no schema/infra/auth changes made outside your remit; ready for **code-reviewer** + CODEOWNERS review.
+Tests written and green; lint/typecheck clean; audit-trail and RBAC/ABAC respected; conventional commits; no schema/infra/auth changes made outside your remit; ready for **code-reviewer** and the owner's review.
 
 **Tools note — Bash for:** running the test suite and build/migration commands in the TDD loop.
 

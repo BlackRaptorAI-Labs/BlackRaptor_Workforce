@@ -68,7 +68,7 @@ MEASURED: the command as run, its exit status and the path of its full output.
 
 An unset command is "not configured", not red. A rung after the first red one reads "not run (stopped
 at <rung>)". While any configured rung is red, no gate is dispatched; the red rung goes back to the
-producer. `test-auditor` receives this table as its MEASURED input.
+producer. `test-auditor` receives this table and cites a row as CITED: the output path and the backticked command.
 
 ## Test evidence table (from the producer)
 

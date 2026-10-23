@@ -68,7 +68,7 @@ claims and returns a per-claim substantiated/FIX/BLOCK verdict + overall SHIP/HO
 the retired-claims ban. A producer running the `compliance-claims-gate` **skill** on its own
 output is self-review, not a gate — always route to the **agent**. **Enforcement category today:
 Checklist-only** — the mandatory step is an agent dispatch the campaign is instructed to make,
-**not yet mechanically blocking** (marketing assets have no stable CODEOWNERS/CI paths in this repo;
+**not yet mechanically blocking** (marketing assets have no stable CI paths in this repo;
 see 5.7b). Stated honestly, not overclaimed. **With the `blackraptor-dev` (Build) pack installed**,
 `completion-auditor` confirms `claims-gate` is in the trace before ship; **otherwise the main session
 performs that trace check itself and records it UNVERIFIED-by-gate** (§9.3 — degrade, don't dangle) —

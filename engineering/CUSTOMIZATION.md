@@ -174,7 +174,6 @@ ones that apply; leave out the rest.
 | `SCHEMA_OWNER` |  | agent `backend-engineer`, agent `code-reviewer` |
 | `SCHEMA_PATH` |  | agent `backend-engineer`, agent `data-engineer`, agent `principal-architect` |
 | `SECOND_APPROVER` |  | `github/pull_request_template.md`, command `/gate-review`, command `/pre-merge` |
-| `SECOND_KEY_TEAM` |  | `github/CODEOWNERS.template` |
 | `SECRETS_STORE` |  | agent `security-architect` |
 | `SEC_ATTACK_SURFACES` |  | agent `security-architect` |
 | `SHELL` |  | agent `completion-auditor` |
@@ -200,18 +199,16 @@ ones that apply; leave out the rest.
 Tier 3 = code where a mistake is a security incident, data loss, or a
 regulatory event. Typically: authentication/authorization, database schema and
 migrations, anything that executes commands remotely, CI/CD configuration, and
-your regulated domain's module. Encode the SAME list in three places (they
+your regulated domain's module. Encode the SAME list in two places (they
 must stay in sync — `devops-sre`'s persona says so too):
 
 1. `.claude/hooks/protect-tier3.py` → `TIER3_PREFIXES` / `TIER3_FILES`
-2. `.github/CODEOWNERS` → routes those paths to `{{SECOND_KEY_TEAM}}` (start from the engineering
-   pack's `github/CODEOWNERS.template` if you have none)
-3. `.github/workflows/change-record-required.yml` → the `GATED` list
+2. `.github/workflows/change-record-required.yml` → the `GATED` list
    (Tier 2 surfaces belong here too — privacy-sensitive and
    data-of-record paths that need a Change Record but not a second key)
 
 The enforcement config protects itself: keep `.github/`, `.claude/hooks/`, and
-`.claude/settings.json` in all three lists.
+`.claude/settings.json` in both lists. The owner approves every pull request, while write access stays with the owner and one agent account (the branch-protection checklist says how); required checks and the owner's approval gate the merge.
 
 ## 4. Trim the roster (5 min)
 
@@ -230,16 +227,13 @@ verdict block), and give it a distinct reasoning method and a new name.
 
 ## 5. GitHub setup (human-only, 10 min)
 
-1. Create the `{{SECOND_KEY_TEAM}}` team with ONLY your second person (write
-   access). Not you — you can't approve your own PRs anyway, and a clean
-   membership makes the two-person story legible.
-2. Replace/merge `.github/CODEOWNERS` — **no global `*` rule**, or you'll block
-   yourself on everything.
-3. Branch protection per the engineering pack's `docs/branch-protection-checklist.md`: require PRs,
-   **0** required approvals, require code-owner reviews, dismiss stale
-   approvals, required checks = your CI + `change-record-required`.
-4. **Run the three verification tests in the checklist.** Do not skip: the
-   0-approvals + code-owners combination must be proven on your plan/settings.
+1. Agents and the build account open pull requests; they must not be admins on the repo. You approve and merge.
+2. Branch protection per the engineering pack's `docs/branch-protection-checklist.md`, or
+   `/workforce-init --setup-branch-protection` from your own terminal: require PRs, **1** required
+   approval (yours), dismiss stale approvals, require approval of the most recent push, required
+   checks = `head-suite`, `base-suite`, your CI and `change-record-required`, up to date with the
+   base branch. The owner approves every pull request, while write access stays with the owner and one agent account (the branch-protection checklist says how); required checks and the owner's approval gate the merge.
+3. **Run the verification tests in the checklist.** Do not skip them.
 
 ## 6. Prove the hook
 

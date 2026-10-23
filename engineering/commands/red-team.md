@@ -6,7 +6,9 @@ Run a red-team review of: $ARGUMENTS
 (If no target given, ask me to scope one — e.g. "auth", "sessions", "the whole platform pre-launch".)
 
 0. **Check ladder first (the same rungs and rules as `dev-team` wave 2b).** Before any other
-   subagent, dispatch `completion-auditor` to run the check ladder on this branch, in order, stopping
+   subagent, dispatch `completion-auditor` to run the check ladder on this branch, with the exact line
+   `MODE: ladder-only (no verdict)` as the first line of its prompt (the Stop hook then owes no verdict
+   from it and ignores any it returns), in order, stopping
    at the first red rung: lint (`{{LINT_CMD}}`), typecheck (`{{TYPECHECK_CMD}}`), the tests for the
    changed files (`{{TEST_CMD}}` scoped to the diff where the runner supports it, else "not
    scopable"), the full suite (`{{TEST_CMD}}`). It returns the ladder table defined in
@@ -14,7 +16,7 @@ Run a red-team review of: $ARGUMENTS
    (command, exit status, output path); an unset command is "not configured", never red. **While a
    configured rung is red, dispatch no gate:** stop, show completion-auditor's table, and name the
    red rung and its command; write no verdict block of your own for the ladder. Otherwise pass the
-   table to every gate you dispatch (`test-auditor` takes it as its MEASURED input).
+   table to every gate you dispatch (`test-auditor` cites it as CITED: the output path and the backticked command).
 
 Use the red-team-reviewer subagent. It must:
 

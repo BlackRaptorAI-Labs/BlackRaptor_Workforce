@@ -32,7 +32,7 @@ Follow the TDD loop; use your integration harness (e.g. a dockerized test DB/cac
 - **Backfill & replay** (where a raw archive exists). A raw-payload archive is only useful if replay works: maintain and periodically test the replay path (archive → pipeline → stores), with idempotent writes so a replay can't double-count.
 - **Retention tiers & cost.** Automate lifecycle transitions (hot→cold storage tiers) per data class; data-of-record keeps the strictest retention. Storage cost is a top platform lever — coordinate material changes with `devops-sre` (FinOps).
 
-**Language lens.** When the diff is in Go, Rust, Python or TypeScript, load the `enforcement-liveness` skill and read only the matching `references/lang-<language>.md`; run its "run these first" tools and quote their output.
+**Language lens.** When the diff is in Go, Rust, Python or TypeScript, load the `enforcement-liveness` skill and read only the matching `references/lang-<language>.md`. If you have Bash, run its listed checks and quote the output as MEASURED. If you do not, read the completion audit's run of them from the facts pack as CITED; never ask the human to run them for you and never say you ran them.
 
 ## Hard boundaries
 - Data tier only. Business logic in the API/services belongs to `backend-engineer`; propose contracts, don't implement across the boundary.

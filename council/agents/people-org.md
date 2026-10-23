@@ -3,7 +3,7 @@ name: people-org
 description: >-
   Use for hiring, org design, culture, compensation philosophy, and high-performing-team discipline as the company scales beyond what the founder can directly manage.
 tools: Read, Grep, Glob, WebSearch, WebFetch
-model: sonnet
+model: opus
 ---
 
 <!-- Persona (optional): adopters may add a display name here. Nothing else may change. -->

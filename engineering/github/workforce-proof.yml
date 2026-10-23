@@ -1,0 +1,503 @@
+# workforce-proof (BlackRaptor Workforce engineering pack, 2.8.3, D-251): CI is the judge of whether the tests pass.
+#
+# Installed by /workforce-init as .github/workflows/workforce-proof.yml. Two jobs; make both required checks on the default
+# branch (/workforce-init --setup-branch-protection, from your own terminal):
+#   head-suite  the commit as pushed: environment folders deleted, dependencies installed only from the lockfile, every
+#               recorded test command (`test_cmd` in .claude/workforce-installed.json at the merge base) run with its
+#               runner's machine report.
+#   base-suite  the same code with every runner-control file and every test file put back as they are at the merge base,
+#               and the test files the change added removed, then the same commands: the base branch's own tests judge
+#               the new code, so a forged conftest, pytest.ini, test file or environment cannot carry it.
+# Each job fails unless every command exits 0 with at least 1 passed and 0 failed or errored by its report.
+# The Stop hook reads these two check runs for the exact commit (github-actions app, this workflow's check suite) and
+# checks this file against the hash /workforce-init recorded. Do not edit it in a pull request: with branch protection set
+# up the owner approves every change to it, and the hook blocks a changed copy.
+# No secrets, no cache, no pull_request_target; read-only token.
+name: workforce-proof
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+permissions:
+  contents: read
+env:
+  WF_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+  WF_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+  WF_JUDGE: |
+    # The workforce-proof judge (D-251): `python3 -c "$WF_JUDGE" head` or `... base`, run by .github/workflows/workforce-proof.yml.
+    # head: the commit as pushed. base: the same code with every runner-control file and every test file put back as they
+    # are at the merge base, and the test files the change added removed, so the base branch's own tests judge the new code.
+    # Both: environment folders deleted, dependencies installed only from the lockfile, every recorded test command run with
+    # its runner's machine report; the job fails unless each command exits 0 with at least 1 passed and 0 failed or errored.
+    import glob, json, os, re, shlex, shutil, subprocess, sys
+
+    MODE = sys.argv[1] if len(sys.argv) > 1 else "head"
+    REPORTS = os.environ.get("WF_REPORTS") or os.path.join(os.environ.get("RUNNER_TEMP") or "/tmp", "wf-reports")
+    REC = ".claude/workforce-installed.json"
+    DEFAULT_GLOBS = ["tests/**", "test/**", "**/tests/**", "**/test/**", "**/__tests__/**", "**/test_*.py", "**/*_test.py",
+                     "**/*_test.go", "**/*.test.*", "**/*.spec.*", "**/*Test.java", "**/*Tests.java", "**/*Test.kt",
+                     "**/*Tests.cs", "**/*Test.cs"]
+    RC_NAMES = ("conftest.py", "pytest.ini", ".pytest.ini", "pytest.toml", ".pytest.toml", "sitecustomize.py",
+                "usercustomize.py", "setup.py")
+    RC_SUFFIXES = (".pth",)
+    RC_PREFIXES = ("jest.config.", "vitest.config.", "vitest.workspace.", "vite.config.", ".mocharc", "karma.conf.",
+                   "playwright.config.")
+    ENV_DIRS = (".venv", "venv", ".tox", "node_modules")
+    ENV_RUNNERS = {"uv", "poetry", "pipenv", "hatch", "pdm", "rye"}
+    PYTHONS = re.compile(r"^(python|python3|python3\.\d+|py)$")
+    ENV_ASSIGN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+    REDIRECT = re.compile(r"(?<!\S)[0-9]*(?:&>>?|>>?&?|<)\s*[^\s;|&<>]+")
+    TWO_WORD = {("go", "test"), ("cargo", "test"), ("dotnet", "test"), ("mvn", "test"), ("./mvnw", "test"), ("gradle", "test"),
+                ("./gradlew", "test"), ("bun", "test"), ("node", "--test"), ("deno", "test"), ("npx", "jest"), ("npx", "vitest"),
+                ("npx", "mocha"), ("npx", "pytest")}
+    SUMMARY = []
+
+
+    def say(line):
+        print(line, flush=True)
+        SUMMARY.append(line)
+
+
+    def git(*a, check=True):
+        p = subprocess.run(["git"] + list(a), capture_output=True, text=True)
+        if check and p.returncode != 0:
+            raise SystemExit("git %s failed: %s" % (" ".join(a), p.stderr.strip()[:300]))
+        return p.stdout
+
+
+    def show(sha, path):
+        p = subprocess.run(["git", "show", "%s:%s" % (sha, path)], capture_output=True)
+        return p.stdout if p.returncode == 0 else None
+
+
+    def _simple_commands(text):
+        text = REDIRECT.sub(" ", text.replace("\n", " ; "))
+        try:
+            lex = shlex.shlex(text, posix=True, punctuation_chars=";&|")
+            lex.whitespace_split = True
+            toks = list(lex)
+        except ValueError:
+            toks = text.split()
+        out, cur = [], []
+        for t in toks + [";"]:
+            if t in (";", "&&", "||", "|", "&", "|&"):
+                if cur:
+                    out.append(tuple(cur))
+                cur = []
+            elif t not in ("(", ")", "{", "}"):
+                cur.append(t)
+        return out
+
+
+    def _canon(tokens):
+        t = list(tokens)
+        if t and t[0] == "env":
+            t.pop(0)
+        while t and ENV_ASSIGN.match(t[0]):
+            t.pop(0)
+        if len(t) > 2 and os.path.basename(t[0]) in ENV_RUNNERS and t[1] == "run":
+            t = t[2:]
+            while t and t[0].startswith("-") and t[0] != "--":
+                t.pop(0)
+            if t[:1] == ["--"]:
+                t.pop(0)
+        if not t:
+            return ()
+        if "/" in t[0] and not t[0].startswith("./"):
+            t[0] = os.path.basename(t[0])
+        if PYTHONS.match(t[0]):
+            rest = t[1:]
+            if t[0] == "py" and rest[:1] == ["-3"]:
+                rest = rest[1:]
+            return ("python", "-m", rest[1]) if rest[:1] == ["-m"] and len(rest) > 1 else ("python",)
+        if t[0] in ("npm", "pnpm", "yarn") and (t[1:3] == ["run", "test"] or t[1:2] in (["test"], ["t"])):
+            return (t[0], "test")
+        if tuple(t[:2]) in TWO_WORD:
+            return tuple(t[:2])
+        return (t[0],)
+
+
+    def _pkg_test_script():
+        try:
+            return str((json.load(open("package.json", encoding="utf-8")).get("scripts") or {}).get("test") or "")
+        except Exception:
+            return ""
+
+
+    def report_plan(cmd, rdir, depth=0):
+        """(command to run, report kind, report path), the same reading as the Stop hook's report_plan (D-234, D-246)."""
+        q = shlex.quote
+        cmds = _simple_commands(cmd)
+        if not cmds or re.search(r"[|>]|2>&1", cmd):
+            return cmd, "output", None
+        runner = _canon(cmds[-1])
+        if runner in (("python", "-m", "pytest"), ("pytest",), ("npx", "pytest")):
+            f = os.path.join(rdir, "junit.xml")
+            return "%s --junitxml=%s -p no:cacheprovider" % (cmd, q(f)), "junit", f
+        if runner in (("jest",), ("npx", "jest")):
+            f = os.path.join(rdir, "jest.json")
+            return "%s --json --outputFile=%s" % (cmd, q(f)), "jestjson", f
+        if runner in (("vitest",), ("npx", "vitest")):
+            f = os.path.join(rdir, "vitest.json")
+            return "%s --reporter=json --outputFile=%s" % (cmd, q(f)), "jestjson", f
+        if len(runner) == 2 and runner[1] == "test" and runner[0] in ("npm", "pnpm", "yarn"):
+            script = _pkg_test_script().strip()
+            if depth > 0 or not script or len(_simple_commands(script)) != 1:
+                return cmd, "output", None
+            inner, kind, f = report_plan(script, rdir, depth + 1)
+            if kind == "output" or not inner.startswith(script):
+                return cmd, "output", None
+            return "%s%s%s" % (cmd, "" if runner[0] == "yarn" else " --", inner[len(script):]), kind, f
+        if runner == ("go", "test"):
+            return cmd + " -json", "gojson", None
+        if runner == ("node", "--test"):
+            f = os.path.join(rdir, "node.xml")
+            return "%s --test-reporter=junit --test-reporter-destination=%s" % (cmd, q(f)), "junit", f
+        if runner in (("mocha",), ("npx", "mocha")):
+            f = os.path.join(rdir, "mocha.json")
+            return "%s --reporter json --reporter-option output=%s" % (cmd, q(f)), "mochajson", f
+        if runner == ("bun", "test"):
+            f = os.path.join(rdir, "bun.xml")
+            return "%s --reporter=junit --reporter-outfile=%s" % (cmd, q(f)), "junit", f
+        if runner == ("dotnet", "test"):
+            f = os.path.join(rdir, "r.trx")
+            return "%s --logger %s" % (cmd, q("trx;LogFileName=" + f)), "trx", f
+        if runner in (("mvn", "test"), ("./mvnw", "test")):
+            f = os.path.join(rdir, "surefire")
+            return "%s -Dsurefire.reportsDirectory=%s" % (cmd, q(f)), "junitdir", f
+        return cmd, "output", None
+
+
+    def _junit(paths):
+        import xml.etree.ElementTree as ET
+        total = failed = skipped = 0
+        seen = False
+        for path in paths:
+            try:
+                root = ET.parse(path).getroot()
+            except Exception:
+                return None        # a report that cannot be read gives no count, so the run fails as "printed no test summary" (D-270)
+            seen = True
+            for tc in root.iter("testcase"):
+                total += 1
+                kids = {c.tag for c in tc}
+                if kids & {"failure", "error"}:
+                    failed += 1
+                elif "skipped" in kids:
+                    skipped += 1
+            for ts in root.iter("testsuite"):
+                if not list(ts.iter("testcase")):
+                    try:
+                        failed += int(ts.get("errors") or 0) + int(ts.get("failures") or 0)
+                    except ValueError:
+                        return None    # an error count that cannot be read gives no count (D-270)
+        return (total - failed - skipped, failed) if seen else None
+
+
+    def read_report(kind, path, out):
+        try:
+            if kind == "junit":
+                return _junit([path]) if os.path.isfile(path) else None
+            if kind == "junitdir":
+                return _junit(sorted(glob.glob(os.path.join(path, "*.xml")))) if os.path.isdir(path) else None
+            if kind == "jestjson":
+                d = json.load(open(path, encoding="utf-8"))
+                return int(d.get("numPassedTests") or 0), int(d.get("numFailedTests") or 0) + int(d.get("numRuntimeErrorTestSuites") or 0)
+            if kind == "mochajson":
+                st = json.load(open(path, encoding="utf-8")).get("stats") or {}
+                return int(st.get("passes") or 0), int(st.get("failures") or 0)
+            if kind == "trx":
+                m = re.search(r"<Counters\b[^>]*>", open(path, encoding="utf-8", errors="replace").read())
+                n = lambda a: int((re.search(r'\b%s="(\d+)"' % a, m.group(0)) or [0, 0])[1])
+                return (n("passed"), n("failed") + n("error")) if m else None
+            if kind == "gojson":
+                passed = failed = 0
+                seen = False
+                for line in out.splitlines():
+                    try:
+                        e = json.loads(line)
+                    except ValueError:
+                        continue
+                    if isinstance(e, dict) and "Action" in e:
+                        seen = True
+                        passed += e.get("Test") is not None and e["Action"] == "pass"
+                        failed += e["Action"] == "fail"
+                return (passed, failed) if seen else None
+        except Exception:
+            return None
+        return None
+
+
+    def glob_re(g):
+        out, i = "", 0
+        while i < len(g):
+            if g[i:i + 3] == "**/":
+                out, i = out + "(?:.*/)?", i + 3
+            elif g[i:i + 2] == "**":
+                out, i = out + ".*", i + 2
+            elif g[i] == "*":
+                out, i = out + "[^/]*", i + 1
+            elif g[i] == "?":
+                out, i = out + "[^/]", i + 1
+            else:
+                out, i = out + re.escape(g[i]), i + 1
+        return re.compile(out + r"\Z")
+
+
+    def is_whole_rc(path, named):
+        b = path.rsplit("/", 1)[-1]
+        return b in RC_NAMES or b.endswith(RC_SUFFIXES) or b.startswith(RC_PREFIXES) or path in named
+
+
+    SECTION_KEEP = {
+        "pyproject.toml": lambda n: n == "tool" or n == "tool.pytest" or n.startswith("tool.pytest.") or n in (
+            "project.entry-points.pytest11", "tool.poetry.plugins.pytest11"),
+        "setup.cfg": lambda n: n in ("tool:pytest", "options.entry_points", "entry_points"),
+        "tox.ini": lambda n: n == "pytest",
+    }
+
+
+    def _sections(text):
+        out = [(None, [])]
+        for line in text.splitlines(True):
+            m = re.match(r"^\s*\[\[?\s*([^\]]+?)\s*\]\]?\s*(#.*)?$", line)
+            if m:
+                out.append((re.sub(r"[\s\"']", "", m.group(1)), [line]))
+            else:
+                out[-1][1].append(line)
+        return out
+
+
+    def swap_sections(head, base, keep):
+        text = "".join("".join(lines) for name, lines in _sections(head) if name is None or not keep(name))
+        add = "".join("".join(lines) for name, lines in _sections(base) if name is not None and keep(name))
+        if add and text and not text.endswith("\n"):
+            text += "\n"
+        return text + add
+
+
+    def swap_package(head, base):
+        try:
+            h = json.loads(head)
+            b = json.loads(base) if base else {}
+        except ValueError:
+            return base if base is not None else head
+        if not isinstance(h, dict):
+            return head
+        b = b if isinstance(b, dict) else {}
+        test_key = lambda k: re.match(r"^(pre|post)?test", str(k)) is not None
+        hs = dict((k, v) for k, v in (h.get("scripts") or {}).items() if not test_key(k))
+        hs.update((k, v) for k, v in (b.get("scripts") or {}).items() if test_key(k))
+        h["scripts"] = hs
+        for k in ("jest", "mocha", "ava", "vitest"):
+            h.pop(k, None)
+            if k in b:
+                h[k] = b[k]
+        return json.dumps(h, indent=2) + "\n"
+
+
+    def put_back_base(base, globs, named):
+        """Runner-control files and test files as at the merge base; test files the change added removed (D-251)."""
+        head_files = set(x for x in git("ls-files", "-z").split("\0") if x)
+        base_files = set(x for x in git("ls-tree", "-r", "-z", "--name-only", base).split("\0") if x)
+        rx = [glob_re(g) for g in globs]
+        is_test = lambda p: any(r.match(p) for r in rx)
+        restored, removed, swapped = [], [], []
+        for p in sorted(head_files | base_files):
+            b = p.rsplit("/", 1)[-1]
+            if is_whole_rc(p, named) or is_test(p):
+                if p in base_files:
+                    data = show(base, p)
+                    os.makedirs(os.path.dirname(p) or ".", exist_ok=True)
+                    if not os.path.isfile(p) or open(p, "rb").read() != data:
+                        open(p, "wb").write(data)
+                        restored.append(p)
+                elif os.path.lexists(p):
+                    os.remove(p)
+                    removed.append(p)
+            elif b in SECTION_KEEP or b == "package.json":
+                if not os.path.isfile(p):
+                    continue
+                head_t = open(p, encoding="utf-8", errors="replace").read()
+                base_b = show(base, p) if p in base_files else None
+                base_t = base_b.decode("utf-8", "replace") if base_b is not None else ""
+                new = swap_package(head_t, base_b and base_t) if b == "package.json" else swap_sections(head_t, base_t, SECTION_KEEP[b])
+                if new != head_t:
+                    open(p, "w", encoding="utf-8").write(new)
+                    swapped.append(p)
+        say("base: restored %d file(s) from %s, removed %d the change added, put back the runner parts of %d" % (
+            len(restored), base[:12], len(removed), len(swapped)))
+        for label, xs in (("restored", restored), ("removed", removed), ("runner parts", swapped)):
+            if xs:
+                say("  %s: %s" % (label, ", ".join(xs[:30]) + (" and %d more" % (len(xs) - 30) if len(xs) > 30 else "")))
+        return sum(1 for p in base_files if is_test(p))
+
+
+    def run(cmd, env=None):
+        say("$ " + cmd)
+        p = subprocess.run(["bash", "-c", cmd], env=env)
+        if p.returncode != 0:
+            raise SystemExit("install step failed (exit %d): %s" % (p.returncode, cmd))
+
+
+    def install():
+        """Environment folders deleted, then dependencies installed only from the lockfile (D-251)."""
+        for d in subprocess.run(["find", ".", "-name", ".git", "-prune", "-o", "-type", "d", "(", "-name", ".venv", "-o", "-name",
+                                 "venv", "-o", "-name", ".tox", "-o", "-name", "node_modules", ")", "-prune", "-print"],
+                                capture_output=True, text=True).stdout.split():
+            shutil.rmtree(d, ignore_errors=True)
+            say("deleted %s (rebuilt from the lockfile)" % d)
+        env = dict(os.environ, POETRY_VIRTUALENVS_IN_PROJECT="true", UV_PROJECT_ENVIRONMENT=".venv")
+        did = False
+        if os.path.isfile("uv.lock"):
+            run("python3 -m pip install --quiet uv==0.13.4 && uv sync --frozen", env)
+            did = True
+        elif os.path.isfile("poetry.lock"):
+            run("python3 -m pip install --quiet poetry==2.5.1 && poetry sync", env)
+            did = True
+        else:
+            reqs = [f for f in ("requirements-dev.txt", "requirements-test.txt", "requirements.txt") if os.path.isfile(f)]
+            if reqs:
+                hashed = all("--hash=" in open(f).read() for f in reqs)
+                run("python3 -m venv .venv && .venv/bin/python -m pip install --quiet %s%s" % (
+                    "--require-hashes " if hashed else "", " ".join("-r " + f for f in reqs)), env)
+                did = True
+        if os.path.isfile("pnpm-lock.yaml"):
+            run("corepack enable && pnpm install --frozen-lockfile", env)
+            did = True
+        elif os.path.isfile("yarn.lock"):
+            berry = "__metadata:" in open("yarn.lock").read()
+            run("corepack enable && yarn install %s" % ("--immutable" if berry else "--frozen-lockfile"), env)
+            did = True
+        elif os.path.isfile("package-lock.json"):
+            run("npm ci", env)
+            did = True
+        if not did:
+            say("no lockfile found: nothing installed")
+        path = [os.path.abspath(p) for p in (".venv/bin", "node_modules/.bin") if os.path.isdir(p)]
+        return dict(os.environ, PATH=os.pathsep.join(path + [os.environ.get("PATH", "")]), CI="1", NO_COLOR="1", FORCE_COLOR="0")
+
+
+    def main():
+        os.makedirs(REPORTS, exist_ok=True)
+        head = git("rev-parse", "HEAD").strip()
+        want_base = os.environ.get("WF_BASE_SHA") or ""
+        if not want_base:
+            default = os.environ.get("WF_DEFAULT_BRANCH") or "main"
+            want_base = "origin/" + default
+        base = git("merge-base", want_base, head).strip()
+        rec_raw = show(base, REC)
+        source = "the merge base"
+        if rec_raw is None:     # D-261: never the change's own record; the owner reviews the first Workforce pull request
+            raise SystemExit("FAIL: base branch has no Workforce install record; the first Workforce pull request is approved "
+                             "by the owner on review, not by CI")
+        try:
+            rec = json.loads(rec_raw.decode("utf-8")) if rec_raw else {}
+        except ValueError:
+            rec = {}
+        v = rec.get("test_cmd")
+        cmds = [x.strip() for x in (v if isinstance(v, list) else [v]) if isinstance(x, str) and x.strip()]
+        globs = rec.get("test_globs") if isinstance(rec.get("test_globs"), list) and rec.get("test_globs") else DEFAULT_GLOBS
+        say("workforce-proof %s-suite: commit %s, merge base %s; test commands from %s: %s" % (
+            MODE, head[:12], base[:12], source, ", ".join("`%s`" % c for c in cmds) or "none"))
+        if not cmds:
+            raise SystemExit("FAIL: no test command recorded in %s" % REC)
+        named = set()
+        for c in cmds:
+            for t in _simple_commands(c):
+                for tok in t[1:]:
+                    tok = tok[2:] if tok.startswith("./") else tok
+                    if tok and not tok.startswith("-") and not os.path.isabs(tok) and os.path.isfile(tok):
+                        named.add(os.path.normpath(tok))
+        if MODE == "base":
+            n_base_tests = put_back_base(base, globs, named)
+            if n_base_tests == 0:   # D-261: no free pass; the owner's review decides this pull request
+                open(os.path.join(REPORTS, "summary.json"), "w").write(json.dumps({"mode": MODE, "result": "no base tests"}))
+                raise SystemExit("FAIL: no base tests to run; the owner's review decides this pull request")
+        env = install()
+        ok, total_p, total_f = True, 0, 0
+        for i, c in enumerate(cmds):
+            rdir = os.path.join(REPORTS, "cmd%d" % (i + 1))
+            os.makedirs(rdir, exist_ok=True)
+            run_cmd, kind, rpath = report_plan(c, rdir)
+            if kind == "output":
+                say("FAIL: `%s` has no machine report the judge can read; record a direct runner command" % c)
+                ok = False
+                continue
+            say("$ " + run_cmd)
+            p = subprocess.run(["bash", "-c", run_cmd], env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            sys.stdout.write(p.stdout[-20000:])
+            counts = read_report(kind, rpath, p.stdout)
+            if counts is None:
+                say("FAIL: `%s` wrote no report (exit %d)" % (c, p.returncode))
+                ok = False
+                continue
+            total_p, total_f = total_p + counts[0], total_f + counts[1]
+            good = p.returncode == 0 and counts[0] >= 1 and counts[1] == 0
+            say("%s: `%s`: exit %d, %d passed, %d failed or errored" % ("PASS" if good else "FAIL", c, p.returncode, counts[0], counts[1]))
+            ok = ok and good
+        open(os.path.join(REPORTS, "summary.json"), "w").write(json.dumps({"mode": MODE, "head": head, "base": base, "commands": cmds,
+                                                                           "passed": total_p, "failed": total_f, "ok": ok}))
+        say("%s-suite: %s (%d passed, %d failed or errored)" % (MODE, "PASS" if ok else "FAIL", total_p, total_f))
+        return 0 if ok else 1
+
+
+    if __name__ == "__main__":
+        try:
+            rc = main()
+        except SystemExit as e:
+            if isinstance(e.code, str):
+                say(e.code)
+                rc = 1
+            else:
+                rc = e.code or 0
+        if os.environ.get("GITHUB_STEP_SUMMARY"):
+            with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as fh:
+                fh.write("```\n" + "\n".join(SUMMARY) + "\n```\n")
+        sys.exit(rc)
+
+jobs:
+  head-suite:
+    name: head-suite
+    if: github.event_name == 'pull_request' || github.ref_name != github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: judge
+        run: python3 -c "$WF_JUDGE" head
+        env:
+          WF_REPORTS: ${{ runner.temp }}/wf-reports
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        if: always()
+        with:
+          name: head-suite-reports
+          path: ${{ runner.temp }}/wf-reports
+          retention-days: 14
+          if-no-files-found: ignore
+  base-suite:
+    name: base-suite
+    if: github.event_name == 'pull_request' || github.ref_name != github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: judge
+        run: python3 -c "$WF_JUDGE" base
+        env:
+          WF_REPORTS: ${{ runner.temp }}/wf-reports
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        if: always()
+        with:
+          name: base-suite-reports
+          path: ${{ runner.temp }}/wf-reports
+          retention-days: 14
+          if-no-files-found: ignore

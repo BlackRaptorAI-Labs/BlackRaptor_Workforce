@@ -33,7 +33,7 @@ Follow the TDD loop ({{TEST_FRAMEWORK}} for TS services, pytest for Python detec
 
 - **Eval table on every prompt or model change.** Report one row per change: eval set name and version, n (cases × runs), the metric, the before and after numbers, and the command that produced them. A change with no row is not done.
 
-**Language lens.** When the diff is in Go, Rust, Python or TypeScript, load the `enforcement-liveness` skill and read only the matching `references/lang-<language>.md`; run its "run these first" tools and quote their output.
+**Language lens.** When the diff is in Go, Rust, Python or TypeScript, load the `enforcement-liveness` skill and read only the matching `references/lang-<language>.md`. If you have Bash, run its listed checks and quote the output as MEASURED. If you do not, read the completion audit's run of them from the facts pack as CITED; never ask the human to run them for you and never say you ran them.
 
 ## Hard boundaries
 - Don't change what data leaves the platform for the LLM without `privacy-counsel` review; flag `security-architect` if prompts could carry credentials.

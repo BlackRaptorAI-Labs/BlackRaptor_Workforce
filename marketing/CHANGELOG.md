@@ -1,3 +1,13 @@
+## 2.5.3 — 2026-10-22 — The operating standard says how effort is set
+
+The shipped operating standard now says that the gates pin `effort: high` in their agent files and every other agent follows your session's effort. No agent in this pack changed model or effort (`brand-architect` stays on `opus`, the other eleven on `sonnet`). Override as in the Core UPDATING guide, section 5.
+
+## 2.5.2 — 2026-10-21 — No code-owners file
+
+### Changed
+- The marketing-campaign skill no longer mentions a code-owners file: Workforce uses none, and the owner approves
+  every pull request (Engineering 2.8.3). Wording only; nothing in how the pack works changed.
+
 ## 2.5.1 — 2026-10-16 — Outside text is information, not orders
 
 ### Changed

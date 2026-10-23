@@ -1,12 +1,15 @@
 # Updating Your BlackRaptor Workforce
 
 *BlackRaptor Workforce alpha — updating installed packs. Covers the alpha packs: Core,
-Engineering, Council, Hardware, Marketing. Last updated 2026-10-17.*
+Engineering, Council, Hardware, Marketing. Last updated 2026-10-20.*
 
 Claude turns automatic updates **off by default** for marketplaces that Anthropic doesn't run,
 including ours — so unless you've switched auto-update on for the BlackRaptor marketplace,
 updates won't reach you on their own. Either way, a new pack version won't appear in a
 conversation that's already running. This page shows you how to update, on both surfaces.
+
+> **Workforce 2.8.3 needs /workforce-init --upgrade in each repo (run it from your own terminal). Until then
+> test-auditor and completion-auditor passes are blocked.** See [2.8.3](#283--what-changed-and-what-you-must-update).
 
 ## 2.0.0 — what changed, and what you must update
 
@@ -38,8 +41,11 @@ install yourself — so on a marketplace install nothing checked the contract at
 
 **If it gets in your way, turn it off:** set `BR_VERDICT_HOOK=off` in your environment. When
 disabled, the hook writes one line to stderr. Interactive sessions show it; `claude -p` does not
-surface hook stderr, so on that path check the `BR_VERDICT_HOOK` variable instead. It fails open on its own
-errors and never blocks the same turn twice.
+surface hook stderr, so on that path check the `BR_VERDICT_HOOK` variable instead. It fails closed on its own
+errors (D-267): a crash blocks the turn with "the verdict check crashed (...): this turn is not gated; report it",
+and a missing python3 or helper prints "gates in this turn are NOT checked" on every stop. It judges every stop, including the one after it blocked, so a re-emitted block is checked too; it
+blocks at most 3 times in one turn, and after that it lets the turn end with a message that starts
+"Verdict check FAILED and was not fixed:", so the failure is on record.
 
 ### 3. Two gate seats moved (Engineering pack)
 
@@ -131,6 +137,121 @@ If you start sessions with `ALLOW_TIER3=1` to allow intentional Tier-3 edits, sw
 `BR_CLAIMS_HOOK=off` still work for one hook each. No action needed unless you want it.
 
 ---
+
+## 2.8.3 — what changed, and what you must update
+
+### 1. Re-run the installer in each repo, from your own terminal
+
+Run `/workforce-init --upgrade` once in each repo you installed with `/workforce-init` (or run the script it
+prints from your own terminal if the sandbox is already on). It turns on the sandbox settings below, records
+your test command, and, in plugin mode, records the enforcement files' fingerprints and your test runner
+config. Without a recorded test command, a test-auditor or completion-auditor PASS is blocked with "no test
+command recorded"; add one with `--upgrade --test-cmd "<your test command>"`. Record the test runner itself
+(for example `python3 -m pytest`, `npx vitest run`, `go test ./...`, or `npm test` when the package.json test
+script is a single jest, vitest, mocha or `node --test` command): a script, `make test` or `turbo test` has no
+report the hook can read, so a PASS on it is blocked (section 3 below lists what to record instead). Until you
+upgrade, each new session in that repo says so.
+
+### 2. What the hooks can and cannot do
+
+Hooks catch honest mistakes and shortcuts; they are not a security boundary on their own. With the sandbox
+on, the enforcement files are protected: no agent's shell command can write them. `/workforce-init` now turns
+on `sandbox.failIfUnavailable` (Claude Code will not start without the sandbox), turns off unsandboxed
+commands, and lists every enforcement file in `sandbox.filesystem.denyWrite`. `--no-sandbox` opts out and says
+what you give up. CI decides whether tests pass, on a clean machine, for the exact commit. The local check is
+an early warning. Agents judge whether tests are strong. You decide. A test-auditor or completion-auditor PASS
+stands only when GitHub Actions ran the workforce-proof workflow for the exact commit and both its jobs passed
+(section 4); until then the review check says INCOMPLETE. Code under test that is written to cheat its own
+tests runs inside CI too; it is visible in the diff, where code-reviewer and a person review it. Before CI is
+asked, the hook runs your test command itself as an early warning, not by what the reviewer printed. That run
+blocks a suite that runs no test or fails one; a test the change skips, rewrites
+or deletes still runs in CI's base-suite.
+When the runner config changes (the pytest, jest, vitest, mocha, karma and playwright config files, the pytest parts of pyproject.toml, setup.cfg and tox.ini, setup.py and pytest11 entry points, the test scripts and test-runner keys in package.json, files the test command names, and in an in-repo virtualenv or node_modules the startup files (.pth, sitecustomize.py, usercustomize.py), pytest plugin entry points, install state and the files a jest, vitest or mocha config names there), the PASS is blocked until a person reviews the change and runs
+`/workforce-init --accept-runner-config` from their own terminal; the hooks README has the full list. Without
+the CI judge (`--no-ci-judge`), anything else the test run loads can still be written to fake a pass; CI on every
+pull request is the proof.
+Tamper detection needs plugin mode: when a hook file, an allow
+file or the hooks in `.claude/settings.json` change, the next stop blocks until you run `--upgrade` (add
+`--replace-enforcement` for a changed hook file) or `--accept-changes` if you made the change. Without the
+sandbox, the tamper check can also be edited, so it no longer protects you. Nothing in a session replaces CI:
+CI should re-run the tests on every pull request.
+
+### 3. Direct test commands
+
+The hook needs a test command whose runner writes a machine report, so record the runner itself. You can record
+several with `/workforce-init --upgrade --test-cmd "<first>" --test-cmd "<second>"`; each must pass.
+
+| Your project | Record this | Not this (no machine report) |
+|---|---|---|
+| Python, pytest | `python3 -m pytest -q`, `.venv/bin/python -m pytest -q`, `uv run pytest -q`, `poetry run pytest -q` | `make test`, `nox`, a script |
+| Python, tox | the pytest command tox runs, with that env's interpreter: `.tox/py/bin/python -m pytest -q` | `tox` |
+| JavaScript, jest | `npx jest`, or `npm test` when the package.json test script is just `jest` | an `npm test` script that runs several tools |
+| JavaScript, vitest | `npx vitest run` | |
+| Node's own runner | `node --test` | |
+| mocha | `npx mocha` | |
+| Go | `go test ./...` | `make test` |
+| Rust | none yet: `cargo test` has no report the hook reads; CI is the check | `cargo test` |
+| .NET | `dotnet test` | |
+| Java | `mvn test` or `./mvnw test` | `gradle test` (no reader yet) |
+| Bun | `bun test` | |
+| Monorepo: pnpm + turbo + vitest | `npx vitest run` with a vitest workspace file that lists the packages, or one entry per package: `--test-cmd "npx vitest run --root packages/a" --test-cmd "npx vitest run --root packages/b"` | `pnpm test`, `turbo test` |
+| Monorepo: nx + jest | one entry per project: `--test-cmd "npx jest -c apps/web/jest.config.ts"` | `nx test`, `nx run-many` |
+
+### 4. CI is the judge
+
+2.8.3 adds `.github/workflows/workforce-proof.yml` to the engineering pack. Its two jobs run on GitHub Actions for
+every push to a branch and every pull request: `head-suite` runs your recorded test commands on the commit as
+pushed, installing only from your lockfile; `base-suite` runs them again with the base branch's own tests and
+test-runner config put back. The review check reads those two results for the exact commit.
+
+1. Run `/workforce-init --upgrade` from your own terminal (it installs the workflow and records its hash).
+2. Commit and push; let both jobs run once.
+   A repo cloned onto a second machine has no tamper baseline there. Any turn that dispatched an agent then blocks with
+   "tamper baseline missing" until you run `/workforce-init --upgrade` from your own terminal; the session start says so.
+3. From your own terminal: `/workforce-init --setup-branch-protection`. It asks GitHub to require `head-suite`
+   and `base-suite` (up to date with the base) and one approving review, with stale approvals dismissed
+   (`--dry-run` prints the call;
+   the doctor reads back what GitHub set). It needs your admin login. On GitHub Free this needs a public
+   repo or a paid plan for a private one.
+4. Agents and the build account open pull requests and must not be admins on the repo. You approve every pull
+   request and merge it; required checks and your approval gate the merge. GitHub does not let you approve
+   your own pull request, so yours merge by an admin override, which GitHub shows as a bypass. Workforce no longer uses a code-owners file (D-258).
+   GitHub counts one approval from anyone with write access. Keep write access to you and one agent or build
+   account, so the approval is yours. Record them with `/workforce-init --upgrade --owner-login <your GitHub login>
+   --agent-account <build account>`; from your own terminal, `/workforce-doctor` lists everyone with write, maintain or
+   admin access and reports a FAIL when anyone else has it. Keep the repo setting "Allow GitHub Actions to create and
+   approve pull requests" off.
+5. Install and sign in to the GitHub CLI (`gh auth login`) where you run Claude Code: the review check reads CI
+   with it.
+
+No GitHub, or Actions off: a test pass stays INCOMPLETE. `/workforce-init --upgrade --no-ci-judge` makes this
+machine's check the judge, and every result says it can be faked; `--ci-judge` turns CI back on.
+
+**A pnpm + turbo + vitest monorepo.** CI runs the commands you record, not `pnpm test`. Record
+one direct command per package, or one with a vitest workspace file:
+
+```
+/workforce-init --upgrade --test-cmd "npx vitest run --root packages/api" --test-cmd "npx vitest run --root packages/web"
+```
+
+Commit `pnpm-lock.yaml` and set `packageManager` in the root `package.json`; CI runs `pnpm install
+--frozen-lockfile`. Each command must pass on its own, and a red package names itself ("command 2 of 2"). This
+was run on GitHub with a two-package workspace: green passed both jobs; breaking one package failed both and named it.
+
+### 5. Models and effort moved (22 Oct 2026)
+
+Six agents now run on `opus` instead of `sonnet`: `ux-designer` (a gate), `product-manager`, and the council seats `revenue`, `gtm-strategy`,
+`people-org` and `technology-strategy`. Every gate (17) now has `effort: high` in its own agent file, so a gate does not run thin because your
+session is set low. `principal-architect` uses `model: best`, which Claude Code resolves to the strongest model your account has (Opus
+if it has nothing stronger), with `effort: high`. No other agent has an `effort:` line, so your session's effort setting decides for them.
+
+Cost effect: the six moved agents cost about twice as much per token (Sonnet 5.5 $2 in and $10 out per million tokens, Opus 5.5 $4 and $20); a gate may
+run at a higher effort than your session; `principal-architect` on a model stronger than Opus costs more again (the top published tier is $10 and $50 per million).
+
+To override: your session's effort setting for every agent without an `effort:` line; the environment variable `CLAUDE_CODE_EFFORT_LEVEL` for every agent,
+gates included; `CLAUDE_CODE_SUBAGENT_MODEL` for a subagent's model when the call and the agent file name none. To pin the architect to Opus instead of
+`best`, edit `principal-architect`'s frontmatter to `model: opus` and `effort: xhigh`. `/workforce-doctor` prints each gate's model and effort as the files
+ask for them; it cannot see what a past run used.
 
 ## The one rule to remember
 

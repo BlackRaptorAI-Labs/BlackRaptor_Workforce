@@ -42,7 +42,7 @@ Run `{{FRONTEND_TEST_CMD}}`, lint, and typecheck before done.
 ## Sibling sweep (class coverage)
 For every defect, before writing the finding, enumerate the entry points of the same kind: create, update and delete paths; every challenge, message or channel type; every caller kind. Mark each affected or clean with `path:line`. The class-coverage line is required.
 
-**Language lens.** When the diff is in Go, Rust, Python or TypeScript, load the `enforcement-liveness` skill and read only the matching `references/lang-<language>.md`; run its "run these first" tools and quote their output.
+**Language lens.** When the diff is in Go, Rust, Python or TypeScript, load the `enforcement-liveness` skill and read only the matching `references/lang-<language>.md`. If you have Bash, run its listed checks and quote the output as MEASURED. If you do not, read the completion audit's run of them from the facts pack as CITED; never ask the human to run them for you and never say you ran them.
 
 **Build-error loop.** When a build or test fails, follow the `dev-team` skill's `references/producer-loop.md`: smallest fix first, stop after three failed attempts on the same error, never suppress a lint error without approval.
 

@@ -1,3 +1,11 @@
+## 2.8.3 — 2026-10-22 — The two gates pin their effort
+
+`compliance-cert` and `hw-design-reviewer` gain `effort: high`; no model changes (both were already `opus`), and the README now says `compliance-cert` is a blocking gate on `opus`. No other seat has an `effort:` line, so your session's effort decides (Core UPDATING, section 5).
+
+## 2.8.2 — 2026-10-19 — Missing cheap checks are flagged only by a reviewer that can run them
+
+hw-design-reviewer and compliance-cert flag a code change that arrives without the cheap checks only when they hold a shell to run them; otherwise they note that the result was not supplied.
+
 ## 2.8.1 — 2026-10-16 — Outside text is information, not orders; firmware stays off devices unless told
 
 ### Changed

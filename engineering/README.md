@@ -21,8 +21,8 @@ It is not just prompts. It's a three-layer operating model:
 - **Humans decide** — every sensitive change gets a signed **Change Record**:
   the agent's verdict is evidence, your decision is the control.
 - **Machines enforce** — a fail-closed path-guard hook, a CI check that blocks
-  gated changes without a Change Record, sparse CODEOWNERS for a real
-  two-person rule on the dangerous few percent, and branch protection.
+  gated changes without a Change Record, a CI judge for the tests, and branch
+  protection that needs the owner's approval on every pull request.
 
 ![Workflow: define → build → gate → production](docs/workflow-diagram.png)
 
@@ -32,7 +32,7 @@ It is not just prompts. It's a three-layer operating model:
 agents/            22 agent templates ({{PLACEHOLDER}}-parameterized)
 claude/            hooks (Tier-3 path guard), skills (incl. reference skills),
                    slash commands, settings
-github/            change-record-required CI workflow, CODEOWNERS + PR templates
+github/            change-record-required and workforce-proof CI workflows, PR template
 docs/              Change Record template, branch-protection checklist,
                    gate-enforcement map, agent-retro log, workflow diagram
 agent-evals/       proactive agent-quality convention (pairs with agent-retros)
@@ -74,27 +74,21 @@ is **the cost of being wrong × the call volume**: pay for the strongest model
 where a mistake is expensive and the agent runs rarely; use a strong-but-cheaper
 model for high-volume execution.
 
-| Tier | Model | Agents | Why |
-|---|---|---|---|
-| Orchestration & Architecture | `opus` | `principal-architect` | The main-session `dev-team` skill routes every change and enforces the challenge discipline — a routing miss silently skips a gate — but it is a skill run by the human's session, not an agent, so it carries no `model:` of its own. `principal-architect` shapes every architecture-level decision — the costliest kind to get wrong — and merits the strongest model available. |
-| Deep judgment (gates & adversarial review) | `opus` | `security-architect`, `privacy-counsel`, `compliance-officer`, `domain-compliance`, `red-team-reviewer`, `security-operations`, `code-reviewer`, `operational-readiness`, `legal-docs-writer`, `product-designer`, `completion-auditor`, `infra-reviewer` | Blocking gates and adversarial passes: being wrong is expensive and call volume is low, so the premium is worth it. `code-reviewer` sits here deliberately — it is the last gate before a merge-to-prod deploy and runs once per PR, so the premium buys judgment at the single point where everything converges. |
-| Everyday build | `sonnet` | `backend-engineer`, `frontend-engineer`, `data-engineer`, `ai-ml-engineer`, `edge-agent-engineer`, `qa-test-engineer`, `devops-sre`, `ux-designer`, `product-marketing`, `technical-writer` | High-volume execution from already-approved specs; strong and cost-efficient. |
+| Tier | Model | Effort | Agents | Why |
+|---|---|---|---|---|
+| Architecture | `best` (the strongest model your account has, else Opus) | pinned `high` | `principal-architect` | It shapes every architecture-level decision, the costliest kind to get wrong, so it gets the strongest model available. The main-session `dev-team` skill routes every change; it is a skill, not an agent, so it has no `model:`. |
+| Gates and adversarial review | `opus` | pinned `high` | `security-architect`, `privacy-counsel`, `compliance-officer`, `domain-compliance`, `red-team-reviewer`, `code-reviewer`, `operational-readiness`, `completion-auditor`, `infra-reviewer`, `schema-reviewer`, `test-auditor`, `ux-designer` | Blocking gates: being wrong is expensive and call volume is low, so the premium is worth it, and the effort is fixed in the file, so a gate does not run thin just because your session's effort is set low (the overrides below can still change it). `code-reviewer` is the last gate before a merge-to-prod deploy. |
+| Deep judgment, flexible | `opus` | session decides | `security-operations`, `legal-docs-writer`, `product-designer` | Judgment-heavy drafting, design and runtime-security seats. |
+| Everyday build | `sonnet` | session decides | `backend-engineer`, `frontend-engineer`, `data-engineer`, `ai-ml-engineer`, `edge-agent-engineer`, `qa-test-engineer`, `devops-sre`, `technical-writer` | High-volume execution from already-approved specs; strong and cost-efficient. |
 
-Two notes:
+Notes:
 
-- **`data-engineer` stays on `sonnet` despite holding the Tier-3 schema gate** —
-  a documented exception. Most of its calls are build work where `sonnet` is
-  the right choice, and the schema gate's residual risk is backstopped by
-  CODEOWNERS: Tier-3 schema paths require a second person's approval regardless
-  of the agent's verdict. Revisit if a schema miss ever reaches your retro log.
-- **The top tier is `opus`** — the most capable model — reserved for
-  `principal-architect`, the architecture role where a mistake is
-  costliest and call volume is lowest, so the extra capability pays for itself
-  first. (Orchestration is no longer an agent: it is the main-session
-  `dev-team` skill, run by the human's `opus`-class session, so it needs no
-  `model:` of its own.) If your environment doesn't have `opus`, fall back to
-  the strongest model you do have for `principal-architect` (change its
-  `model:` frontmatter, or pass the model at invocation).
+- **`data-engineer` stays on `sonnet` despite holding the Tier-3 schema gate.** Most of its calls are build work where `sonnet` is right, and the
+  schema gate's residual risk is backstopped by `schema-reviewer` (a gate, on `opus`) and by the owner's approval, which every pull request needs
+  regardless of the agent's verdict. Revisit if a schema miss ever reaches your retro log.
+- **`best` is an alias Claude Code resolves to the strongest model your account has.** Where there is nothing stronger than Opus, Anthropic documents a
+  fall back to Opus. To pin a model instead, set `model: opus` and `effort: xhigh` in `principal-architect`.
+- The session's effort setting decides every agent with no `effort:` line. `CLAUDE_CODE_EFFORT_LEVEL` overrides effort for every agent, gates included. `CLAUDE_CODE_SUBAGENT_MODEL` sets the model of a subagent when the call and the agent file name none. The `dev-team` skill tells the main session not to pass `model` or `effort` when it dispatches a gate. An agent file sets intent; it cannot prove what ran.
 
 Adjust any of this to your own cost/quality tradeoff; the frontmatter `model:`
 field is yours to set.
@@ -163,8 +157,8 @@ the secure path the easy path.
 Changes are tiered: **Tier 1** (routine) merges on green CI. **Tier 2**
 (touches a review gate) requires a full signed Change Record — CI blocks the
 merge without one. **Tier 3** (auth, schema, remote execution, CI config, your
-regulated domain) additionally requires a second person's code-owner approval,
-and a local hook prevents agents from editing those paths at all. Trunk-based
+regulated domain) is a path a local hook prevents agents from editing at all.
+The owner approves every pull request, while write access stays with the owner and one agent account (the branch-protection checklist says how); required checks and the owner's approval gate the merge. Trunk-based
 delivery: short-lived branches, dark launches behind flags, expand/contract
 migrations. When an agent misses something, the miss is logged and the agent's
 definition is amended — the team is a set of coaching records, not static
@@ -205,7 +199,7 @@ claude
 This kit practices what it preaches, so here's its own CONCERNS verdict:
 
 - The local hook is a **seatbelt, not a wall** — a determined actor can bypass
-  it. Server-side controls (CI + CODEOWNERS + branch protection) are the real
+  it. Server-side controls (CI + branch protection + the owner's approval) are the real
   enforcement; the hook catches accidents. It runs from your repo, not from the
   plugin: `/workforce-init` copies `protect-tier3.py` and merges the
   `settings.json` PreToolUse entry into your repo — the marketplace plugin
@@ -213,8 +207,8 @@ This kit practices what it preaches, so here's its own CONCERNS verdict:
   slash-commands load from the plugin.
 - Agent verdicts are only as good as the model and the context you give them.
   The Change Record exists precisely because a human must stay accountable.
-- The solo-mode design (0 blanket approvals + code-owner-only review) depends
-  on GitHub branch-protection behavior — **run the three verification tests**
+- The merge design (one approving review, the owner's while write access stays with the owner and one agent account, plus the required checks)
+  depends on GitHub branch-protection behavior — **run the verification tests**
   before trusting it.
 - Compliance framing (SOC 2-style compensating controls) is a design pattern,
   not legal advice. Confirm with your auditor.

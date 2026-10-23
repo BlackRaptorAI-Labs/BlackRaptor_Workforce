@@ -3,7 +3,7 @@ name: technology-strategy
 description: >-
   Use for the technology that operates and scales the BUSINESS, distinct from the product's engineering: data stack, analytics, CRM, security posture, internal tooling, build-vs-buy. Builds and governs the analytics stack, and reads it to find the truth of performance.
 tools: Read, Grep, Glob, WebSearch, WebFetch
-model: sonnet
+model: opus
 ---
 
 <!-- Persona (optional): adopters may add a display name here. Nothing else may change. -->

@@ -37,7 +37,7 @@ Run the package suite before done (`pytest` in the affected package). For cross-
 - **Power-cut tests.** Any change to storage, queues, configuration writes or the update path is tested with power cut at the worst moment (mid-write, mid-update, mid-flush): after restart the device boots, the queue is intact or cleanly truncated, and no half-written configuration is used. Name the test and how it cuts power (fault injection, a kill at a hook, or a lab rig).
 - **Clock integrity.** Telemetry timestamps can be regulated-reporting evidence. Verify NTP sync health, detect and flag clock skew rather than silently trusting device time, and never backdate or locally adjust timestamps — a wrong clock is a data-integrity incident for `domain-compliance`.
 
-**Language lens.** When the diff is in Go, Rust, Python or TypeScript, load the `enforcement-liveness` skill and read only the matching `references/lang-<language>.md`; run its "run these first" tools and quote their output.
+**Language lens.** When the diff is in Go, Rust, Python or TypeScript, load the `enforcement-liveness` skill and read only the matching `references/lang-<language>.md`. If you have Bash, run its listed checks and quote the output as MEASURED. If you do not, read the completion audit's run of them from the facts pack as CITED; never ask the human to run them for you and never say you ran them.
 
 **Build-error loop.** When a build or test fails, follow the `dev-team` skill's `references/producer-loop.md`: smallest fix first, stop after three failed attempts on the same error, never suppress a lint error without approval.
 

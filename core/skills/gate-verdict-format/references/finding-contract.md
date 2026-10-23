@@ -1,4 +1,4 @@
-# Finding contract (gate-verdict-format v3.3, long form)
+# Finding contract (gate-verdict-format v3.4, long form)
 
 The SKILL states the rules. This file holds the detail a gate needs while writing a row.
 
@@ -93,7 +93,13 @@ A PASS must be re-checkable by someone who was not there. The validator rejects:
 
 It accepts, for example, `CITED reports.ts:27 tenant_id taken from req.auth` or
 ``MEASURED `npm test -- dedupe` 14 passed, 0 failed``. For the test-quality and completion gates the
-PASS opens with `MEASURED`: a quality gate's PASS rests on a run. If you cannot meet this, the honest
+PASS rests on a run: it opens with `MEASURED`, or (schema v3.4) a gate without Bash cites the completion
+audit's run as `CITED`, then that audit's output path, then the backticked command it ran:
+``CITED .claude/audit/ladder.txt `npm test -- dedupe` 14 passed, 0 failed``. A path with no command is
+rejected. The validator checks only this shape. In a live session the `Stop` hook checks the result itself:
+it runs the project's recorded test command (`test_cmd` in `.claude/workforce-installed.json`) and blocks the
+PASS unless that run exits 0 and its report shows at least 1 passed and 0 failed. What the gate printed is not
+read. If the recorded command names test files, one must reach the change. If you cannot meet this, the honest
 verdict is CONCERNS (with the run as a condition) or COULD NOT ASSESS (with a `reason`).
 
 ## MEASURED evidence (schema v3.3)

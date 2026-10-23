@@ -36,7 +36,7 @@ the full standard behind every rule included in `hw-engineering/docs/`.
     - `rf-connectivity` (Opus) — antennas, modems, link budgets, cert-preserving RF config
     - `embedded-firmware` (Sonnet) — boot/secure boot, OTA/rollback, watchdog, storage, provisioning; checklist discipline
     - `reliability-dfr` (Opus) — DFMEA, derating audit, MTBF, failure economics
-    - `compliance-cert` (Sonnet) — standards mapping, cert plan, design pre-checks; checklist discipline
+    - `compliance-cert` (Opus) — standards mapping, cert plan, design pre-checks; a blocking gate
     - `manufacturing-dfm` (Sonnet) — assembly, tolerances, test points, AVL, yield; checklist discipline
     - `cost-engineer` (Sonnet) — should-cost, landed cost, driver ranking, RFQ program; checklist discipline
     - `hw-design-reviewer` (Opus) — cross-cutting adversarial reviewer; not a seat, a gate
@@ -80,10 +80,13 @@ buildable.
 ## Model tiering
 
 Follows the rule: **Opus** for judgment-heavy
-design and review seats — its failure mode is narrow under-verification, so the
-verification loop stays mandatory; **Sonnet** for well-scoped seats with the
-Excellence Pass items written as explicit, visibly-completed checklist steps —
-it performs them at top-tier level when named, and skips them when not.
+design and review seats, where the verification loop stays mandatory; **Sonnet**
+for well-scoped seats with the Excellence Pass items written as explicit,
+visibly-completed checklist steps (a step that is named is carried out; one that
+is not named may be skipped).
+The two gates, `compliance-cert` and `hw-design-reviewer`, are `opus` with
+`effort: high` pinned in their files; no other seat has an `effort:` line, so
+your session's effort setting decides. The session's effort setting decides every agent with no `effort:` line. `CLAUDE_CODE_EFFORT_LEVEL` overrides effort for every agent, gates included. `CLAUDE_CODE_SUBAGENT_MODEL` sets the model of a subagent when the call and the agent file name none. The `dev-team` skill tells the main session not to pass `model` or `effort` when it dispatches a gate. An agent file sets intent; it cannot prove what ran.
 
 ## Using it on a program
 

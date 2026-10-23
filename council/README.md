@@ -99,14 +99,16 @@ task volume:
 
 | Tier | Seats | Why |
 |---|---|---|
-| **Opus** | `finance`, `ethics-governance`, `fundraising-ir` | Highest judgment stakes: finance owns capital allocation and downside math; ethics-governance holds legal judgment and BLOCK authority; fundraising-ir analyzes terms where a missed nuance costs equity. (Convening/synthesis is the main-session `council` skill — run by the human's `opus`-class session, not a seat with a `model:` of its own — where a subtle failure would corrupt everything downstream.) |
-| **Sonnet** | `market-insight`, `pricing-strategy`, `gtm-strategy`, `revenue`, `growth-engine`, `technology-strategy`, `people-org` | Analysis and strategy seats: strong reasoning over sources and frameworks, invoked frequently, cost-efficient. |
+| **Opus** (`effort: high` pinned on the gate) | `ethics-governance` (the gate, effort pinned) and `chair`, `coo`, `finance`, `fundraising-ir`, `ip-counsel`, `market-insight`, `pricing-strategy`, `gtm-strategy`, `people-org`, `revenue`, `technology-strategy` (effort follows your session) | Highest judgment stakes and advice a CEO may act on: capital, legal judgment and BLOCK authority, terms, market truth, pricing, go-to-market, hiring, revenue and technology choices. (Convening/synthesis is the main-session `council` skill, run by the human's session.) |
+| **Sonnet** | `growth-engine` | The one executor: high-volume campaign work, under human approval and `ethics-governance` review. |
 
-> `product-manager` (the product anchor) and `evidence-auditor` (the evidence gate)
-> run at `sonnet` and `opus` respectively but live in the shared **`blackraptor-core`**
-> plugin, auto-installed with this council — so their tiering is documented there.
+> `product-manager` (the product anchor, `opus`) and `evidence-auditor` (the evidence gate,
+> `opus` with `effort: high`) live in the shared **`blackraptor-core`**
+> plugin, auto-installed with this council, so their tiering is documented there.
 
-There is deliberately no cheaper volume tier: every council output is
+The session's effort setting decides every agent with no `effort:` line. `CLAUDE_CODE_EFFORT_LEVEL` overrides effort for every agent, gates included. `CLAUDE_CODE_SUBAGENT_MODEL` sets the model of a subagent when the call and the agent file name none. The `dev-team` skill tells the main session not to pass `model` or `effort` when it dispatches a gate. An agent file sets intent; it cannot prove what ran.
+
+There is deliberately no cheaper volume tier (the one `sonnet` seat is the executor): every council output is
 advice a CEO may act on, so the quality floor is uniform. Assignments are
 coaching records — if a seat under-reasons in practice, promote it (one
 line in its frontmatter). Ports should preserve the tiering with their

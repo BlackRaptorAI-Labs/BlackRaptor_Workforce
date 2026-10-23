@@ -11,8 +11,8 @@ prune` removes it if you later uninstall both teams.)
 
 | Component | Kind | Why it's shared |
 |---|---|---|
-| **`product-manager`** | agent (`sonnet`) | The end-to-end product owner — from *what to build and why it wins* (outcome thesis, JTBD, target customer, scope) through *the buildable definition* (user stories, acceptance criteria, success metrics, sequencing). It sits across the council (market demand) and engineering (delivery) and exists to keep the build matched to the market. |
-| **`evidence-auditor`** | agent (`opus`) | The adversarial gate for research, analysis, and evidence-based reporting. Central to the council (every recommendation rests on evidence) and the HEAVY-tier escalation for engineering's load-bearing claims (root-cause, perf/scale, vendor/tech selection). |
+| **`product-manager`** | agent (`opus`) | The end-to-end product owner — from *what to build and why it wins* (outcome thesis, JTBD, target customer, scope) through *the buildable definition* (user stories, acceptance criteria, success metrics, sequencing). It sits across the council (market demand) and engineering (delivery) and exists to keep the build matched to the market. |
+| **`evidence-auditor`** | agent (`opus`, `effort: high`) | The adversarial gate for research, analysis, and evidence-based reporting. Central to the council (every recommendation rests on evidence) and the HEAVY-tier escalation for engineering's load-bearing claims (root-cause, perf/scale, vendor/tech selection). |
 | **`research-integrity`** | skill | The three-mode research methodology `evidence-auditor` reviews the output of — tiered LITE / STANDARD / HEAVY, so light engineering research and heavy council research use the same engine at the right depth. |
 
 ## Why a bridge, not duplication

@@ -21,13 +21,17 @@ Usage: validate_verdict.py <file.md> [--require] [--json]
 
 --cr-mode (D-118, audit F5): the Change Record gate. On top of the checks above, a CR whose aggregate
 state is HAS_FAIL or HAS_COULD_NOT_ASSESS fails (exit 1) unless its "## 5. Deviations & risk
-acceptance" table has a row whose "What" cell names each FAIL / COULD NOT ASSESS gate (by its `gate`
-or `agent` value). A missing gate is still a missing gate: --cr-mode implies --require.
+acceptance" table has a row that accepts each FAIL / COULD NOT ASSESS gate (D-202): the "What" cell
+names the gate (its `gate` or `agent` value as a whole word, not a substring), "I decided" is
+ACCEPT-WITH-RISK or HUMAN-OVERRULES, and "Why acceptable" and "Approver" are filled (D-212: not n/a, none,
+TBD, ?, pending or todo, and the Approver is a person, not a gate or council slug). When several rows name
+one gate, every one of them must accept. A missing gate is still a missing gate: --cr-mode implies --require.
 """
 import json
 import os
 import re
 import sys
+import tempfile
 from pathlib import Path
 
 # Indent-tolerant: a ```verdict fence nested under a list item / inside <details>
@@ -37,8 +41,15 @@ FENCE = re.compile(r"^[ \t]*```verdict[ \t]*\n(.*?)\n[ \t]*```", re.S | re.M)
 
 SCHEMA_PATH = Path(__file__).with_name("verdict-schema.json")
 
-# Gates whose PASS must rest on a run (schema v3.2): their evidence opens with MEASURED.
+# Gates whose PASS must rest on a run (schema v3.2): their evidence opens with MEASURED, or (v3.4, D-201)
+# with CITED, completion-auditor's output path and the backticked command that run executed. This file checks
+# the shape only: it cannot see the session. The Stop hook checks the run (D-211): a passing test run that a
+# completion-auditor dispatched in the same turn made.
 QUALITY_GATES = {"test-auditor", "completion-auditor"}
+QUALITY_CITED = re.compile(r"^CITED\s+[^\s`]*[/.][^\s`]*\s+`[^`]+`")
+
+# --cr-mode §5 (D-202): the decisions that accept a FAIL / COULD NOT ASSESS gate.
+ACCEPTING = {"ACCEPT-WITH-RISK", "HUMAN-OVERRULES"}
 
 # The exact literal strings the CR template ships. A copy that changes only
 # verdict '___' → PASS but leaves these is a two-character rubber stamp; reject them.
@@ -105,21 +116,43 @@ def _standards_item_errs(item, idx, i):
     return errs
 
 
+def _repo_root(start):
+    """The first folder at or above `start` holding `.git` (a folder, a file or a link, even a dangling one;
+    D-213), or None within 25 levels."""
+    d = os.path.realpath(start)
+    for _ in range(25):
+        if os.path.lexists(os.path.join(d, ".git")):
+            return d
+        parent = os.path.dirname(d)
+        if parent == d:
+            return None
+        d = parent
+    return None
+
+
 def _allowed_gates():
-    """Project gates from .claude/gates-allow.txt (one slug per line), found from CLAUDE_PROJECT_DIR or the
-    working directory upward (D-192)."""
-    starts = [os.environ.get("CLAUDE_PROJECT_DIR") or "", os.getcwd()]
-    for start in starts:
-        d = os.path.realpath(start) if start else ""
+    """Project gates from .claude/gates-allow.txt (one slug per line), found from the working directory upward
+    (D-192). The walk stops at the first folder holding `.git` (D-204; `.git` may be a dangling link, D-213): an
+    allow file above the repository is never read. CLAUDE_PROJECT_DIR is used only when it is the working
+    directory's repository root or a folder inside it (D-213); otherwise it is ignored."""
+    cwd = os.path.realpath(os.getcwd())
+    root, starts = _repo_root(cwd), []
+    env = os.environ.get("CLAUDE_PROJECT_DIR") or ""
+    if env and root:
+        e = os.path.realpath(env)
+        if e == root or e.startswith(root + os.sep):
+            starts.append(e)
+    starts.append(cwd)
+    for d in starts:
         for _ in range(25):
-            if not d:
-                break
             f = os.path.join(d, ".claude", "gates-allow.txt")
             if os.path.isfile(f):
                 try:
                     return {l.strip() for l in open(f, encoding="utf-8") if l.strip() and not l.startswith("#")}
                 except OSError:
                     return set()
+            if os.path.lexists(os.path.join(d, ".git")):
+                break
             parent = os.path.dirname(d)
             if parent == d:
                 break
@@ -211,9 +244,10 @@ def validate_block(obj, idx, schema, cr=False):
             errs.append(f"block {idx}: a PASS needs evidence someone can re-check (schema v3.2) — at least one "
                         f"path:line reference or a backticked command, got '{ev[:60]}'")
         agent = str(obj.get("agent") or "").split(":")[-1].strip()
-        if agent in QUALITY_GATES and not re.match(r"^MEASURED\b", ev):
-            errs.append(f"block {idx}: a {agent} PASS must open with MEASURED (schema v3.2) — it rests on a run, "
-                        f"not a trace")
+        if agent in QUALITY_GATES and not (re.match(r"^MEASURED\b", ev) or QUALITY_CITED.match(ev)):
+            errs.append(f"block {idx}: a {agent} PASS must open with MEASURED, or with CITED, completion-auditor's "
+                        f"output path and the backticked command that run executed (schema v3.4) — it rests on "
+                        f"a run, not a trace")
 
     # v3.3 MEASURED rule (D-146), every verdict: MEASURED evidence names the command it ran, in backticks.
     # A path:line alone is a citation (CITED); a run outside this session is CITED with its log path.
@@ -275,22 +309,72 @@ def aggregate_state(verdicts):
     return "HAS_CONCERNS"
 
 
-def uncovered_blockers(text, blocks):
-    """--cr-mode: the FAIL / COULD NOT ASSESS blocks whose gate is not named in a §5 row's "What" cell."""
+# D-212: words that stand in for a value without giving one.
+NOT_FILLED = {"n/a", "na", "none", "tbd", "?", "pending", "todo"}
+
+
+def _filled(cell):
+    """A §5 cell holds something: not blank, not only template fill marks (___, -, —), and not a stand-in
+    word (n/a, na, none, tbd, ?, pending, todo; any case; D-212)."""
+    c = re.sub(r"[*`]", "", cell or "").strip()
+    if not re.sub(r"[\s_\-—.]", "", c):
+        return False
+    return c.lower().strip(" .") not in NOT_FILLED
+
+
+def section5_rows(text, agent_slugs=()):
+    """--cr-mode (D-202, D-212): [(lowercased What, accepts)] for each §5 row. Columns are found by the
+    header row ("What", "I decided", "Why acceptable", "Approver"; `*`, backticks and spaces in a header cell
+    are ignored). A row accepts only when "I decided" is ACCEPT-WITH-RISK or HUMAN-OVERRULES, "Why
+    acceptable" and "Approver" are filled, and the Approver is not an agent (a gate or council slug). A table
+    with no Approver column (the 2.8.2 template) has no accepting row."""
     m = re.search(r"^##\s*5\.[^\n]*\n(.*?)(?=^##\s|\Z)", text, re.S | re.M)
-    whats = []
-    if m:
-        for line in m.group(1).splitlines():
-            cells = [c.strip() for c in line.strip().strip("|").split("|")] if line.strip().startswith("|") else []
-            if not cells or not cells[0] or re.match(r"^:?-+:?$", cells[0]) or cells[0].lower() == "what":
-                continue
-            whats.append(cells[0].lower())
+    if not m:
+        return []
+    header, out = None, []
+    for line in m.group(1).splitlines():
+        if not line.strip().startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if all(re.match(r"^:?-+:?$", c) for c in cells if c):
+            continue                       # the |---|---| separator (or an empty row)
+        if header is None:
+            header = [re.sub(r"[*`\s]", "", c).lower() for c in cells]
+            continue
+        col = lambda pred: next((i for i, h in enumerate(header) if pred(h)), None)
+        i_what, i_dec = col(lambda h: h == "what"), col(lambda h: "decided" in h or "decision" in h)
+        i_why, i_appr = col(lambda h: h.startswith("why") or "justification" in h), col(lambda h: "approver" in h)
+        if i_what is None:
+            return []
+        get = lambda i: cells[i] if i is not None and i < len(cells) else ""
+        if not _filled(get(i_what)):
+            continue
+        appr = re.sub(r"[*`\s]", "", get(i_appr)).lower().split(":")[-1]
+        accepts = (None not in (i_dec, i_why, i_appr)
+                   and re.sub(r"[*`\s]", "", get(i_dec)).upper() in ACCEPTING and _filled(get(i_why))
+                   and _filled(get(i_appr)) and appr not in agent_slugs)
+        out.append((get(i_what).lower(), accepts))
+    return out
+
+
+def uncovered_blockers(text, blocks, schema=None):
+    """--cr-mode: the FAIL / COULD NOT ASSESS blocks that §5 does not accept (D-202, D-212). The gate is
+    named by its `gate` or `agent` value (or the agent's slug after a plugin prefix) as a whole word: a
+    hyphen or letter on either side is part of another name, so `security` does not match
+    `security-operations`. A blocker is covered only when at least one row names it and every row that
+    names it accepts."""
+    slugs = set((schema or {}).get("gates") or []) | set((schema or {}).get("council_seats") or [])
+    rows = section5_rows(text, slugs)
     out = []
     for b in blocks:
         if not isinstance(b, dict) or aggregate_state([b.get("verdict")]) not in ("HAS_FAIL", "HAS_COULD_NOT_ASSESS"):
             continue
-        names = {str(b.get(k) or "").strip().lower() for k in ("gate", "agent")} - {""}
-        if not any(n in w for n in names for w in whats):
+        names = {str(b.get(k) or "").strip().lower() for k in ("gate", "agent")}
+        names |= {n.split(":")[-1].strip() for n in names}
+        names -= {""}
+        pats = [re.compile(r"(?<![a-z0-9_-])" + re.escape(n) + r"(?![a-z0-9_-])") for n in names]
+        naming = [acc for what, acc in rows if any(p.search(what) for p in pats)]
+        if not (naming and all(naming)):
             out.append(b)
     return out
 
@@ -349,7 +433,53 @@ def self_test():
         ok = (got == want)
         bad += 0 if ok else 1
         print(f"  {'ok  ' if ok else 'BAD '} {name:<42} want rc {want:<2} got rc {got}")
-    total = len(expectations) + len(cr_exp)
+    # D-204, D-213 (the allow-file walk stays inside the repo): where the allow file sits, CLAUDE_PROJECT_DIR and
+    # the working directory, each relative to <tmp>/outer with the repo at outer/repo; want "reject" or "accept".
+    scenarios = [
+        ("(D-204) allow file above-repo", "outer", ".git dir", "outer/repo", "outer/repo", "reject"),
+        ("(D-204) allow file in-repo", "outer/repo", ".git dir", "outer/repo", "outer/repo", "accept"),
+        ("(D-213) dangling .git link stops walk", "outer", ".git dangling link", "outer/repo", "outer/repo", "reject"),
+        ("(D-213) env outside the repo", "outer/other", ".git dir", "outer/other", "outer/repo", "reject"),
+        ("(D-213) env at the repo's parent", "outer", ".git dir", "outer", "outer/repo", "reject"),
+        ("(D-213) env at the repo root, cwd below", "outer/repo", ".git dir", "outer/repo", "outer/repo/src", "accept"),
+    ]
+    allow_cases = 0
+    for name, home_rel, git_kind, env_rel, cwd_rel, want in scenarios:
+        allow_cases += 1
+        with tempfile.TemporaryDirectory() as tmp:
+            base = os.path.realpath(tmp)
+            repo = os.path.join(base, "outer", "repo")
+            for d in ("outer/repo/src", "outer/other"):
+                os.makedirs(os.path.join(base, d), exist_ok=True)
+            if git_kind == ".git dir":
+                os.makedirs(os.path.join(repo, ".git"))
+            else:
+                os.symlink(os.path.join(base, "no-such-gitdir"), os.path.join(repo, ".git"))
+            home = os.path.join(base, home_rel)
+            os.makedirs(os.path.join(home, ".claude"), exist_ok=True)
+            with open(os.path.join(home, ".claude", "gates-allow.txt"), "w", encoding="utf-8") as f:
+                f.write("acme-project-gate\n")
+            obj = json.loads(FENCE.findall((fx / "valid-pass.md").read_text())[0])
+            obj["agent"] = "acme-project-gate"
+            cwd, env = os.getcwd(), os.environ.get("CLAUDE_PROJECT_DIR")
+            try:
+                os.environ["CLAUDE_PROJECT_DIR"] = os.path.join(base, env_rel)
+                os.chdir(os.path.join(base, cwd_rel))
+                errs = validate_block(obj, 1, schema)
+            finally:
+                os.chdir(cwd)
+                if env is None:
+                    os.environ.pop("CLAUDE_PROJECT_DIR", None)
+                else:
+                    os.environ["CLAUDE_PROJECT_DIR"] = env
+        rejected = any("not a gate agent: acme-project-gate" in e for e in errs)
+        ok = (rejected == (want == "reject"))
+        bad += 0 if ok else 1
+        print(f"  {'ok  ' if ok else 'BAD '} {name:<42} want {want} got {'reject' if rejected else 'accept'}")
+        if not ok:
+            for e in errs:
+                print(f"         {e}")
+    total = len(expectations) + len(cr_exp) + allow_cases
     print(f"\n  {total - bad}/{total} fixtures behaved as expected")
     return 1 if bad else 0
 
@@ -368,7 +498,7 @@ def cr_mode_rc(text, schema, report=None):
             continue
         errs += validate_block(obj, i, schema, cr=True)
         blocks.append(obj)
-    unc = uncovered_blockers(text, blocks)
+    unc = uncovered_blockers(text, blocks, schema)
     if report is not None:
         report["errors"], report["uncovered"] = errs, unc
     return 1 if (errs or unc) else 0
@@ -395,8 +525,9 @@ def main():
             print(f"  ERROR: {e}")
         for b in rep["uncovered"]:
             print(f"  ERROR: gate '{b.get('gate')}' ({b.get('agent')}) returned {b.get('verdict')} and no row in "
-                  f"'## 5. Deviations & risk acceptance' names it in the What column — rework, or record the "
-                  f"human risk acceptance there")
+                  f"'## 5. Deviations & risk acceptance' accepts it (What names the gate, I decided is "
+                  f"ACCEPT-WITH-RISK or HUMAN-OVERRULES, Why acceptable and Approver filled) — rework, or "
+                  f"record the human risk acceptance there")
         if rc == 0:
             print("  OK — verdict blocks well-formed; every FAIL / COULD NOT ASSESS gate has a §5 risk-acceptance row.")
         return rc

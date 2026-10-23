@@ -12,6 +12,11 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/inject-session-contract.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/upgrade-notice.sh",
+            "timeout": 10
           }
         ]
       }
@@ -57,7 +62,7 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/validate-verdicts.sh",
-            "timeout": 45
+            "timeout": 900
           }
         ]
       }

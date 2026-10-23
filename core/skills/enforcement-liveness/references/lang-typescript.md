@@ -2,7 +2,7 @@
 
 Load this only when the diff contains TypeScript (`*.ts`, `*.tsx`, `tsconfig.json`). Use it as a review lens: each item says what fails and how to check it.
 
-## Run these first
+## Checks (run by whoever holds Bash; a read-only reviewer cites the completion audit's run)
 
 | Tool | Command | What it catches |
 |---|---|---|

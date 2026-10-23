@@ -5,5 +5,17 @@
   "cr-council-seat-signs-gate-row.md": 1,
   "cr-fail-no-section5-row.md": 1,
   "cr-fail-row-names-other-gate.md": 1,
+  "cr-fail-section5-approver-gate-slug.md": 1,
+  "cr-fail-section5-approver-na.md": 1,
+  "cr-fail-section5-blank-decision.md": 1,
+  "cr-fail-section5-bold-header.md": 0,
+  "cr-fail-section5-complete-row.md": 0,
+  "cr-fail-section5-contradictory-rows.md": 1,
+  "cr-fail-section5-five-columns.md": 1,
+  "cr-fail-section5-no-approver.md": 1,
+  "cr-fail-section5-no-justification.md": 1,
+  "cr-fail-section5-reject.md": 1,
+  "cr-fail-section5-substring-name.md": 1,
+  "cr-fail-section5-why-tbd.md": 1,
   "cr-fail-with-section5-row.md": 0
 }

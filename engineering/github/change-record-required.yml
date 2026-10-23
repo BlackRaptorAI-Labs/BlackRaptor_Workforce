@@ -51,11 +51,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            // Tier 2/3 gated surfaces. Keep in sync with .github/CODEOWNERS
-            // and gate-enforcement-map.md. Prefixes unless noted.
+            // Tier 2/3 gated surfaces. Keep in sync with gate-enforcement-map.md.
+            // Prefixes unless noted.
             const GATED = [
               // CUSTOMIZE: your Tier 2/3 gated surfaces. Keep in sync with
-              // .github/CODEOWNERS and .claude/hooks/protect-tier3.py.
+              // .claude/hooks/protect-tier3.py.
               // The first two protect the enforcement mechanism — keep them.
               '.github/',
               '.claude/',
@@ -161,6 +161,6 @@ jobs:
             # "## 5. Deviations & risk acceptance" table has a row naming that gate (D-118).
             # --require stays explicit so an older base-ref validator without --cr-mode still
             # requires at least one block.
-            python3 "$V" --cr-mode "$f" --require || rc=1
+            python3 -I "$V" --cr-mode "$f" --require || rc=1
           done <<< "$CR_FILES"
           exit "$rc"

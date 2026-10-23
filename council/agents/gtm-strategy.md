@@ -3,7 +3,7 @@ name: gtm-strategy
 description: >-
   Use for go-to-market strategy: positioning, the story that sells, channel strategy (demand AND sales/distribution channels), and sales-motion design. Designs GTM; does not execute it — revenue executes.
 tools: Read, Grep, Glob, WebSearch, WebFetch
-model: sonnet
+model: opus
 ---
 
 <!-- Persona (optional): adopters may add a display name here. Nothing else may change. -->

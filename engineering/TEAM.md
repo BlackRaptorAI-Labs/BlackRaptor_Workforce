@@ -9,14 +9,12 @@ designed to reinforce the platform's existing spec-driven workflow
 > writes the Tier-3 hook and its settings entry to `.claude/`, the verdict validator to
 > `.claude/skills/gate-verdict-format/`, and the Change Record CI workflow to `.github/workflows/`;
 > in copy mode it also copies the agents and the skills they use into `.claude/`. The PR template,
-> the governance docs and the `CODEOWNERS` template ship in the pack for you to copy as needed. The
-> sparse `CODEOWNERS.solo` is installed manually after your second-approver team
-> exists. Installing agent/`.github/` files is a Tier-3 governed change (Change
-> Record + second-approver approval).
+> the governance docs ship in the pack for you to copy as needed. Installing agent/`.github/` files is a
+> Tier-3 governed change (Change Record + the owner's approval). The owner approves every pull request, while write access stays with the owner and one agent account (the branch-protection checklist says how); required checks and the owner's approval gate the merge.
 >
-> **Companion files:** `CODEOWNERS.solo` + `branch-protection-checklist.md`
+> **Companion files:** `branch-protection-checklist.md`
 > (mechanical gate enforcement), `gate-enforcement-map.md` (which gates are
-> enforced by CODEOWNERS/CI vs. which rely on the signed Change Record),
+> enforced by CI and branch protection vs. which rely on the signed Change Record),
 > `change-record-template.md` (the audit artifact), and `AGENT-RETROS.md` +
 > `agent-evals/` (the improvement loop).
 
@@ -58,7 +56,7 @@ designed to reinforce the platform's existing spec-driven workflow
 
 **Pod 4 · Quality**
 10. `qa-test-engineer` — TDD discipline; designs the test strategy and writes tests. The quality GATE is `test-auditor` (2.0.0 — a seat does not gate what it authors).
-11. `code-reviewer` — commit/PR/CODEOWNERS/CI gate before merge.
+11. `code-reviewer` — commit/PR/CI gate before merge.
     - `completion-auditor` — the **completion-audit gate** (opus): independent verifier that re-derives ground truth from git/gh before "done/merged/green" is claimed; invoke before reporting completion. Counted as a dev GATE agent in ROSTER §9, `verify.sh` `GATE_AGENTS`, `[4l]`, and the gate-enforcement-map. (Wired into the roster 2026-07-31.)
     - `evidence-auditor` — shared bridge agent; the adversarial gate for research/analysis/evidence before a finding is trusted or published. Advisory. (Wired 2026-07-31.)
 
@@ -114,29 +112,35 @@ designed to reinforce the platform's existing spec-driven workflow
 
 The Council is a **separate plugin** (`blackraptor-council`) — 10 advisory seats convened by their own main-session `council` skill. It answers *"are we building the right company?"* upstream of this team's *"are we building it right?"*. The two connect through the Council's **Definition Brief**, which `product-manager` and `principal-architect` turn into requirements, spec, and architecture. Install it alongside this team from the same marketplace.
 
-## Model tiering & agent permissions
+## Model tiering, effort & agent permissions
 
 
-**Model tiering (deliberate policy, not ad hoc).** Each agent's `model:` is
-chosen by the cost of being wrong × the call volume:
+**Model tiering and effort (deliberate policy, not ad hoc).** Each agent's `model:` is chosen by the cost of being wrong × the call
+volume. `effort:` is pinned in the agent file only where a miss is expensive (principal-architect and every gate); everywhere else the
+agent has no `effort:` line and the session, or you, decide. No agent is on `haiku`; none uses `max`.
 
-| Tier | Model | Agents | Rationale |
-|---|---|---|---|
-| Architecture | the top tier (the strongest model available) | principal-architect | `principal-architect` shapes every architecture-level decision — the costliest kind to get wrong — so it merits the strongest available model. (Orchestration is not an agent: routing and challenge-discipline enforcement are the main-session `dev-team` skill, so they carry no model tier of their own.) **Fallback policy (TH, 2026-07-16): Opus 4.8 (`opus`) when the top tier is unavailable.** Agent frontmatter supports no per-agent fallback chain, so the fallback is applied at invocation (pass `model: opus` in the Agent call) or by session `fallbackModel`; if the top tier is retired or persistently unavailable, flip the frontmatter to `opus`. |
-| Deep judgment | `opus` | security-architect, privacy-counsel, compliance-officer, domain-compliance, red-team-reviewer, security-operations, code-reviewer, infra-reviewer, operational-readiness, completion-auditor, legal-docs-writer, product-designer | Blocking gates, adversarial review — being wrong is expensive; low call volume makes the premium worth it. (`operational-readiness` blocks on human-oversight of consequential actions — an expensive miss; `completion-auditor` is the closing completion-audit gate.) |
-| Everyday build | `sonnet` | backend-, edge-, frontend-, data-, ai-ml-engineer, qa-test-engineer, devops-sre, ux-designer, product-manager, technical-writer | High-volume execution from approved specs; strong and cost-efficient. |
-| Low-stakes *(optional)* | `haiku` | candidate: technical-writer routine doc passes | Fast/cheap where judgment is already framed by others' output. Try, promote to sonnet if quality dips. |
+| Tier | Model | Effort | Agents | Rationale |
+|---|---|---|---|---|
+| Architecture | `best` (the strongest model your account has, else Opus) | pinned `high` | `principal-architect` | It shapes every architecture-level decision, the costliest kind to get wrong, so it gets the strongest model available. `best` is an alias Claude Code resolves to the strongest model your account has; where there is nothing stronger than Opus it falls back to Opus (documented by Anthropic). Orchestration is not an agent: the main-session `dev-team` skill routes every change, so it has no `model:` of its own. |
+| Gates | `opus` | pinned `high` | `claims-gate`, `evidence-auditor`, `ethics-governance`, `code-reviewer`, `completion-auditor`, `compliance-officer`, `domain-compliance`, `infra-reviewer`, `operational-readiness`, `privacy-counsel`, `red-team-reviewer`, `schema-reviewer`, `security-architect`, `test-auditor`, `ux-designer`, `compliance-cert`, `hw-design-reviewer` | Blocking gates and adversarial review: being wrong is expensive and call volume is low, so the premium is worth it, and the effort is fixed so a gate does not run thin just because your session's effort is set low (the overrides below can still change it). |
+| Deep judgment, flexible | `opus` | session decides (recommended `high`) | `competitive-intel-analyst`, `market-research-analyst`, `pricing-strategy-analyst`, `product-manager`, `chair`, `coo`, `finance`, `fundraising-ir`, `ip-counsel`, `market-insight`, `pricing-strategy`, `gtm-strategy`, `people-org`, `revenue`, `technology-strategy`, `legal-docs-writer`, `product-designer`, `security-operations`, `power-electronics`, `reliability-dfr`, `rf-connectivity`, `thermal-mechanical`, `brand-architect` | Judgment-heavy strategy, legal drafting and design seats. |
+| Everyday build | `sonnet` | session decides (default; `medium` is fine for well-specified build work) | `product-docs-writer`, `growth-engine`, `ai-ml-engineer`, `backend-engineer`, `data-engineer`, `devops-sre`, `edge-agent-engineer`, `frontend-engineer`, `qa-test-engineer`, `technical-writer`, `cost-engineer`, `embedded-firmware`, `manufacturing-dfm`, `analytics-attribution-engineer`, `content-strategist`, `copywriter`, `creative-director`, `email-outbound-sequencer`, `name-trademark-researcher`, `paid-media-manager`, `product-marketing`, `seo-geo-engineer`, `social-community-manager`, `video-creative-producer` | High-volume execution from approved specs; strong and cost-efficient. |
 
-Two deliberate tiering notes (2026-07-06):
-- **`code-reviewer` promoted to `opus`** — it is the last gate before every
-  production deploy (no staging) and runs once per PR, so volume is bounded;
-  the premium buys judgment at the single point where everything converges.
-- **`data-engineer` stays on `sonnet` despite holding the Tier-3
-  schema gate** — a documented exception. Most of its calls are build work
-  where sonnet is right, and the schema gate's residual risk is backstopped by
-  CODEOWNERS: Tier-3 schema paths require second-approver (human) approval
-  regardless of the agent's verdict. Revisit if a schema miss ever reaches the
-  retro log.
+Totals: 40 on `opus` (17 gates and 23 flexible), 24 on `sonnet`, 1 on `best`: 65 agents.
+
+What moved on 22 Oct 2026 (D-287): `ux-designer` (a gate), `product-manager`, and the council seats `revenue`, `gtm-strategy`, `people-org` and
+`technology-strategy` went from `sonnet` to `opus`; every gate gained `effort: high`; `principal-architect` went from `opus` to `model: best` with `effort: high`. The cost effect: the six moved agents now cost about twice as much per token
+(Sonnet 5.5 $2/$10 per million tokens in and out, Opus 5.5 $4/$20), and a gate that used to run at the session's effort may now run
+higher; principal-architect on a stronger model than Opus costs more again (the top published tier is $10/$50 per million).
+
+**How a user overrides.** The session's effort setting decides every agent that has no `effort:` line. `CLAUDE_CODE_EFFORT_LEVEL` overrides effort for every agent, pinned or not. A per-call `model` or `effort` from the main session overrides an agent file; the `dev-team` skill tells the main session not to pass either when it dispatches a gate. `CLAUDE_CODE_SUBAGENT_MODEL` sets the model of a subagent when neither the call nor the agent file names one. (Anthropic's documentation, checked 22 Oct 2026.) An agent file sets intent; it cannot prove what model or effort a gate ran on.
+
+Two deliberate tiering notes:
+- **`code-reviewer` is on `opus`** — it is the last gate before every production deploy (no staging) and runs once per PR, so volume is
+  bounded; the premium buys judgment at the single point where everything converges.
+- **`data-engineer` stays on `sonnet` despite holding the Tier-3 schema gate** — a documented exception. Most of its calls are build
+  work where sonnet is right, and the schema gate's residual risk is backstopped by `schema-reviewer` (a gate, on `opus`) and by the owner's
+  approval, which every pull request needs regardless of the agent's verdict. Revisit if a schema miss ever reaches the retro log.
 
 
 **Tier → output-quality discipline (2026-07-20).** The model tier also sets how
@@ -227,7 +231,7 @@ before changes ship (see `agent-evals/`), complementing the reactive
    strategy; no plan step ships without a test.
 4. **Build.** Engineers execute the plan TDD-style (failing test → implement →
    pass → conventional commit), staying inside their package boundaries.
-5. **Review.** `code-reviewer` + the CODEOWNERS-matched specialist must approve;
+5. **Review.** `code-reviewer` + the matching specialist gate review it, and the owner approves;
    required CI checks green (including `change-record-required`); required gates
    confirmed cleared and recorded in the Change Record.
 6. **Release.** `devops-sre` merges — which deploys to production (no staging).
@@ -244,7 +248,7 @@ before changes ship (see `agent-evals/`), complementing the reactive
 | Personal data collected/stored/transferred/sent to LLM (EU GDPR + US/Canada/LATAM) | `privacy-counsel` | spec + review |
 | Data of record underpinning a regulated output (its measurement, eligibility, and integrity) | `domain-compliance` | spec + review |
 | Any test missing or weak | `qa-test-engineer` (plan-time strategy, writes the tests) / `test-auditor` (audit gate, dispatched after `completion-auditor`'s MEASURED run — a seat does not gate what it authors) | plan + pre-review |
-| Any migration or schema file, in any framework (Prisma, Alembic, Rails, Django, Flyway or Liquibase, raw SQL) | `data-engineer` authors (CODEOWNERS) / `schema-reviewer` gates (a seat does not gate what it authors) | review |
+| Any migration or schema file, in any framework (Prisma, Alembic, Rails, Django, Flyway or Liquibase, raw SQL) | `data-engineer` authors / `schema-reviewer` gates (a seat does not gate what it authors) | review |
 | `/infrastructure/`, `/.github/` change | `devops-sre` authors / `infra-reviewer` gates (a seat does not gate what it authors) | review |
 | Any merge | `code-reviewer` + green CI | review |
 | As-built spec drift (behavior/API/data-model change without a `docs/specs/` update) | `technical-writer` (checked by `code-reviewer`) | review |
@@ -302,11 +306,11 @@ operating contract every agent follows.
 >   skill); the **human** signs the decision.
 > - Risk is tiered: Tier 1 (routine) merges on green CI; Tier 2 needs a Change
 >   Record; Tier 3 (auth/RBAC, schema, remote-execution, `.github/`/`.claude/`,
->   the regulated domain) additionally needs second-person (your second-approver code-owner team)
->   approval and is blocked from direct agent edits by the Tier-3 guard hook.
+>   the regulated domain) is blocked from direct agent edits by the Tier-3 guard hook. The
+>   owner approves every pull request, while write access stays with the owner and one agent account (the branch-protection checklist says how); required checks and the owner's approval gate the merge.
 > - "Fail-closed" is enforced mechanically: the `change-record-required` CI
->   check blocks gated PRs lacking a CR; branch protection + CODEOWNERS enforce
->   the two-person rule. See `CONTRIBUTING.md`, `gate-enforcement-map.md`, and
+>   check blocks gated PRs lacking a CR; branch protection requires the CI checks
+>   and the owner's approval. See `CONTRIBUTING.md`, `gate-enforcement-map.md`, and
 >   `branch-protection-checklist.md`.
 > The RACI, Blocking-Gates, and sign-off tables below remain directionally
 > correct but predate the newest agents (`legal-docs-writer` + `ip-counsel`,
@@ -409,8 +413,8 @@ evidence SOC 2 / ISO expect — a verdict, dated, with rationale.
 > **Capability boundary (read first).** This governance layer is *advisory* by
 > default. It is actually enforced only on two surfaces: (1) **Claude Code** — the
 > `protect-tier3.py` PreToolUse hook blocks writes to Tier-3 paths in a local
-> session; (2) **GitHub** — the `change-record-required` CI check + CODEOWNERS +
-> branch protection block a merge. Everywhere else (Cowork, claude.ai, a raw agent
+> session; (2) **GitHub** — the `change-record-required` CI check, the CI judge and
+> branch protection (the owner's approval) block a merge. Everywhere else (Cowork, claude.ai, a raw agent
 > run) these gates are prompts an agent is asked to honor, not mechanisms — there is
 > no runtime that blocks a gate bypass. Say "advisory" where it is advisory; reserve
 > "enforced/blocking/fail-closed" for the two surfaces above.
@@ -439,8 +443,8 @@ A change is **blocked by default** until every gate its triggers require shows
 or absence of a sign-off, = not approved. A missing gate is treated as a `FAIL`,
 never as an implicit pass. This is advisory in Claude Code / GitHub and enforced by
 the `change-record-required` CI check, which runs `validate_verdict.py` over the CR.
-Gates map to CODEOWNERS where possible (see `gate-enforcement-map.md`); path-
-agnostic gates rely on this table plus the PR checklist.
+Gates map to required CI checks where possible (see `gate-enforcement-map.md`); the
+rest rely on this table, the PR checklist and the owner's review.
 
 ### 5. Conflict-resolution ladder (when agents disagree)
 1. **Agents attempt reconciliation** via the main session (the `dev-team` skill)
@@ -507,7 +511,7 @@ claims are proven by machines; unverifiable claims get challenged.
 - **Specs are the source of truth.** Read the spec directory and the forward-spec directory before acting. Keep specs in sync with code.
 - **TDD is non-negotiable.** Failing test first; the five CI checks must pass.
 - **Conventional commits + small PRs.** Squash-merge; PR has Summary + Test plan.
-- **Respect package and CODEOWNERS boundaries.** Propose changes outside your
+- **Respect package and Tier-3 boundaries.** Propose changes outside your
   lane; don't make them.
 - **Audit everything that matters.** State changes write `AuditEvent`.
 - **No secrets or PII in code, logs, or LLM prompts.**

@@ -30,7 +30,7 @@ The team depends on the **`blackraptor-core`** plugin (auto-installed with it) f
 
 Division of labor stays clean: **math and engineering verification remain with `hw-design-reviewer`** and the Excellence Pass (independent-method re-derivation) — the bridge validates market fit and research claims, never physics.
 
-Model tiers follow the rule in CLAUDE.md: Opus for judgment-heavy design and review (its failure mode is narrow under-verification, so the verification loop stays mandatory); Sonnet for well-scoped seats with the Excellence Pass items written as explicit, visibly-completed checklist steps (it performs them at top-tier level when named, skips them when not). Program conduction is the main-session `hw-program` skill and carries no agent tier of its own.
+Model tiers follow the rule in CLAUDE.md: Opus for judgment-heavy design and review (the verification loop stays mandatory); Sonnet for well-scoped seats with the Excellence Pass items written as explicit, visibly-completed checklist steps (a step that is named is carried out; one that is not named may be skipped). The two gates (`compliance-cert`, `hw-design-reviewer`) also pin `effort: high`; no other seat has an `effort:` line, so the session's effort decides. Program conduction is the main-session `hw-program` skill and carries no agent tier of its own.
 
 ## Cross-review matrix (who audits whom)
 

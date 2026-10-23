@@ -92,11 +92,13 @@ CI check parses and validates it.**
 ## 5. Deviations & risk acceptance
 
 Required if any decision above is ACCEPT-WITH-RISK, or differs from the agent's
-verdict. Empty otherwise.
+verdict. Empty otherwise. The CR check accepts a FAIL or COULD NOT ASSESS gate only through a row
+whose What names the gate, I decided is ACCEPT-WITH-RISK or HUMAN-OVERRULES, and Why acceptable and
+Approver are filled. REJECT or a blank decision accepts nothing.
 
-| What | Agent said | I decided | Why acceptable | Revisit by |
-|---|---|---|---|---|
-| | | | | |
+| What | Agent said | I decided | Why acceptable | Approver | Revisit by |
+|---|---|---|---|---|---|
+| | | | | | |
 
 ## 6. Emergency addendum (only if Emergency = YES)
 

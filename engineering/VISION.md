@@ -33,8 +33,8 @@ clever prompts, but a three-layer operating model:
   *control*. Overruling a FAIL forces a written risk acceptance with a revisit
   date.
 - **Machines enforce** — a fail-closed path-guard hook, a CI check that blocks
-  gated changes lacking a Change Record, sparse CODEOWNERS for a real two-person
-  rule on the dangerous few percent, and branch protection. What the prompts ask
+  gated changes lacking a Change Record, a CI judge for the tests, and branch
+  protection that needs the owner's approval on every pull request. What the prompts ask
   agents not to do, the machinery makes them unable to do.
 
 The team answers *"are we building the thing right?"* — and hands your release a
@@ -45,9 +45,8 @@ trail an auditor can follow.
 **1. Governance is mechanical, not aspirational.** "Be careful" prompts wear
 off; machinery doesn't. Changes are tiered — **Tier 1** routine merges on green
 CI; **Tier 2** requires a signed Change Record or CI blocks the merge; **Tier 3**
-(auth, schema, remote execution, CI config, your regulated domain) additionally
-requires a second person's code-owner approval, and a local hook stops agents
-from editing those paths at all.
+(auth, schema, remote execution, CI config, your regulated domain) is a path a
+local hook stops agents from editing at all. The owner approves every pull request, while write access stays with the owner and one agent account (the branch-protection checklist says how); required checks and the owner's approval gate the merge.
 
 **2. Five blocking gates with real teeth.** Security, privacy, compliance,
 domain, and schema agents produce Change-Record-ready verdicts. A FAIL is a stop,
@@ -111,11 +110,11 @@ the gate to hit a deadline, and writes down what it decided and why.
 This kit practices what it preaches, so here is its own CONCERNS verdict:
 
 - The local hook is **bypassable by a determined actor** — server-side controls
-  (CI + CODEOWNERS + branch protection) are the real enforcement.
+  (CI + branch protection + the owner's approval) are the real enforcement.
 - Agent verdicts are only as good as the model and the context you give them; the
   human signature is there because the model can be wrong.
-- The solo-mode design (0 blanket approvals + code-owner-only review) depends on
-  GitHub branch-protection behaving as documented — **run the verification
+- The merge design (one approving review, the owner's while write access stays with the owner and one agent account, plus the required checks)
+  depends on GitHub branch-protection behaving as documented — **run the verification
   tests** in `docs/branch-protection-checklist.md` before trusting it.
 - Compliance framing (SOC 2-style compensating controls) is a design pattern, not
   legal advice or a certification. Confirm with your auditor.

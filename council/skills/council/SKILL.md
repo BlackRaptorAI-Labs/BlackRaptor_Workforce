@@ -133,7 +133,7 @@ council seats' blocks (only seats that are also gates), so this skill does, in t
 (§5) before it dispatches `chair`. For each seat, write its
 returned block unchanged to `council/<slug>.verdict.md` with the Write tool, then run the core
 validator on it, one seat at a time (name the file, not a shell variable):
-`python3 <validator> council/<slug>.verdict.md --require`
+`python3 -I <validator> council/<slug>.verdict.md --require`
 Find the validator without searching (D-194): read `core_root` from `.claude/workforce-installed.json`
 and use `<core_root>/skills/gate-verdict-format/validate_verdict.py`; if that file does not exist, use
 `.claude/skills/gate-verdict-format/validate_verdict.py`. Never run `find` and never use any other path.

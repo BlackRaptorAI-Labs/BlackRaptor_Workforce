@@ -3,7 +3,16 @@
 
 Fail-closed enforcement of the Tier-3 boundary for ALL Claude Code sessions
 and subagents in this repo. Prompts instruct agents not to touch these paths;
-this hook makes them unable to.
+this hook stops the common ways of touching them, with a clear message.
+
+EARLY WARNING, NOT THE LOCK (D-223, 2.8.3). The Bash checks below read command
+text, and a command can always be written in a form they miss (`python3 -c`,
+`node -e`, `install`, `ln -sf`; audit 5 K2). What keeps every agent's shell off
+the enforcement files is Claude Code's sandbox: /workforce-init turns it on with
+failIfUnavailable, no unsandboxed commands, and a denyWrite entry for each
+enforcement file outside the .claude folders the sandbox already protects. This
+hook stays to catch honest mistakes early; without the sandbox, an agent with a
+shell can edit these files.
 
 Coverage:
   - Edit/Write/MultiEdit/NotebookEdit: blocked on protected paths. Paths are
@@ -71,7 +80,7 @@ The boundary for these is a sandbox network allowlist, not this hook.
 
 Boundary of record: this hook is IN-SESSION accident-prevention and is
 bypassable by construction (especially the Bash heuristic). The enforcement of
-record for Tier 3 is SERVER-SIDE — branch protection + CODEOWNERS + the
+record for Tier 3 is SERVER-SIDE — branch protection (the owner's approval) + the
 change-record-required CI check. Do not rely on this hook as the only control.
 
 Contract (Claude Code hooks):
@@ -92,8 +101,8 @@ import sys
 from urllib.parse import urlsplit
 from datetime import datetime, timezone
 
-# CUSTOMIZE: your Tier-3 paths. Keep this list in sync with .github/CODEOWNERS
-# and the GATED list in .github/workflows/change-record-required.yml.
+# CUSTOMIZE: your Tier-3 paths. Keep this list in sync with the GATED list in
+# .github/workflows/change-record-required.yml.
 # The first three entries protect the enforcement mechanism itself — keep them.
 TIER3_PREFIXES = [
     ".github/",
@@ -109,6 +118,7 @@ TIER3_FILES = [
     ".claude/settings.json",
     ".claude/live-commands-allow.txt",   # the human's live-command exceptions; agents never edit it
     ".claude/gates-allow.txt",           # the project's own gate slugs (D-192); an agent listing itself would sign verdicts
+    ".claude/test-summary-patterns.txt", # the project's test-summary readers (D-216); an agent adding one could fake a green run
     # "src/lib/audit.ts",         # e.g. your audit-trail writer
 ]
 REPO_MARKER = ""  # set at runtime from the project directory name (see main)

@@ -6,11 +6,20 @@ PreToolUse-hook payload on stdin. Exits 2 (block) with a one-line reason on stde
 Write/Edit targets an ungated `.md` file inside a marketing-asset directory; exits 0 (allow)
 otherwise.
 
-FAIL-OPEN everywhere except the one judgement it exists to make. Unreadable payload, a tool
-this hook does not cover, a target outside any marked directory, or an internal error -> exit 0.
-It blocks ONLY when the target resolves inside a directory the session has marked with a
+FAIL CLOSED on a gated write (D-267, D-269). Any error while judging a write under a marked asset directory
+denies the write (exit 2) with "the claims-gate check could not run (<reason>): this write is not allowed; report it":
+the validator missing or failing to start, a lookup that raises, a crash. A call the hook does not cover (a tool it does
+not list, a target that is not a `.md`, a target outside every marked directory) passes. When an error leaves the hook
+unable to tell whether a write is under a marked directory, it denies only if the project has a marked directory (or,
+for a Bash command, the command names a `.verdict.md`, which is blocked everywhere); otherwise it allows the write and says
+so on stderr, so an engineering or council session is never wedged by this hook. An empty stdin is not a hook call.
+The owner's way out is the announced kill switch (BR_CLAIMS_HOOK=off or BR_HOOKS=off), never a silent error.
+DEADLINE (D-278): hooks.json gives this hook 10 s, and Claude Code (measured on client 2.1.296) lets the write through when a hook outlives its timeout. It arms an
+alarm at HOOK_BUDGET_S (7 s; the validator call gets 5 s) and denies a marked write at the deadline: "the claims-gate check ran out of
+time: this write is not allowed; report it". The shell wrapper's watchdog (9 s) does the same if the helper cannot answer at all.
+It blocks when the target resolves inside a directory the session has marked with a
 `.br-assets` file AND the target is a bare `.md` write/edit with no validating sibling
-`.verdict.md`.
+`.verdict.md`, or when it cannot judge such a write.
 
 MARKING RULE. A directory D is "marked" if `.br-assets` exists in D or in any ancestor of D, up
 to (and including) the project root. Written by the `marketing-core` skill at onboarding and by
@@ -38,8 +47,10 @@ import json
 import os
 import re
 import shlex
+import signal
 import subprocess
 import sys
+import time
 
 COVERED_TOOLS = ("Write", "Edit", "MultiEdit")
 VERDICT_BASH_MESSAGE = "Verdict files are written with the Write tool so the gate check can read them."
@@ -54,6 +65,127 @@ def log(msg):
         sys.stderr.write("[enforce-draft-gate] %s\n" % msg)
     except Exception:
         pass
+
+
+# D-278 (Amendment 11, Z1): THIS HOOK DECIDES BEFORE THE CLIENT'S TIMEOUT. hooks.json gives it 10 s, and Claude Code cancels a hook that
+# outlives its timeout and lets the write through, silently (audit 10V, measured on client 2.1.296). So it arms its own alarm at
+# HOOK_BUDGET_S (7 s) and denies a marked write when it fires; the shell wrapper's watchdog (9 s) is the backup if this process cannot
+# answer at all. BR_HOOK_BUDGET_S can only LOWER the budget.
+HOOK_BUDGET_S = 7
+VALIDATOR_TIMEOUT_S = 5
+_BUDGET = {"deadline": None}
+
+
+class BudgetExceeded(BaseException):
+    """The hook's own deadline. A BaseException, so no `except Exception` below can swallow it."""
+
+
+def time_left():
+    d = _BUDGET["deadline"]
+    return 1e9 if d is None else d - time.time()
+
+
+def _on_alarm(_signum, _frame):
+    raise BudgetExceeded("the claims-gate check")
+
+
+def _arm_budget():
+    try:
+        env = float(os.environ.get("BR_HOOK_BUDGET_S") or 0)
+    except ValueError:
+        env = 0
+    b = min(HOOK_BUDGET_S, env) if env > 0 else HOOK_BUDGET_S
+    _BUDGET["deadline"] = time.time() + b
+    try:
+        signal.signal(signal.SIGALRM, _on_alarm)
+        signal.setitimer(signal.ITIMER_REAL, b)
+    except (AttributeError, ValueError, OSError):   # D-278: no SIGALRM here: the wrapper's watchdog is the only deadline
+        pass
+
+
+def _disarm_budget():
+    _BUDGET["deadline"] = None
+    try:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+    except (AttributeError, ValueError, OSError):   # D-278: nothing was armed
+        pass
+
+
+class Cannot(Exception):
+    """The judgement could not be made (D-269): the write is denied, naming why."""
+
+
+def time_block():
+    sys.stderr.write(
+        "BLOCKED (DRAFT/GATED convention): the claims-gate check ran out of time: this write is not allowed; report it\n"
+        "If you believe this block is wrong, stop and report it to the human with the reason above; "
+        "do not disable the check.\n")
+    return 2
+
+
+def cannot_block(reason):
+    sys.stderr.write(
+        "BLOCKED (DRAFT/GATED convention): the claims-gate check could not run (%s): this write is not allowed; report it\n"
+        "If you believe this block is wrong, stop and report it to the human with the reason above; "
+        "do not disable the check.\n" % reason)
+    return 2
+
+
+def project_has_marker(project_dir):
+    """True when any directory under the project root is marked (bounded walk). Raises nothing: an error reads as True."""
+    try:
+        seen = 0
+        for root, dirs, files in os.walk(project_dir):
+            if ".br-assets" in files:
+                return True
+            dirs[:] = [x for x in dirs if x not in (".git", "node_modules", ".venv", "venv", "__pycache__")]
+            seen += len(files) + len(dirs)
+            if seen > 50000:
+                return True      # too large to rule out
+        return False
+    except Exception:
+        return True
+
+
+_STATE = {"payload": None}
+
+
+def guard_failure(exc, timed=False):
+    """D-269: an error nothing handled. Deny when the write is, or may be, under a marked directory; else allow, said on stderr."""
+    reason = "%s" % type(exc).__name__
+    try:
+        payload = _STATE["payload"]
+        project_dir = os.path.realpath(os.environ.get("CLAUDE_PROJECT_DIR") or (payload or {}).get("cwd") or os.getcwd())
+        if not isinstance(payload, dict):
+            deny = project_has_marker(project_dir)
+        else:
+            tool = payload.get("tool_name") or ""
+            ti = payload.get("tool_input") if isinstance(payload.get("tool_input"), dict) else {}
+            if tool == "Bash":
+                cmd = str(ti.get("command") or "")
+                deny = ".md" in cmd and (".verdict.md" in cmd or project_has_marker(project_dir))
+            elif tool in COVERED_TOOLS:
+                fp = str(ti.get("file_path") or "")
+                if not fp:
+                    deny = project_has_marker(project_dir)
+                elif not fp.endswith(".md"):
+                    deny = False
+                else:
+                    abs_path = fp if os.path.isabs(fp) else os.path.join(payload.get("cwd") or project_dir, fp)
+                    deny = bool(find_marker_dir(os.path.dirname(os.path.realpath(abs_path)), project_dir))
+            else:
+                deny = False
+    except Exception:
+        deny = True
+    if deny:
+        return time_block() if timed else cannot_block(reason)
+    log("%s stopped the check; this write is outside every marked folder, so it is allowed" % ("running out of time" if timed else "an error (%s)" % reason))
+    return 0
+
+
+def time_failure(exc=None):
+    """D-278: the hook's own deadline fired. Deny when the write is, or may be, under a marked folder (the same rule as an error)."""
+    return guard_failure(exc if exc is not None else BudgetExceeded("the claims-gate check"), timed=True)
 
 
 def _strip_heredoc_bodies(cmd):
@@ -211,15 +343,13 @@ def draft_decision(abs_path, project_dir, validator, fold_case=False):
     if not os.path.isfile(verdict_path):
         return "'%s' has no sibling '%s'." % (os.path.relpath(abs_path, project_dir), os.path.basename(verdict_path))
     if not (os.path.isfile(validator) and os.access(validator, os.R_OK)):
-        log("validator not found at %s, allowing (fail-open)" % validator)
-        return None
+        raise Cannot("the validator is missing at %s" % validator)
     try:
-        p = subprocess.run([sys.executable, validator, verdict_path, "--require", "--json"],
-                           capture_output=True, text=True, timeout=30)
+        p = subprocess.run([sys.executable, "-I", validator, verdict_path, "--require", "--json"],
+                           capture_output=True, text=True, timeout=max(1, min(VALIDATOR_TIMEOUT_S, time_left())))
         report = json.loads(p.stdout or "{}")
     except Exception as e:
-        log("validator invocation failed, allowing (fail-open): %s" % e)
-        return None
+        raise Cannot("the validator could not be run: %s" % type(e).__name__)
     verdicts = report.get("verdicts") or []
     # PASS only (D-119, R5, audit F9): claims-gate SHIPs only when every claim is PASS, so a CONCERNS
     # verdict is a HOLD and never promotes the asset.
@@ -260,37 +390,57 @@ def bash_marked_decision(cmd, cwd, project_dir, validator):
 
 
 def main():
+    """D-278: arm the hook's own deadline, then judge; reaching the deadline is a denial of a marked write, never a silent pass."""
+    _arm_budget()
+    try:
+        return _main()
+    except BudgetExceeded as late:
+        _disarm_budget()
+        return time_failure(late)
+    finally:
+        _disarm_budget()
+
+
+def _main():
     if len(sys.argv) < 2:
         return 0
     validator = sys.argv[1]
 
+    raw = sys.stdin.read()
+    if not raw.strip():
+        return 0               # nothing was sent: not a hook call
     try:
-        payload = json.load(sys.stdin)
+        payload = json.loads(raw)
+        if not isinstance(payload, dict):
+            raise ValueError("the payload is not a JSON object")
     except Exception as e:
-        log("malformed hook payload, allowing (%s)" % e)
-        return 0
+        return guard_failure(e)   # D-269: cannot tell the target, so deny if the project has a marked folder
+    _STATE["payload"] = payload
 
     tool = payload.get("tool_name") or ""
     project_dir = os.path.realpath(
         os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd())
-    if tool == "Bash":
-        cmd = str((payload.get("tool_input") or {}).get("command") or "")
-        targets = bash_verdict_writes(cmd)
-        if targets:
-            return block_verdict_bash(targets)
-        why = bash_marked_decision(cmd, payload.get("cwd") or project_dir, project_dir, validator)
-        return block(why) if why else 0
-    if tool not in COVERED_TOOLS:
-        return 0
+    try:
+        if tool == "Bash":
+            cmd = str((payload.get("tool_input") or {}).get("command") or "")
+            targets = bash_verdict_writes(cmd)
+            if targets:
+                return block_verdict_bash(targets)
+            why = bash_marked_decision(cmd, payload.get("cwd") or project_dir, project_dir, validator)
+            return block(why) if why else 0
+        if tool not in COVERED_TOOLS:
+            return 0
 
-    tool_input = payload.get("tool_input") or {}
-    raw_path = tool_input.get("file_path") or ""
-    if not raw_path or not raw_path.endswith(".md"):
-        return 0
-    abs_path = raw_path if os.path.isabs(raw_path) else os.path.join(
-        payload.get("cwd") or project_dir, raw_path)
-    why = draft_decision(os.path.realpath(abs_path), project_dir, validator)
-    return block(why) if why else 0
+        tool_input = payload.get("tool_input") or {}
+        raw_path = tool_input.get("file_path") or ""
+        if not raw_path or not raw_path.endswith(".md"):
+            return 0
+        abs_path = raw_path if os.path.isabs(raw_path) else os.path.join(
+            payload.get("cwd") or project_dir, raw_path)
+        why = draft_decision(os.path.realpath(abs_path), project_dir, validator)
+        return block(why) if why else 0
+    except Cannot as c:
+        return cannot_block(str(c))
 
 
 if __name__ == "__main__":
@@ -298,6 +448,5 @@ if __name__ == "__main__":
         sys.exit(main())
     except SystemExit:
         raise
-    except Exception as e:  # never crash the hook — an uncaught exception must fail OPEN
-        log("unexpected error, allowing (fail-open): %s" % e)
-        sys.exit(0)
+    except Exception as e:  # D-269: an uncaught error denies a write that is, or may be, under a marked folder
+        sys.exit(guard_failure(e))

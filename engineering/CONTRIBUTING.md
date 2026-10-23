@@ -33,7 +33,7 @@ Use the "Agent miss report" issue template if you'd rather report than patch.
   a short README on what you changed and why.
 - **Enforcement improvements** — hook coverage, CI-check robustness, the
   branch-protection recipe (especially reports of how GitHub's settings behave
-  on different plans — the 0-approvals + code-owners combination is the
+  on different plans — one required approval plus the required checks is the
   load-bearing assumption; evidence welcome).
 - **Docs** — anything that shortens the path from clone to first gated merge.
 

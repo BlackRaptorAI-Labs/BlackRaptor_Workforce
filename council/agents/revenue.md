@@ -3,7 +3,7 @@ name: revenue
 description: >-
   Use for revenue execution: running the GTM end-to-end, pipeline and forecast discipline, sales motion operation, enablement, and RevOps. The CRO-equivalent — the single seat accountable for the number.
 tools: Read, Grep, Glob, Bash, WebSearch, WebFetch
-model: sonnet
+model: opus
 ---
 
 <!-- Persona (optional): adopters may add a display name here. Nothing else may change. -->

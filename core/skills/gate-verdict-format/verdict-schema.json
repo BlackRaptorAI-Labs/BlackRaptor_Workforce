@@ -1,7 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Gate verdict block",
-  "x-schema-version": "3.3",
+  "x-schema-version": "3.4",
+  "x-version-note-3.4": "MINOR bump 2026-10-19 (v3.3->v3.4, D-201, amends D-101 and D-181). A content rule on an existing field, no new field: a test-auditor or completion-auditor PASS opens with MEASURED, or with CITED followed by completion-auditor's output path and the backticked command that run executed. A reviewer without Bash can now pass on the completion audit's run. The Stop hook checks that the cited command ran in this session (by any agent), as it does for MEASURED.",
   "x-version-note-3.3": "MINOR bump 2026-10-12 (v3.2->v3.3, D-146). A content rule on an existing field, no new field: `evidence` that opens with MEASURED must contain at least one backticked command, for every verdict. A MEASURED line with only a `path:line` is CITED. A run that happened outside this session (CI, another terminal) is CITED with its log path, never MEASURED. The Stop hook also checks that a backticked MEASURED command was actually run in the session.",
   "x-version-note-3.2": "MINOR bump 2026-10-09 (v3.1->v3.2, PLAN-WF-2026-10-v2 R3, audit F4). A content rule on an existing field, no new field: a PASS needs `evidence` that opens with MEASURED, CITED, COMPUTED or ESTIMATED (never ASSUMED) and contains at least one `path:line` reference or a backticked command. For `test-auditor` and `completion-auditor` a PASS must open with MEASURED. A bare label (`MEASURED`) or a hand-trace with nothing to re-check no longer carries a PASS. CONCERNS, FAIL and COULD NOT ASSESS are unchanged.",
   "x-version-note-3.1": "MINOR bump 2026-10-02 (v3.0->v3.1, D-101). One content rule on an existing field, no new field: `evidence` must open with one of the five provenance labels the core contract already defines (MEASURED, CITED, COMPUTED, ESTIMATED, ASSUMED), so a hand-traced result (COMPUTED or ASSUMED) can never pass as an executed one (MEASURED). Blocks that were valid v3.0 fail v3.1 only if their evidence lacks the label.",
@@ -117,9 +118,9 @@
       "then": {"properties": {"evidence": {"pattern": "^MEASURED\\b[\\s\\S]*`[^`]+`"}}}
     },
     {
-      "x-rule": "v3.2 quality gates: a test-auditor or completion-auditor PASS opens with MEASURED",
+      "x-rule": "v3.4 quality gates: a test-auditor or completion-auditor PASS opens with MEASURED, or with CITED, the completion audit's output path and the backticked command it ran",
       "if": {"properties": {"verdict": {"const": "PASS"}, "agent": {"enum": ["test-auditor", "completion-auditor"]}}, "required": ["verdict", "agent"]},
-      "then": {"properties": {"evidence": {"pattern": "^MEASURED\\b"}}}
+      "then": {"properties": {"evidence": {"pattern": "^(MEASURED\\b|CITED\\s+[^\\s`]*[/.][^\\s`]*\\s+`[^`]+`)"}}}
     }
   ]
 }

@@ -12,9 +12,9 @@
 
 ## 5. Deviations & risk acceptance
 
-| What | Agent said | I decided | Why acceptable | Revisit by |
-|---|---|---|---|---|
-| privacy gate could not assess (no data-flow table) | COULD NOT ASSESS | ACCEPT-WITH-RISK | no personal data in this diff | 2026-11-01 |
+| What | Agent said | I decided | Why acceptable | Approver | Revisit by |
+|---|---|---|---|---|---|
+| privacy gate could not assess (no data-flow table) | COULD NOT ASSESS | ACCEPT-WITH-RISK | no personal data in this diff | T. Owner 2026-10-19 | 2026-11-01 |
 
 ## 6. Emergency addendum
 

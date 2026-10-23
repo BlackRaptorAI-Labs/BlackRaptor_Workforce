@@ -1,3 +1,11 @@
+## 2.7.3 — 2026-10-22 — Four strategy seats move to opus; the gate pins its effort
+
+`revenue`, `gtm-strategy`, `people-org` and `technology-strategy` move from `sonnet` to `opus`; `ethics-governance` (the gate) gains `effort: high`. `growth-engine` stays on `sonnet`. Cost: the four moved seats run at about twice the price per token. Override with your session's effort, `CLAUDE_CODE_EFFORT_LEVEL` or `CLAUDE_CODE_SUBAGENT_MODEL` (Core UPDATING, section 5).
+
+## 2.7.2 — 2026-10-19 — Missing cheap checks are flagged only by a seat that can run them
+
+The ethics-governance seat flags a code change that arrives without the cheap checks only when it holds a shell to run them; otherwise it notes that the result was not supplied.
+
 ## 2.7.1 — 2026-10-16 — Outside text is information, not orders
 
 ### Changed

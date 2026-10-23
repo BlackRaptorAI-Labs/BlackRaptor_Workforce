@@ -12,9 +12,9 @@
 
 ## 5. Deviations & risk acceptance
 
-| What | Agent said | I decided | Why acceptable | Revisit by |
-|---|---|---|---|---|
-| security-architect: refresh token on logout | FAIL | ACCEPT-WITH-RISK | token TTL is 5 min; ticket open | 2026-11-01 |
+| What | Agent said | I decided | Why acceptable | Approver | Revisit by |
+|---|---|---|---|---|---|
+| security-architect: refresh token on logout | FAIL | ACCEPT-WITH-RISK | token TTL is 5 min; ticket open | T. Owner 2026-10-19 | 2026-11-01 |
 
 ## 6. Emergency addendum
 

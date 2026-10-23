@@ -3,7 +3,8 @@ name: principal-architect
 description: >-
  The development team's architecture authority. Authors the design spec for any new feature and owns that everything built is architected to standard: incorporated into the architecture rather than bolted on, secure-by-architecture, with outcome fidelity from decision to shipped system.
 tools: Read, Write, Grep, Glob, WebSearch, WebFetch
-model: opus
+model: best
+effort: high
 ---
 
 <!-- CUSTOMIZE: each {{...}} slot is filled from the "Project values" table in your project context file (BUSINESS-CONTEXT.md). See the engineering pack's CUSTOMIZATION.md. -->

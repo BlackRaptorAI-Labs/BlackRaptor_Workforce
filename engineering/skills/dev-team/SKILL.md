@@ -70,7 +70,8 @@ Its memo is an attachment to the Change Record, never a gate row.
 
 Four waves, in order: **(1) spec** — `principal-architect` (+ `product-manager` if intake escalated)
 — **(2) build** — the selected producers, TDD-style, from the approved spec — **(2b) check ladder** —
-`completion-auditor` runs the cheap checks before any gate, in this order, and stops at the first red
+`completion-auditor`, dispatched with the exact line `MODE: ladder-only (no verdict)` as the first line of
+its prompt (it owes no verdict for the ladder), runs the cheap checks before any gate, in this order, and stops at the first red
 rung: lint (`{{LINT_CMD}}`), typecheck (`{{TYPECHECK_CMD}}`), the tests for the changed files
 (`{{TEST_CMD}}` scoped to the diff where the runner supports it, else the rung reads "not scopable"),
 the full suite (`{{TEST_CMD}}`). Each rung is a MEASURED row in the facts pack (command, exit status,
@@ -78,10 +79,20 @@ output path; `references/facts-pack.md`). An unset command is one row, "not conf
 **No wave-3 gate is dispatched while a configured rung is red:** the red rung goes back to the owning
 producer as wave 2, the same as a gate FAIL. — **(3) gates** — every gate the tier matrix selected,
 dispatched together once the ladder is green (except `test-auditor`, which waits for
-`completion-auditor`'s MEASURED run of the suite and gets the ladder table as its input) — **(4)
+`completion-auditor`'s MEASURED run of the suite and gets the ladder table as its input; before it and before
+any `completion-auditor` verdict dispatch, commit and push the branch, `git push -u origin HEAD`, never
+`--force` and never the default branch, because CI is the judge of whether the tests pass and runs on the pushed
+commit, D-252) — **(4)
 `completion-auditor`** — closes, per §8. Do not open wave *n+1* before wave *n*'s outputs exist; within
 a wave, dispatch concurrently (§5 below).
 
+- **CI decides whether tests pass** (D-252): on a clean machine, for the exact commit. The local check is an
+  early warning; agents judge whether the tests are strong; the human decides. The final report shows, per
+  test-auditor and completion-auditor verdict, the CI state the Stop hook gave: passed, waiting (with the run URL)
+  or failed (with the job URL). A waiting gate is not a PASS; a later turn re-reads CI. Never poll in a loop.
+- **Agents never merge.** A person merges once CI and the gates pass. `/workforce-init --setup-branch-protection`
+  asks GitHub to require `head-suite`, `base-suite` and one approving review, the owner's while write access stays with the owner and one agent account (D-253, D-260). Agents
+  open pull requests as the build or agent account, never as the owner, so the owner can approve them.
 - **A gate's FAIL stops the merge.** Route the FAIL and its stated fix back to the owning producer;
   the producer's fix re-enters wave 2, not wave 3 — a fixed diff is a new build, not a patched review.
 - **A gate's COULD NOT ASSESS re-dispatches that gate once**, with the specific missing input named
@@ -94,11 +105,13 @@ a wave, dispatch concurrently (§5 below).
 ## 4. Cost quote (before dispatch)
 
 Before dispatching a wave, state the quote as **agents × tier × estimated tokens**: list each agent
-about to be dispatched, its model tier (opus/sonnet/haiku), and a rough per-dispatch token estimate,
+about to be dispatched, its model tier (best/opus/sonnet) and its effort (a gate shows `high`; any other agent shows "session"), and a rough per-dispatch token estimate,
 summed. This is a stated estimate, not a metered measurement — say so — and it lets the human stop an
 oversized wave before it runs rather than after.
 
 ## 5. Dispatch instruction
+
+**Do not pass `model` or `effort` when you dispatch a gate.** A per-call value overrides the agent file's `model:` and `effort: high`, which are fixed on purpose; let the file decide. (A person can still set `CLAUDE_CODE_EFFORT_LEVEL` or `CLAUDE_CODE_SUBAGENT_MODEL` themselves.)
 
 **In a SINGLE message, spawn the independent specialists as separate subagents** (Agent
 tool) so they run concurrently; sequence only where a real dependency exists (spec →
@@ -141,7 +154,7 @@ in the state file and the Change Record. An advisory is never converted into a g
 
 **`completion-auditor` runs last** on the assembled work — it re-checks ground truth
 (refs advanced, CI green, STATE updated, Done-criteria met) before anything is reported
-done. Route the code to `code-reviewer` and confirm the right CODEOWNERS gates cleared.
+done. Route the code to `code-reviewer` and confirm the right specialist gates cleared; the owner approves the pull request.
 
 ## 9. Reviews with more than one agent
 

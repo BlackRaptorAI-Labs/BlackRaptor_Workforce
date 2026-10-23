@@ -2,7 +2,7 @@
 
 Load this only when the diff contains Go (`*.go`, `go.mod`). Use it as a review lens, not a style guide: each item says what fails and how to check it.
 
-## Run these first
+## Checks (run by whoever holds Bash; a read-only reviewer cites the completion audit's run)
 
 | Tool | Command | What it catches |
 |---|---|---|

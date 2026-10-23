@@ -3,7 +3,7 @@ name: product-manager
 description: >-
   The end-to-end product owner (CPO) and the bridge between market demand and the build. Use for what-to-build decisions and for turning an approved ask into a buildable definition: outcome thesis, target customer, jobs-to-be-done, scope/non-goals, then problem statement, user stories, acceptance criteria, and success metrics. Holds the final pricing decision.
 tools: Read, Grep, Glob, WebSearch, WebFetch
-model: sonnet
+model: opus
 ---
 
 <!-- CUSTOMIZE: each {{...}} slot is filled from the "Project values" table in your project context file (BUSINESS-CONTEXT.md). See the engineering pack's CUSTOMIZATION.md. -->

@@ -1,3 +1,13 @@
+## 2.8.3 — 2026-10-19 — Read-only reviewers cite runs instead of being told to make them
+
+Reviewers without a shell are never told to run checks and cite the completion audit's run instead, test-auditor can pass on that cited run, security-architect fails an exploitable finding unless the Change Record accepts the risk, completion-auditor fails any claim it could not verify, and a reviewer flags the cheap checks as not run only when it could have run them.
+CI decides whether tests pass, on a clean machine, for the exact commit. The local check is an early warning. Agents judge whether tests are strong. You decide. The new workforce-proof workflow (head-suite and base-suite) is that CI judge; /gate-review, /pre-merge and dev-team now tell the session to push the branch before the quality gates and to report the CI state per gate (run live for /gate-review). Code under test that is written to cheat its own tests runs inside CI too; it is visible in the diff, where code-reviewer and a person review it. test-auditor's and completion-auditor's passes are also checked first by the review check's own run of your test command, an early warning that blocks a suite that runs no test or fails one, and blocks when the runner config changes (the pytest, jest, vitest, mocha, karma and playwright config files, the pytest parts of pyproject.toml, setup.cfg and tox.ini, setup.py and pytest11 entry points, the test scripts and test-runner keys in package.json, files the test command names, and in an in-repo virtualenv or node_modules the startup files (.pth, sitecustomize.py, usercustomize.py), pytest plugin entry points, install state and the files a jest, vitest or mocha config names there). Without the CI judge (--no-ci-judge), anything else the test run loads can still be written to fake a pass; CI on every pull request is the proof.
+/gate-review, /pre-merge, /red-team and dev-team mark the completion-auditor dispatch that only runs the check ladder, so it owes no verdict, and the Tier-3 hook now says it is an early warning: with the sandbox on, no agent's shell command can write the enforcement files.
+The code-owners template and every code-owners step are removed: the owner approves every pull request, while write access stays with the owner and one agent account (the branch-protection checklist says how), and required checks and the owner's approval gate the merge. /workforce-init --setup-branch-protection now asks for one approving review with stale approvals dismissed and the last push approved, both CI checks on a branch up to date with the base, and no code-owner rule; agents and the build account open pull requests and are not admins.
+A pull request whose base branch has no Workforce install record, or no tests, is decided by your review, and workforce-proof says so instead of passing or failing it. Every CI run for the commit must finish and pass, and a report folder with a file that cannot be read gives no count. GitHub counts one approval from anyone with write access: keep write access to you and one agent or build account so the approval is yours, record them with /workforce-init --owner-login and --agent-account, and keep the repo setting "Allow GitHub Actions to create and approve pull requests" off. The enforcement map's Schema and CI/CD rows now say Partial and name what covers them (the Tier-3 hook, change-record-required when you make it a required check, and your approval), and a check keeps the template and the skill's map in step.
+A 2.8.3 repo opened on a machine that has no tamper baseline for it (a fresh clone) blocks any turn that dispatched an agent with "tamper baseline missing"; run /workforce-init --upgrade from your own terminal, and the session start says so. The approval is the owner's only while write access stays with the owner and one agent account: the doctor warns on a second agent account and fails when GitHub Actions can approve pull requests. The unqualified sentences "the owner approves every pull request" now carry that condition.
+Models and effort: `ux-designer` (a gate) moves from `sonnet` to `opus`, and its sonnet exception is retired; all 12 gates in this pack gain `effort: high`; `principal-architect` uses `model: best` with `effort: high` (the strongest model your account has, else Opus); `legal-docs-writer`, `product-designer` and `security-operations` stay on `opus` with no `effort:` line; the `dev-team` skill shows model and effort in its cost quote and tells the main session not to pass `model` or `effort` when it dispatches a gate. Cost: `ux-designer` runs at about twice the price per token; override as in UPDATING, section 5.
+
 ## 2.8.2 — 2026-10-16 — Agents stay off live systems
 
 Agents no longer run live-system commands from docs, and a new check blocks the direct forms of
@@ -348,7 +358,7 @@ produce it before it is used (D2a). `technical-writer` trades `Bash` for `Edit`,
 says run / script / compute programmatically / write the file / `sim/` while the grant lacks the
 tool it needs, an unused `Write` or `Edit`, and a `Bash` grant with no re-execution clause.
 
-The `change-record-required` workflow, CODEOWNERS and PR templates, and the Tier-3 protection hook
+The `change-record-required` workflow, code-owners and PR templates, and the Tier-3 protection hook
 are now BUILT from the golden source and byte-checked against what ships, instead of being
 hand-maintained in the repository.
 
@@ -570,7 +580,7 @@ people published their work openly, and we're grateful for it.
   symlinks with `realpath` (so a symlink pointing at a protected file is
   caught). The docstring now states plainly that this hook is in-session
   accident-prevention and that the *enforcement of record* is server-side
-  (branch protection + CODEOWNERS + the change-record-required CI check).
+  (branch protection + code-owner review + the change-record-required CI check).
   Verified with a path-guard test harness.
 
 ### Notes
@@ -606,5 +616,5 @@ source, please open an issue — we want attribution to be right.
 ## [0.1.0] — 2026-07-02
 
 Initial public release: 16-agent governed team, Tier-3 path-guard hook,
-`change-record-required` CI check, sparse CODEOWNERS two-person rule, the Change
+`change-record-required` CI check, sparse code-owners two-person rule, the Change
 Record system, and the agent-retro feedback loop. Extracted from production use.
