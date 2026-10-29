@@ -64,41 +64,46 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    Say plainly that this is what the files ask for; the session or the environment (`CLAUDE_CODE_EFFORT_LEVEL`, `CLAUDE_CODE_SUBAGENT_MODEL`)
    can still override it, and the doctor cannot see what a past run used.
 
-4. **Core hooks wiring (R15.4; `blackraptor-core` is always installed).** Four hooks live in the
-   CORE pack: the welcome/onboarding trigger and the session-contract hook (both `SessionStart`; the
-   session-contract hook is off unless `BR_SESSION_CONTRACT=on`, so its silence is expected), the DRAFT/GATED write gate
+4. **Core hooks wiring (R15.4; `blackraptor-core` is always installed).** Five hooks live in the
+   CORE pack: the welcome/onboarding trigger, the session-contract hook and the upgrade notice (all three `SessionStart`; the
+   session-contract hook is off unless `BR_SESSION_CONTRACT=on`, and the upgrade notice speaks only when this repo's install is
+   older or incomplete, so their silence is expected), the DRAFT/GATED write gate
    (`PreToolUse`), and the verdict validator (`Stop`). The one-shot claims-gate prompt-reminder hook
    that used to run on `UserPromptSubmit` was removed in 2.2.0 (its job is now carried directly in
    each producer's own instructions). Since 2.8.2 the `UserPromptSubmit` entry is the verdict
    validator recording verdict and asset files at turn start (it prints nothing). Report whether each
-   of the four current hooks is wired:
+   of the five current hooks is wired:
    - `core/hooks/hooks.json` is present and lists one `SessionStart` entry, one `UserPromptSubmit`
      entry (`validate-verdicts.sh --snapshot turn-start`), one `PreToolUse` entry (matcher
      `Write|Edit|MultiEdit|Bash`), one `PostToolUse` entry (matcher `Bash`, `validate-verdicts.sh
      --snapshot bash`), and one `Stop` entry.
-   - `core/hooks/inject-onboarding-rule.sh` and `core/hooks/inject-session-contract.sh` (`SessionStart`), `core/hooks/enforce-draft-gate.sh`
+   - `core/hooks/inject-onboarding-rule.sh`, `core/hooks/inject-session-contract.sh` and `core/hooks/upgrade-notice.sh` (`SessionStart`), `core/hooks/enforce-draft-gate.sh`
      (`PreToolUse`), and `core/hooks/validate-verdicts.sh` (`Stop`) are all present **and executable**
      (`test -x`). A hook the client cannot execute is a silently disabled rule.
    - `command -v python3` succeeds, and `core/hooks/validate-verdicts.py`, `core/hooks/enforce-draft-gate.py`
      and `core/skills/gate-verdict-format/validate_verdict.py` are present (D-267, D-268). The write gate
-     and the verdict validator run in Python. Without `python3` on PATH, or without one of these files,
-     the verdict hook prints "gates in this turn are NOT checked" on every Stop and the write gate denies
-     writes under a marked asset folder, so a missing one is a **FAIL**, not an anomaly to note: report
+     and the verdict validator run in Python. Without `python3` on PATH, or without one of these files, a gate
+     hook cannot run as built: the verdict hook says gates are not checked, or blocks the turn, and the write gate
+     denies writes it would otherwise judge (D-305), so a missing one is a **FAIL**, not an anomaly to note: report
      `FAIL: the verdict check cannot run (<what is missing>); gates are NOT checked`.
    - the core `plugin.json` does **NOT** declare a `"hooks"` key. On client 2.1.170+ `hooks/hooks.json`
      auto-loads by convention, so declaring it is a fatal "Duplicate hooks file detected" load failure —
      a **blocking** anomaly.
-   Report the wiring status for all four hooks; a missing/non-executable hook means that rule won't
+   Report the wiring status for all five hooks; a missing/non-executable hook means that rule won't
    auto-fire (for onboarding, the in-skill R3/R7 triggers still apply as the backstop) — note it,
    non-blocking.
    Stop-hook scope: the verdict hook checks verdict blocks that a gate dispatched in the turn returned,
-   and verdict files written in that turn. It does not check a block the main session writes itself, and
-   a turn that dispatched no gate shows no Stop-hook activity. Stop hooks do run in print mode
-   (`claude -p`). This check covers wiring only; never report a quiet Stop hook on a turn with no gate
-   as a defect.
+   and verdict files written in that turn. It does not check a block the main session writes itself. A
+   turn that dispatched no gate is usually quiet, but the Stop hook still blocks it for a verdict file a shell
+   command named or changed, or a marked asset written without a claims-gate PASS, and says when its disk check
+   was skipped or partial. Stop hooks do run in print mode (`claude -p`). This check covers wiring only; never
+   report a quiet Stop hook on a turn with no gate as a defect.
 
 5. **Client version.** Record `claude --version`. Note it in the report — hook-loading and
-   marketplace behavior have varied across client versions.
+   marketplace behavior have varied across client versions. The minimum is 2.1.288 (D-291): compare as version numbers
+   (2.1.99 < 2.1.288 < 2.1.300). An older client is an **ANOMALY (blocking)**, `FAIL: Claude Code <version> is older than
+   2.1.288, the minimum Workforce supports: the verdict check reads each agent's own transcript, which was confirmed on 2.1.288 and
+   2.1.296 and an older client may not write, and blocks a turn that ran an agent when it cannot find them; update Claude Code`. A version you cannot read is a **WARNING** that says so; never report it as passing.
 
 6. **Context onboarding (per pack).** For each installed pack that uses a context file, resolve it
    per the documented order (current working / project root → an explicit path the user named) and
@@ -234,7 +239,7 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    - `branch_protection.requires_both` false: an **ANOMALY (blocking)**,
      `FAIL: branch protection on <branch> does not require head-suite and base-suite: run /workforce-init --setup-branch-protection from your own terminal`.
      A `branch_protection.error` (gh missing, not signed in, offline) is a **WARNING** naming it. Inside Claude
-     Code's sandbox on macOS, gh cannot verify GitHub's certificate (measured), so the error says "run it from
+     Code's sandbox on macOS, gh cannot verify GitHub's certificate (measured: `_eval/reviews/PATCH-283-STATE.md`, the C-5 doctor probe), so the error says "run it from
      your own terminal": give the user the exact command, `python3 <core_root>/hooks/validate-verdicts.py
      --ci-status <repo>`, and report branch protection as not checked, never as passing.
    - `branch_protection.reviews_readable` true and `required_approving_review_count` below 1 or
@@ -274,8 +279,11 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
      - `readable` false: a **WARNING**, "whether GitHub Actions can approve pull requests on <repo> needs an admin GitHub login to read;
        run `python3 <core_root>/hooks/validate-verdicts.py --ci-status <repo>` from your own terminal". Never report it as passing.
    - `disk_check.skipped` true (D-279): a **WARNING**, "the disk check would be skipped on this repo (<reason>): verdict files and
-     marked assets written outside the Write tool are not checked; the verdict hook says so on every turn it skips". `skipped`
-     false: nothing to report.
+     marked assets written outside the Write tool are not checked; the verdict hook says so on every turn it skips". The reason
+     names a folder it cannot read when that is the cause (D-289). `skipped` false: nothing to report.
+   - `disk_check.partial` set (D-294): a **WARNING**, "the disk check's search for marked folders inside git-ignored folders
+     stops short on this repo (<partial>): a marked asset there that a script or shell command wrote may not be caught; the verdict
+     hook says so on every turn". Empty: nothing to report.
    - Quote `judge.msg` for HEAD as a note (CI passed, waiting, failed, or why it was not read).
    Agents never merge, and the doctor changes nothing here: every fix above is the user's, from their own
    terminal or GitHub's settings.

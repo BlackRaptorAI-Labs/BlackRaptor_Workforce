@@ -7,16 +7,16 @@ installed; you do not wire anything yourself.
 |---|---|---|---|
 | `inject-onboarding-rule.sh` | `SessionStart` | Offers the first-run welcome when a project has no context file or no `USER-PREFS.md`. Silent once you are set up. | 10 s |
 | `inject-session-contract.sh` | `SessionStart` | Off by default. With `BR_SESSION_CONTRACT=on` it adds the session contract (honor `USER-PREFS.md`, the context-review reminder, at most one preference suggestion per session) to each session, at a cost of about 270 tokens per turn. | 10 s |
-| `upgrade-notice.sh` | `SessionStart` | When this repo's install record is older than the running Core pack or has no test command, tells you once per session: "Workforce <version> needs /workforce-init --upgrade in this repo (run it from your own terminal). Until then test-auditor and completion-auditor passes are blocked." Silent otherwise. | 10 s |
-| `enforce-draft-gate.sh` | `PreToolUse` (Write, Edit, MultiEdit, Bash) | In a folder marked for marketing assets only, blocks writing a final `.md`, with the Write tool or a shell command (cp, mv, a redirect, an archive extract), until a sibling `.verdict.md` exists that validates as PASS. Everywhere, blocks a Bash command that writes a `.verdict.md` file: verdict files are written with the Write tool so the gate check can read them. | 10 s |
-| `validate-verdicts.sh` | `Stop`; also `UserPromptSubmit` and `PostToolUse` (Bash) to record verdict and asset files on disk | When a turn dispatched a gate agent, the turn does not end until that gate's verdict block validates. A verdict block must name the agent that returned it. A verdict file, or an asset under a marked folder, that appeared or changed in the turn with no Write or Edit of it blocks the turn. A test-auditor or completion-auditor PASS is checked by the hook's own run of your test command. | 900 s (Stop; it may run your tests), 20 s (snapshots) |
+| `upgrade-notice.sh` | `SessionStart` | When this repo's install record is older than 2.8.3 (the last release that changed a plugin-mode install) or has no test command, tells you once per session: "Workforce <version> needs /workforce-init --upgrade in this repo (run it from your own terminal). Until then test-auditor and completion-auditor passes may be blocked." In copy mode, when the repo's copies of the agents and skills are older than the packs, it says so and asks for the same command. In plugin mode it also says when this machine has no tamper baseline for the repo. Silent otherwise. | 10 s |
+| `enforce-draft-gate.sh` | `PreToolUse` (Write, Edit, MultiEdit, Bash) | In a folder marked for marketing assets, blocks writing a final `.md`, with the Write tool or a shell command (cp, mv, a redirect, an archive extract), until a sibling `.verdict.md` holds a claims-gate PASS that validates and was written in the same turn (an approval from an earlier turn does not clear new copy). Everywhere, blocks a Bash command that names the `.verdict.md` file it writes in a form it parses (a redirect, tee, cp or mv, sed -i, dd, an interpreter's -c text; not curl -o, touch or awk, which the stop catches where its disk check runs): verdict files are written with the Write tool so the gate check can read them. Where it cannot tell whether a folder is marked (its own check cannot run, or a `cd` it cannot resolve), it denies a `.md` write anywhere; "Turning them off" below has the exact rule. | 10 s |
+| `validate-verdicts.sh` | `Stop`; also `UserPromptSubmit` and `PostToolUse` (Bash) to record verdict and asset files on disk | When a turn dispatched a gate agent, the stop blocks the turn until that gate's verdict block validates, at most three times; then the turn ends with "Verdict check FAILED". A verdict block must name the agent that returned it. A verdict file, or an asset under a marked folder, that appeared or changed in the turn with no Write or Edit of it blocks the turn where the disk check runs (where it is skipped or partial, the stop says so). A test-auditor or completion-auditor PASS is checked by the hook's own run of your test command. | 900 s (Stop; it may run your tests), 20 s (snapshots) |
 
 ## What the hooks can and cannot do
 
 Hooks catch honest mistakes and shortcuts; they are not a security boundary on their own. With the sandbox
 on, the enforcement files are protected: no agent's shell command can write them (measured on Claude Code
 2.1.296 for the main session, the built-in general-purpose and `claude` agents, and every pack agent with a
-shell). `/workforce-init` turns the sandbox on by default. CI decides whether tests pass, on a clean machine,
+shell: `_eval/proofs/2026-10-patch283/amendment4/p0/p0-table.md`, `_eval/proofs/2026-10-patch283/amendment5/l1/l1-table.md`). `/workforce-init` turns the sandbox on by default. CI decides whether tests pass, on a clean machine,
 for the exact commit. The local check is an early warning. Agents judge whether tests are strong. You decide.
 A test-auditor or completion-auditor PASS stands only when GitHub Actions ran the workforce-proof workflow for
 the commit and both its jobs passed (see "CI is the judge" below); the hook's own run of your test command
@@ -33,7 +33,21 @@ CI too; it is visible in the diff, where code-reviewer and a person review it. T
   dispatch this turn". Read verdict files with the Read tool.
 - It does not check a verdict block the main session writes in its own reply. Only a gate's verdict
   counts: a block signed by an agent that is not a gate (or a council seat) is rejected as "not a gate
-  agent", inline or in a verdict file. The gate list is `gates` in the core pack's
+  agent", inline or in a verdict file. A verdict counts only for the gate that was dispatched: a block signed with another
+  agent's name blocks wherever the result came from (the reply, a completion notice, or the task's output file), and a council
+  seat file or a claims-gate verdict file counts for a gate only when it holds the block that dispatch returned in the turn,
+  unchanged (a second dispatch of the same gate cannot stand in for the first), and never in place of that dispatch's own reply. Every text part of a gate's final message is judged. Whether a pass needs CI is decided by the gate that was dispatched, not by the name in its block. A marketing asset
+  is cleared only by a claims-gate PASS in the verdict file beside it, written in the same turn as the asset (an approval from an
+  earlier turn does not clear new copy). The write gate checks the PASS when the asset is written, and refuses it as not written
+  this turn when the turn-start snapshot for this project and session shows the PASS unchanged since the turn began and the
+  session's transcript shows no Write or Edit of it in this turn that succeeded (one whose result is an error does not count)
+  and the file was last modified before the turn began (the client can call the write gate before its transcript shows that
+  Write; a file time moved by touch alone clears the write gate, and the stop then blocks the asset);
+  the stop
+  checks the whole rule for every marked asset written in the turn that it can see: every Write-tool write, and a
+  shell or script write where its disk check runs (where that check is skipped or partial, the stop says so; see the limits
+  below). A gate that finished but whose output file is
+  missing or empty blocks the turn, naming the file. The gate list is `gates` in the core pack's
   `skills/gate-verdict-format/verdict-schema.json`; a project adds its own gates to
   `.claude/gates-allow.txt`, one name per line (with the sandbox on, no agent's shell command can write it;
   without the sandbox, an agent with a shell can).
@@ -111,7 +125,7 @@ CI too; it is visible in the diff, where code-reviewer and a person review it. T
   counts add; the block names the command that failed ("command 2 of 2: ..."). No recorded command blocks
   with "no test command recorded; run /workforce-init". The run uses `NO_COLOR=1`, `FORCE_COLOR=0` and
   `CI=1`: CI is the reference, so a test that passes only under `CI=1` passes here too (D-235). It runs for
-  at most `test_timeout` seconds (default 300, capped at 600 so the whole hook finishes inside its 870-second budget; past that it blocks with "test run exceeded N s; raise
+  at most `test_timeout` seconds (default 300, capped at 600 so the whole hook finishes inside its 840-second budget; past that it blocks with "test run exceeded N s; raise
   test_timeout or split the suite"). On macOS the run cannot write the enforcement files (`sandbox-exec`);
   elsewhere it is not confined, and the clean line says so. If the recorded command names test files, one
   must reach the change: a changed file, its folder, or a file that imports it directly or through a package
@@ -183,11 +197,20 @@ CI too; it is visible in the diff, where code-reviewer and a person review it. T
   in a message that starts "Verdict check FAILED and was not fixed:". If the only problem is a reviewer
   still running, the message says "Verdict check INCOMPLETE" instead.
 - A gate dispatched in the background is checked when its completion notice arrives, in the same turn
-  or a later one. A gate with no result and no notice yet blocks as "still running".
+  or a later one, also when you sent another message before it finished. A gate with no result and no notice yet blocks as
+  "still running". The own transcript of every agent judged in the turn whose result names its agent id is read, including one
+  resumed with SendMessage (every result recorded from Claude Code 2.1.288 to 2.1.310 names one: 237 of 237 results in 97
+  transcripts, `_eval/proofs/2026-10-patch284/amend1/q6/agent-id-scan.txt`; a result without one is not traced, a known gap).
+- A gate dispatched with no result at all when the turn ends is not blocked, since the agent cannot fix a
+  result that never came: the stop says "Verdict check INCOMPLETE: <gate> returned no result: this turn is
+  not gated".
 - After a clean turn that dispatched gates it prints one line: "BlackRaptor verdict check: gates checked
-  N, verdicts valid N; measured: N runs matched, M non-zero." A turn with no gate and no verdict or
-  asset file touched prints nothing; a turn with no gate that reads a verdict file with Bash, or changes
+  G, verdicts valid V; measured: R runs matched, Z non-zero." Gates checked counts every gate dispatched;
+  verdicts valid counts only the gates whose verdict passed the validator. A turn with no gate and no verdict or
+  asset file touched prints nothing, unless the disk check was skipped or partial, which it says; a turn with no gate that reads a verdict file with Bash, or changes
   one, still blocks, and the message says why.
+- A block lists the first five problems, then "and N more", and ends with every note the check made
+  (a skipped disk check, for one), so every note is in the message and the other problems are counted.
 
 ## Direct test commands
 
@@ -221,33 +244,64 @@ Set an environment variable before you start Claude Code:
 A hook that is off prints one line to stderr saying so. The two hooks that guard a gate, the verdict
 check and the marketing write gate, fail closed (D-267): if one breaks or a tool it needs is missing, it
 says so instead of passing quietly. The verdict check blocks the turn with "the verdict check crashed
-(...): this turn is not gated; report it"; after three blocks in one turn (one, when the shell wrapper had to
-answer for the helper) it ends with a "Verdict check FAILED" message, so it cannot loop. If python3, the helper or the validator is missing, it prints
-"gates in this turn are NOT checked" on every stop, and `/workforce-doctor` reports a FAIL. The write gate
-denies a write under a marketing-asset folder when its check cannot run, and lets other writes through with one
-line on stderr. The three hooks that only inform (onboarding, session contract, upgrade notice) still fail open:
+(...): this turn is not gated; report it". The same goes for a verdict validator that cannot run ("the verdict
+validator could not run"), a gate's output file that cannot be read, and a turn that ran an agent with no
+subagents folder beside its transcript ("subagent transcripts are missing (<folder>): this turn is not gated;
+Claude Code 2.1.288 or newer is required"). Blocks in one turn are counted together, whatever caused them (problems, a crash,
+a timeout), in a file of their own beside the transcript, so a dropped snapshot does not reset the count; after three
+(four, when the first block came from the shell wrapper answering for a check that could not) the turn ends with a "Verdict check FAILED" message, so it cannot loop (a damaged background-task notice in the transcript can give one turn a second count of three blocks, a known limit to be fixed in 2.8.5). When it cannot read the
+transcript, or the shell wrapper has to answer for the helper, it blocks only a turn not yet blocked and ends any later stop of
+that turn with FAILED at once. If python3, the helper or the validator is missing, it prints
+"gates in this turn are NOT checked" on every stop, and `/workforce-doctor` reports a FAIL. When the write gate's helper
+cannot answer (it is missing, it ends without a decision, or its 7-second watchdog fires), the gate does not guess where the
+marketing-asset folders are: it denies a write to a file named `.md`, a shell command that names a `.md` file (also with quotes, escapes or a line break inside the name), a shell command that copies a folder, unpacks an archive or copies with a wildcard, and a shell command over 2048 bytes
+long as the client sends it (both of its fallbacks count the same bytes), which it does not try to read ("the claims-gate check could not run (<reason>): this call
+is not allowed until the check works; report it"), and lets every other call through with one line on stderr. An error the
+helper catches itself is decided by the same rule, with "the claims-gate check could not run (<error>): this write is not
+allowed; report it". A folder the write gate cannot read counts as marked. A `cd` it cannot resolve (`cd "$DIR"`, `cd -`) before a relative `.md` write in a form it parses (a redirect, tee, cp or mv, sed -i, dd, an interpreter's -c text; not `curl -o`, `wget -O` or `touch`, which the stop catches where its disk check runs) or an
+archive extract is denied in every project (D-314): no record of where the marked folders are can be trusted to be current, so
+the gate does not guess. The three hooks that only inform (onboarding, session contract, upgrade notice) still fail open:
 they cannot affect a PASS.
 
 Each gate hook also has its own deadline, below the client's timeout (D-278), because Claude Code cancels a hook that
-outlives its timeout and lets the turn end, or the write through, without a word. We measured this on client 2.1.296 by running a throwaway
+outlives its timeout and lets the turn end, or the write through, without a word. We measured this on client 2.1.296 (audit 10V X1, `_eval/proofs/2026-10-patch283/amendment11/z6/audit10v-timeout/AUDIT-10V-REPORT.md`) by running a throwaway
 install whose hook slept past its timeout: the client cancelled it and the turn ended, or the write went through, with no message. It is our
-measurement, not a documented guarantee, and you can repeat it on your client with the same test. The verdict check answers within 870
-of the Stop call's 900 seconds (12 of 20 for the snapshot calls); the write gate within 7 of its 10. At the deadline the
+measurement, not a documented guarantee, and you can repeat it on your client with the same test. The verdict check answers within 840
+of the Stop call's 900 seconds (12 of 20 for the snapshot calls), and its shell watchdog at 855 leaves at least 30 seconds; the
+write gate within 5 of its 10, with its shell watchdog at 7 and 1 second to stop the helper, so when the helper hangs it is built to
+answer within 9 of the 10 seconds. The watchdogs count clock time. At the deadline the
 verdict check blocks the turn with "the verdict check ran out of time (<step>): this turn is not gated; report it" (a
-systemMessage on a snapshot call), and the write gate denies a marked write with "the claims-gate check ran out of time:
-this write is not allowed; report it". A shell watchdog a few seconds later does the same if the helper cannot answer
-at all. The disk check lists files with git, so a large repo is still checked; where it cannot run (no git and a large
-tree, or a huge marked folder) the Stop says "disk check skipped (<reason>): verdict files and marked assets written
-outside the Write tool are not checked this turn", and `/workforce-doctor` warns.
+systemMessage on a snapshot call), and the write gate denies the calls listed above (a write to a file named `.md`, and the
+shell commands) with "the claims-gate check ran out of time: this write is not allowed; report it". A shell watchdog a few seconds later answers
+if the helper cannot answer at all, by the rule in the paragraph above, without searching the project. The disk check lists files with git, so a
+large repo is still checked; where it cannot run (no git and a large tree, a huge marked folder, or a folder it cannot
+read) the Stop says "disk check skipped (<reason>): verdict files and marked assets written outside the Write tool are
+not checked this turn", and `/workforce-doctor` warns. It also finds marked folders inside git-ignored folders, up to 8
+levels deep and outside the folders it never searches (node_modules, Python environment and cache folders); where that search stops short (over 20,000 entries, a folder deeper than 8 levels, or an ignored folder it cannot read) the Stop says
+"disk check partial (<reason>)", and the rest of the check still runs.
 
-How a gate can be off, and what is left (the list is complete):
+How a gate can be off, and what is left (the ways we know of):
 - The kill switches above (BR_HOOKS=off, BR_VERDICT_HOOK=off, BR_CLAIMS_HOOK=off). Announced on stderr.
 - The plugin disabled or not installed. Claude Code then runs none of its hooks and nothing is said; `/workforce-doctor`
   shows what is installed.
 - CI as the judge of tests. The hook's own test run is an early warning; GitHub's `head-suite` and `base-suite` decide.
 - Limits that remain: a hook killed from outside (the machine sleeps, the process is killed, the client crashes) cannot say
-  anything; the disk check does not look inside git-ignored folders outside a marked folder; and the deadlines were measured
-  on client 2.1.296 only (the test is described above).
+  anything; the disk check does not look at files in git-ignored folders unless they sit in a marked folder, and finds
+  marked folders inside git-ignored folders only up to 8 levels deep; it never walks into node_modules or Python environment
+  and cache folders, and does not follow a link to a folder outside the project; and the deadlines were measured on client 2.1.296
+  only (the test is described above). While the write gate's helper cannot answer, a shell command that writes a marked
+  asset without naming a `.md` (a copy onto a link with another name, a moved folder, a script), or a Write to a link with
+  another name, is not denied there; where the stop's disk check runs, it then blocks the turn unless a claims-gate PASS sits
+  beside the asset (where that check is skipped or partial, the stop says so instead). A gate result that names no agent
+  id is not traced (see above). Without the sandbox, an agent with a shell can edit the install record and set
+  `ci_judge: false`; the stop then notes, with each test-auditor or completion-auditor PASS it judges, that the local
+  judge can be faked. A turn-start snapshot that names another project or session, or that could not be finished, is not used;
+  the stop then counts the files it cannot compare as changed. Known limits to be fixed in 2.8.5: a damaged background-task notice
+  in the transcript can give one turn a second count of three blocks; a turn-start snapshot that can be neither rewritten nor removed
+  (a read-only folder) is used for the next turn, which can then be blocked for the previous turn's asset; and the write gate
+  compares a subagent's time with the turn's start as text, so a time written with a time-zone offset can make it take an earlier
+  turn's PASS as this turn's and let the asset through; the stop reads only the transcripts of agents dispatched, resumed or finished in the turn, so it does not take that PASS
+  as written in the turn.
 
 These switches are for you, not for the agents. A block message never offers them: it tells the agent
 to stop and report to you why it thinks the block is wrong, and leaves the decision to you.
@@ -263,7 +317,10 @@ file to copy.
 
 ## What they need
 
-- `bash` and `python3` on your PATH. Without `python3` the write gate and the verdict check do
-  nothing. The `workforce-doctor` skill checks for it.
+- `bash` and `python3` on your PATH. Without `python3` the verdict check cannot judge (every stop says gates are NOT checked)
+  and the write gate denies the calls its fail-closed rule above lists. The `workforce-doctor` skill checks for it.
+- Claude Code 2.1.288 or newer. Each agent's own transcript beside the session's was confirmed on clients 2.1.288 and
+  2.1.296 (2.1.288: `docs/workforce-state.md`, D-117; 2.1.296: 77 agent transcripts found beside their sessions,
+  `_eval/proofs/2026-10-patch284/amend1/q6/subagent-file-scan.txt`); on an older client it may be missing, and the verdict check then blocks any turn that ran an agent. The `workforce-doctor` skill checks the version.
 - On Windows, run Claude Code with Git Bash available (Git for Windows), since the hooks are bash
   scripts.

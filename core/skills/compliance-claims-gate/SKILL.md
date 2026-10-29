@@ -14,8 +14,9 @@ This skill is the **method**. The **gate** is the separate **`claims-gate` agent
 method in a context that has **not** seen the copy's author reasoning (P5). The mandatory routing rule —
 *every external-facing marketing asset is dispatched to the `claims-gate` agent before delivery* — is
 carried on loaded surfaces (this skill and each producer's
-description; no hook carries it) because a plugin-root `CLAUDE.md` carrier does **not** load on a marketplace install (measured;
-SPEC §2 P11). **Do NOT run this skill on copy the current context wrote** — that is self-review, which the
+description; no hook carries it) because a plugin-root `CLAUDE.md` carrier does **not** load on a marketplace install (measured
+2026-08-13: a line placed there was not retrieved in 3 of 3 runs, while a line in a skill was; Workforce agent spec v3, §2 P11,
+kept in the Workforce source repository, not shipped). **Do NOT run this skill on copy the current context wrote** — that is self-review, which the
 gate exists to prevent; dispatch the `claims-gate` agent instead. Guaranteed isolated dispatch is the
 `marketing-campaign` skill's mandatory step; for an ad-hoc single asset, dispatch the `claims-gate` agent
 and, if you cannot, say so and do not present the copy as gate-cleared.
@@ -35,12 +36,19 @@ skill references this rule in one sentence and does not restate the mechanics.
 Two controls make this mechanical rather than checklist-only (the 2.1.0 claims-gate change):
 - A **PreToolUse hook** (`enforce-draft-gate.sh`, Core) refuses a `Write`/`Edit` whose target is a
   `*.md` file under a directory the session has marked as a marketing-asset directory (a `.br-assets`
-  marker file, written by the `marketing-core` skill at onboarding and by `marketing-campaign` at
-  campaign start), unless the target is `*.DRAFT.md`, `*.verdict.md`, or a `*.md` whose sibling
-  `*.verdict.md` exists and validates. Outside a marked directory the hook is inert. Kill switch:
-  `BR_CLAIMS_HOOK=off`. The hook fails CLOSED (D-267): an error while judging a write under a marked
+  marker file, written by the `marketing-campaign` skill at campaign start), unless the target is `*.DRAFT.md`, `*.verdict.md`, or a `*.md` whose sibling
+  `*.verdict.md` exists, validates, holds only `claims-gate` PASS blocks, and is not shown by the turn-start snapshot as unchanged
+  since the turn began with no successful Write or Edit of it in this turn and no change to its file time since the turn began (an approval from an earlier turn does not clear new copy; the verdict Stop hook checks the same rule for
+  every marked asset written in the turn that it can see: every Write-tool write, and a shell or script write where its disk
+  check runs (where that check is skipped or partial, the stop says so)). Outside a marked directory the hook allows every write except a shell command that names a `*.verdict.md` it writes in a form it parses (the hooks README lists them),
+  a `cd` it cannot resolve before a relative `.md` write in a form it parses (the hooks README lists them) or an archive extract (D-314), and, while its check cannot finish, the calls
+  listed below.
+  Kill switch: `BR_CLAIMS_HOOK=off`. The hook fails CLOSED (D-267): an error it catches while judging a write under a marked
   directory denies the write ("the claims-gate check could not run (...): this write is not allowed; report it"), same
-  discipline as the verdict Stop hook; other writes pass with one line on stderr.
+  discipline as the verdict Stop hook; any other error is decided by the rule below. When the check itself cannot finish (its helper is missing, crashes or runs out of
+  time), the hook does not guess where the marked directories are: it denies a write to a file named `*.md`, a shell command
+  that names a `*.md`, a shell command that copies a folder, unpacks an archive or copies with a wildcard, and a shell command
+  over 2048 bytes long as sent, until it is fixed, and lets other writes through with one line on stderr; the hooks README lists what it cannot see.
 - The core **Stop hook** (`validate-verdicts.sh`) additionally blocks the turn when the transcript
   shows a `Write` of a `*.DRAFT.md` under a marked directory with no later `claims-gate` dispatch in
   the same session — the gap the unscoped August hook did not have and over-blocked trying to close;

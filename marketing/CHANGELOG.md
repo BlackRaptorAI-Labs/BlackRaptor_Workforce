@@ -1,3 +1,10 @@
+## 2.5.4 — 2026-10-26 — The operating standard names principal-architect's effort
+
+The shipped operating standard now says that the gates and `principal-architect` pin `effort: high` in their agent files and every other agent follows your session's effort. No agent in this pack changed model or effort.
+
+- `product-marketing` no longer says a claims-gate CONCERNS verdict clears an asset. Only a PASS does; a CONCERNS verdict is a HOLD, as the claims-gate skill and the hooks have required since Core 2.3.3. The 2.1.0 entry below that says "PASS or CONCERNS" predates that rule.
+- An asset is cleared only by a claims-gate PASS written beside it in the same turn as the asset (Core 2.8.4). An approval left from an earlier review no longer clears copy rewritten later: gate the new copy and write its PASS.
+
 ## 2.5.3 — 2026-10-22 — The operating standard says how effort is set
 
 The shipped operating standard now says that the gates pin `effort: high` in their agent files and every other agent follows your session's effort. No agent in this pack changed model or effort (`brand-architect` stays on `opus`, the other eleven on `sonnet`). Override as in the Core UPDATING guide, section 5.

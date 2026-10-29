@@ -1,3 +1,7 @@
+## 2.7.4 — 2026-10-26 — The operating standard names principal-architect's effort
+
+The shipped operating standard now says that the gates and `principal-architect` pin `effort: high` in their agent files and every other agent follows your session's effort. No agent in this pack changed model or effort.
+
 ## 2.7.3 — 2026-10-22 — Four strategy seats move to opus; the gate pins its effort
 
 `revenue`, `gtm-strategy`, `people-org` and `technology-strategy` move from `sonnet` to `opus`; `ethics-governance` (the gate) gains `effort: high`. `growth-engine` stays on `sonnet`. Cost: the four moved seats run at about twice the price per token. Override with your session's effort, `CLAUDE_CODE_EFFORT_LEVEL` or `CLAUDE_CODE_SUBAGENT_MODEL` (Core UPDATING, section 5).

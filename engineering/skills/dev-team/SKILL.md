@@ -105,7 +105,7 @@ a wave, dispatch concurrently (§5 below).
 ## 4. Cost quote (before dispatch)
 
 Before dispatching a wave, state the quote as **agents × tier × estimated tokens**: list each agent
-about to be dispatched, its model tier (best/opus/sonnet) and its effort (a gate shows `high`; any other agent shows "session"), and a rough per-dispatch token estimate,
+about to be dispatched, its model tier (best/opus/sonnet) and its effort (a gate or `principal-architect` shows `high`; any other agent shows "session"), and a rough per-dispatch token estimate,
 summed. This is a stated estimate, not a metered measurement — say so — and it lets the human stop an
 oversized wave before it runs rather than after.
 

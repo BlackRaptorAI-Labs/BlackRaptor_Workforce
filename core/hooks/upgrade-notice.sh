@@ -13,6 +13,12 @@
 # "tamper baseline missing" (D-270, D-281). A repo cloned onto a second machine is the usual case. Silent when no plugin data folder
 # can be found (copy mode, or not run by the plugin).
 #
+# D-299 (PATCH-284, owner ruling 1A): a plugin-mode repo is asked for /workforce-init --upgrade for its record's age only when it is older than REINIT_MIN, the
+# last release that changed a plugin-mode install (2.8.3), not whenever it is older than the running pack: 2.8.4 runs on a 2.8.3 record unchanged, and the
+# old comparison would have told every such repo, falsely, that its passes were blocked (caught before release, as an H4).
+# A missing test command or core version, and a missing tamper baseline, still ask for it too. A copy-mode repo keeps its own copies of the agents and skills (the
+# gate hooks always run from the plugin), so a record older than the running pack means those copies are older; it is told so.
+#
 # SWITCH. BR_HOOKS=off turns it off with every other core hook (br-hooks-env.sh).
 # FAIL-OPEN: any error prints nothing and exits 0.
 HERE="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
@@ -32,9 +38,14 @@ num = lambda v: tuple(int(x) for x in re.findall(r"\d+", str(v or "0"))[:3])
 have = (rec.get("packs") or {}).get("core") if isinstance(rec, dict) else None
 if not isinstance(rec, dict):
     raise SystemExit(0)
-if not (rec.get("test_cmd") and have and num(have) >= num(ver)):
+REINIT_MIN = (2, 8, 3)
+if not (rec.get("test_cmd") and have and num(have) >= min(num(ver), REINIT_MIN)):
     print(json.dumps({"systemMessage": "Workforce %s needs /workforce-init --upgrade in this repo (run it from your own terminal). "
-                      "Until then test-auditor and completion-auditor passes are blocked." % ver}))
+                      "Until then test-auditor and completion-auditor passes may be blocked." % ver}))
+    raise SystemExit(0)
+if rec.get("mode") == "copy" and num(have) < num(ver):
+    print(json.dumps({"systemMessage": "This repo uses its own copies of the Workforce agents and skills, made by %s; the packs are %s. Run "
+                      "/workforce-init --upgrade from your own terminal to copy in the %s versions." % (have, ver, ver)}))
     raise SystemExit(0)
 if rec.get("mode") != "plugin":
     raise SystemExit(0)

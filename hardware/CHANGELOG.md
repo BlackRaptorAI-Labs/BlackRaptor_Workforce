@@ -1,3 +1,7 @@
+## 2.8.4 — 2026-10-26 — The operating standard names principal-architect's effort
+
+The shipped operating standard now says that the gates and `principal-architect` pin `effort: high` in their agent files and every other agent follows your session's effort. No agent in this pack changed model or effort.
+
 ## 2.8.3 — 2026-10-22 — The two gates pin their effort
 
 `compliance-cert` and `hw-design-reviewer` gain `effort: high`; no model changes (both were already `opus`), and the README now says `compliance-cert` is a blocking gate on `opus`. No other seat has an `effort:` line, so your session's effort decides (Core UPDATING, section 5).

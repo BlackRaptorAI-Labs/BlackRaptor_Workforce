@@ -3,58 +3,60 @@
 DRAFT written under a marketing-asset directory with no later claims-gate dispatch in the session.
 
 Invoked by validate-verdicts.sh with the path to validate_verdict.py as argv[1] and the Stop-hook
-payload on stdin. Prints a `{"decision":"block", ...}` object when either check fails, and nothing
-at all otherwise.
+payload on stdin. Prints a `{"decision":"block", ...}` object when either check fails; otherwise it prints nothing, or a
+systemMessage (the clean-turn line, a skipped or partial check, an INCOMPLETE or FAILED line).
 
 FAIL CLOSED (D-267, D-268). This hook guards a gate, so an error on its path never ends a turn quietly. An error
 that is not handled where it happens reaches the one guard in main(), which prints a block: "the verdict check crashed
 (<ExceptionType> at <function>): this turn is not gated; report it". The block is bounded like every other: the first
 MAX_STOP_BLOCKS Stops of a turn block, then a "Verdict check FAILED" systemMessage puts the failure on record, so a
 broken hook can neither pass a turn silently nor loop. A Stop call whose payload cannot be read, or that names no
-transcript, or whose transcript cannot be read, blocks the same way. Only a call that is not a Stop hook at all stays
+transcript, or whose transcript cannot be read, blocks only a turn not yet blocked, and ends any later Stop of that turn with
+"Verdict check FAILED" at once. Only a call that is not a Stop hook at all stays
 silent: empty stdin, a payload with no sign of a Stop event, and the snapshot recorder's own work (a snapshot error is a
 systemMessage; the Stop check then falls back to counting files it cannot compare as changed). The owner's way out
 is the announced kill switch (BR_VERDICT_HOOK=off or BR_HOOKS=off), never a silent error. Informational hooks
 (session contract, onboarding, upgrade notice) stay fail-open; they cannot affect a PASS.
-DEADLINE (D-278): the hook arms an alarm at HOOK_BUDGET_S (870 s of hooks.json's 900; 12 s of 20 for a snapshot call). Reaching it
+DEADLINE (D-278): the hook arms an alarm at HOOK_BUDGET_S (840 s of hooks.json's 900; 12 s of 20 for a snapshot call). Reaching it
 blocks: "the verdict check ran out of time (<step>): this turn is not gated; report it", bounded like the crash block. The shell wrapper
-kills the helper a few seconds later if it cannot answer at all.
+kills the helper at 855 s (17 s on a snapshot call) if it cannot answer at all.
 SKIPS ARE SAID (D-279): a check that has to skip itself (the disk check on a large tree with no git) adds a systemMessage naming what is
 not checked, every time.
-It blocks when (a) it successfully read a gate's output and neither the gate's
-inline text nor a verdict file it wrote validates, (b) it saw a `*.DRAFT.md` written under a
+It blocks when (a) it successfully read a gate's output and the gate's own returned text does not validate (a council seat or
+claims verdict file is a copy of the returned block, checked against it, and never counts in its place: D-321), (b) it saw a `*.DRAFT.md` written under a
 `.br-assets`-marked directory with no `claims-gate` dispatch anywhere after it in the same
 transcript, or (c) any error, crash or missing input on the path of either check (D-267). The second check is what makes the DRAFT/GATED convention (`compliance-claims-gate`
 skill) mechanical rather than checklist-only, extending this hook rather than adding a second
 Stop hook (the 2.1.0 claims-gate change §3(c)) — scoped to marked directories only, so an engineering or council
-session sees zero blocks from it.
+session is not blocked by it unless the check itself fails (c) or meets a folder it cannot read, which counts as marked (D-305).
 
-CHECK 1 LOOKS IN TWO PLACES (D-57, GO-BLOCK-P2-BUILD-v1-AMENDMENT-5 §1). Some gate names — most
-notably `ethics-governance` — serve two roles: a standalone artifact gate that returns an inline
-fenced ```verdict block, and a council seat (COUNCIL.md §3a) that instead writes
-`council/<slug>.verdict.md` and returns prose. The same agent name cannot be told apart by name
-alone, so for every dispatch of a GATES member Check 1 looks, in order: (a) an inline fenced
-```verdict block in the subagent's own returned text; failing that, (b) a `council/<slug>.verdict.md`
-write in the transcript (any GATES member may be dispatched as a seat); failing that and only for
-`claims-gate`, (c) a `<name>.verdict.md` write beside a `<name>.DRAFT.md` write. All file content is
-read from the transcript's own `Write` tool-call input, never from disk, so a stale file on disk
-cannot satisfy it. No exemption exists for a council context and seats get no second inline block —
-if none of (a)/(b)/(c) validates, the turn blocks naming the gate and every location checked.
+CHECK 1 JUDGES THE GATE'S OWN RETURN (D-57 history; D-321, 2.8.4). Some gate names, notably `ethics-governance`, also
+serve as council seats. A seat ends its own returned text with its fenced ```verdict block, like every gate (COUNCIL.md §3a),
+and never writes a verdict file; only the orchestrator writes `council/<slug>.verdict.md`, by copying that block unchanged with
+the Write tool. So for every dispatch of a GATES member Check 1 validates the block in the gate's own returned text. A council
+seat file, or a claims-gate `<name>.verdict.md` beside a draft, is a copy checked against that return (check 1c, D-304) and
+never counts in its place (before 2.8.4 a file could stand in for the return and rescue one that failed; record:
+docs/workforce-state.md, D-321). File content is read from the transcript's own `Write` tool-call input, not from disk, so a stale file on
+disk cannot satisfy it (a verdict file a Bash command names is read back from disk: D-175 below). If the return does not
+validate, the turn blocks naming the gate.
 
 A DISPATCH'S "RETURNED TEXT" IS NOT ALWAYS ITS `tool_result` (D-65, GO-BLOCK-P2-BUILD-v1-AMENDMENT-8
-§1). When this was measured (client 2.1.258; our own measurement, not a documented guarantee), Claude Code launched every Agent/Task dispatch in the background unless the call sets
+§1). When this was measured (client 2.1.258; our own measurement, not a documented guarantee; record: docs/workforce-state.md,
+D-65), Claude Code launched every Agent/Task dispatch in the background unless the call sets
 `run_in_background: false`; a backgrounded dispatch's `tool_result` is a fixed async-launch stub
 ("Async agent launched successfully ...") and the gate's real text arrives later as a `system` event,
 `subtype: "task_notification"`, carrying the same `tool_use_id`. So for (a) above, the text tried is,
 in order: (i) a `task_notification` event matching the dispatch's `tool_use_id`, its `summary` field,
-or — if `summary` is absent or empty and `output_file` exists — the last assistant text in that file;
+or — if `summary` is absent or empty and `output_file` exists — every text part of the final assistant message in that
+file, in order (D-315);
 (ii) otherwise the `tool_result`, as before. A `tool_result` that is the async-launch stub is never
 treated as returned text. If a dispatch has a stub result and no completed notification yet, the turn
 BLOCKS with "<slug>: gate seat still running; wait for its result before ending the turn" rather than
-falling through to (b)/(c) or silently permitting — a still-running gate is not the same as one whose
+silently permitting — a still-running gate is not the same as one whose
 text simply failed to validate.
 
-THE TRANSCRIPT FILE STORES THE NOTICE IN TWO OTHER SHAPES (D-164, 2.8.2, measured on client transcripts).
+THE TRANSCRIPT FILE STORES THE NOTICE IN TWO OTHER SHAPES (D-164, 2.8.2, measured on client
+transcripts; record: docs/workforce-state.md, D-164).
 The `system`/`task_notification` event appears in the stream output, not in the transcript file this hook
 reads. The file holds the notice as text, `<task-notification>` with `<tool-use-id>`, `<status>`,
 `<result>` (the seat's returned text) and `<output-file>`: (1) when it lands inside the dispatching
@@ -102,7 +104,7 @@ A QUALITY PASS IS CHECKED BY THIS HOOK'S OWN TEST RUN (D-222, 2.8.3; replaces th
 an agent writes cannot prove what it ran (audit 5 K1: `pytest ; echo '99 passed'`). When the turn holds a PASS from
 test-auditor or completion-auditor, the hook runs the project's test command itself: `test_cmd` in
 .claude/workforce-installed.json (recorded by /workforce-init), from the repo root, with NO_COLOR=1, FORCE_COLOR=0,
-CI=1, under `test_timeout` seconds (default 300, at most 600; the whole hook has 870 of hooks.json's 900 seconds, D-278). For a known runner
+CI=1, under `test_timeout` seconds (default 300, at most 600; the whole hook has 840 of hooks.json's 900 seconds, D-278, D-310). For a known runner
 it adds the runner's machine report (pytest --junitxml, jest/vitest JSON, go test -json, node --test junit, mocha
 JSON, bun junit, dotnet trx, maven surefire) written to a folder this hook owns under the plugin data folder; a
 command with no machine report is refused before it runs (D-234, below). The PASS counts only if the run exits 0
@@ -185,11 +187,11 @@ returns from earlier turns of the session, and an earlier block that failed vali
 EVERY STOP IS JUDGED (D-209, 2.8.3; replaces the loop guard of D-164). A Stop that arrives with
 `stop_hook_active` (the turn is continuing because this hook blocked) is judged like any other, so a
 "fixed" re-emit is checked. While problems remain the hook blocks again, at most 3 times per turn (the
-count is kept in the `.br-snapshot.json` beside the transcript, keyed by session and turn). On the 4th
-Stop with problems it does not block: it prints the problems as a `systemMessage` that begins "Verdict
+count is kept in its own `.br-stop-blocks.json` beside the transcript, keyed by session and turn, and shared by every path that
+blocks, D-322; a block the shell wrapper gives when the helper cannot answer is not in it, so such a turn can have a fourth). After
+those blocks, the next Stop with problems does not block: it prints the problems as a `systemMessage` that begins "Verdict
 check FAILED and was not fixed:", so the failure is on record. When the only problem is a gate still
-running, the line reads "Verdict check INCOMPLETE: <gate> still running at turn end" instead (D-220). Claude Code's own cut-off after 8
-consecutive blocks stays a backstop.
+running, the line reads "Verdict check INCOMPLETE: <gate> still running at turn end" instead (D-220).
 
 COMMANDS ARE SPLIT ON NEWLINES (D-210, 2.8.3). A multi-line Bash command is several simple commands: a
 newline separates them (a backslash-newline joins two lines), before any matching. A heredoc body is text, not
@@ -206,6 +208,7 @@ import re
 import shlex
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import tempfile
@@ -234,9 +237,9 @@ def fault(check, exc):
 # D-278 (Amendment 11, Z1): THIS HOOK DECIDES BEFORE THE CLIENT'S TIMEOUT. Claude Code cancels a hook that outlives its timeout and
 # lets the turn end, silently (audit 10V, measured on client 2.1.296). hooks.json gives the Stop call 900 s and the snapshot calls
 # (UserPromptSubmit, PostToolUse) 20 s, so the hook arms its own alarm below both. Reaching it blocks (Stop) or says so (snapshot);
-# the shell wrapper's watchdog (validate-verdicts.sh, 885 s and 17 s) is the backup if this process cannot answer at all.
+# the shell wrapper's watchdog (validate-verdicts.sh, 855 s and 17 s; D-310: at least 30 s before the 900) is the backup if this process cannot answer at all.
 # BR_HOOK_BUDGET_S can only LOWER the budget (the fixtures and the scratch live proof use it).
-HOOK_BUDGET_S = 870
+HOOK_BUDGET_S = 840
 SNAPSHOT_BUDGET_S = 12
 _BUDGET = {"deadline": None, "step": "the verdict check"}
 
@@ -327,6 +330,21 @@ CALL_LINE = re.compile(r'tool_use|tool_result|toolUseResult|task_notification|su
 
 # A *.verdict.md path named in a Bash command (D-175).
 VERDICT_REF = re.compile(r"[^\s'\"<>|;&()=`]*\.verdict\.md(?![\w.-])")   # a $name or ${name} in it is globbed as *; the name ends at .md, not .md.bak or .mdx (D-280)
+SPACED_REF = re.compile(r"""(["'])([^"'\n]*\s[^"'\n]*?\.verdict\.md)\1|((?:[^\s'"<>|;&()=`]|\\ )*\\ (?:[^\s'"<>|;&()=`]|\\ )*\.verdict\.md)(?![\w.-])""")
+
+
+def verdict_refs(cmd, project_dir):
+    """The verdict-file names a command's text names (D-175). D-300 (PATCH-284, owner ruling 3A): VERDICT_REF stops at a space, so a
+    quoted or backslash-escaped name with a space ("Claude outputs/x.verdict.md") came out cut short ("outputs/x.verdict.md") and was checked
+    under a path that does not exist. A spaced name is taken whole when that file exists; otherwise the cut-short name stays, as before."""
+    refs = VERDICT_REF.findall(cmd)
+    for m in SPACED_REF.finditer(cmd):
+        full = (m.group(2) or m.group(3) or "").replace("\\ ", " ")
+        short = re.split(r"\s", full)[-1]
+        ap = full if os.path.isabs(full) else os.path.join(project_dir, full)
+        if os.path.exists(ap):
+            refs = [x for x in refs if x.replace("\\", "") != short] + [full]
+    return refs
 
 # Check 3 match (D-179): simple commands, redirections dropped, compared token for token.
 REDIRECT = re.compile(r"(?<!\S)[0-9]*(?:&>>?|>>?&?|<)\s*[^\s;|&<>]+")
@@ -667,7 +685,7 @@ def run_is_green(output, is_error, readers=()):
 # printed is never read for it: the run's exit code and the runner's machine report (written to a folder this hook
 # owns, outside the repo) decide. One run per tree state per session (cached under the plugin data folder).
 INSTALLED_REC = os.path.join(".claude", "workforce-installed.json")
-TEST_TIMEOUT_DEFAULT, TEST_TIMEOUT_MAX = 300, 600      # D-278: the whole hook has HOOK_BUDGET_S (870 s) of hooks.json's 900 s; the test run gets at most 600 of it
+TEST_TIMEOUT_DEFAULT, TEST_TIMEOUT_MAX = 300, 600      # D-278: the whole hook has HOOK_BUDGET_S (840 s) of hooks.json's 900 s; the test run gets at most 600 of it
 CACHE_SKIP = {".ruff_cache", "htmlcov", ".coverage"}
 
 
@@ -1751,12 +1769,12 @@ def ci_judge(project_dir, rec):
 
 def disk_check_status(root):
     """D-279: what the doctor reports about the disk check: {"skipped": bool, "reason": str|None, "candidates": int|None}."""
-    DISK_SKIP["reason"] = None
+    DISK_SKIP["reason"] = DISK_SKIP["partial"] = None
     try:
         c = _snap_candidates(os.path.realpath(root))
     except Exception as exc:   # D-279 (closed): the doctor reports it as not checked
-        return {"skipped": True, "reason": "the file list could not be read (%s)" % type(exc).__name__, "candidates": None}
-    return {"skipped": c is None, "reason": DISK_SKIP["reason"], "candidates": None if c is None else len(c)}
+        return {"skipped": True, "reason": "the file list could not be read (%s)" % type(exc).__name__, "candidates": None, "partial": None}
+    return {"skipped": c is None, "reason": DISK_SKIP["reason"], "candidates": None if c is None else len(c), "partial": DISK_SKIP["partial"]}
 
 
 def ci_status(project_dir):
@@ -2103,19 +2121,49 @@ def placeholder_verdict_name(ref):
 MAX_STOP_BLOCKS = 3        # D-209: blocks per turn before the failure is put on record instead
 
 
+def _blocks_path(tpath):
+    """D-322 (audit 13R F4): the block budget's own file beside the transcript. No snapshot call writes or removes it."""
+    return (tpath[:-len(".jsonl")] if tpath.endswith(".jsonl") else tpath) + ".br-stop-blocks.json"
+
+
 def bump_stop_blocks(tpath, payload, turn_key):
-    """Count one more blocking Stop for this session and turn in the snapshot file; return the new count,
-    or None when the file cannot be written (then the hook keeps blocking; the client's cut-off applies)."""
-    sp = _snap_path(tpath)
-    try:
-        state = json.load(open(sp))
-    except Exception:          # D-259 (closed): the count restarts, so the hook keeps blocking
-        state = {}
-    key = "%s:%s" % (payload.get("session_id") or "", turn_key)
+    """Count one more blocking Stop for this session and turn; return the new count, or None when the count cannot be read or kept
+    (then a Stop that the hook already blocked once ends the turn with the FAILED line instead, D-286). Audit 13 R12: every path that
+    blocks a turn (a problem, a crash, a timeout) counts under the one key of that turn (turn_identity()); a block whose turn cannot be
+    read (turn_key None) is counted as pending and joins the next count of the session. D-322 (audit 13R F4): the count has its own
+    file, so dropping a snapshot never resets it, and a count file that exists but cannot be read is None, never a fresh count of 0."""
+    bp = _blocks_path(tpath)
+    if os.path.exists(bp):
+        try:
+            state = json.load(open(bp))
+            if not isinstance(state, dict):
+                raise ValueError("the block count file is not a JSON object")
+        except Exception:      # D-270 (closed; D-322): a count that cannot be read is not 0; None ends a bounced Stop loudly
+            return None
+    else:
+        try:                   # D-322: carry over a count an older hook kept in the snapshot file (an upgrade in mid-session)
+            snap = json.load(open(_snap_path(tpath)))
+        except Exception:      # D-270 (normal; D-322): no older count to carry over
+            snap = {}
+        if not isinstance(snap, dict) or not isinstance(snap.get("stop_blocks", {}), dict):
+            return None        # D-333 (audit 13T T3): a snapshot or older count that is not an object is a count it cannot read, never 0
+        state = {"stop_blocks": snap.get("stop_blocks") or {}}
+    sid = payload.get("session_id") or ""
     counts = state.setdefault("stop_blocks", {})
-    counts[key] = int(counts.get(key) or 0) + 1
+    if not isinstance(counts, dict):
+        return None
+    pend = "%s:pending" % sid
+    key = pend if turn_key is None else "%s:%s" % (sid, turn_key)
+    for k in {key, pend}:      # D-327 (audit 13S S8): a count is a whole number of 0 or more; anything else is a count it cannot read
+        v = counts.get(k, 0)
+        if type(v) is not int or v < 0:
+            return None
+    if turn_key is None:
+        counts[key] = counts.get(key, 0) + 1
+    else:
+        counts[key] = counts.get(key, 0) + 1 + counts.pop(pend, 0)
     try:
-        json.dump(state, open(sp, "w"))
+        json.dump(state, open(bp, "w"))
     except OSError:   # D-270 (closed): None means the count cannot be kept, and the hook keeps blocking
         return None
     return counts[key]
@@ -2129,7 +2177,7 @@ def find_marker_dir(start_dir, project_dir):
     root = os.path.realpath(project_dir) if project_dir else None
     hops = 0
     while True:
-        if os.path.isfile(os.path.join(d, ".br-assets")):
+        if _marker_in(d):
             return d
         if root and d == root:
             return None
@@ -2140,15 +2188,28 @@ def find_marker_dir(start_dir, project_dir):
         hops += 1
 
 
+def _marker_in(d):
+    """True when folder d holds a .br-assets file, or when a look into d is refused (D-305, Rule F review: the claims hook's rule; a
+    folder that cannot be read may be marked)."""
+    try:
+        return stat.S_ISREG(os.stat(os.path.join(d, ".br-assets")).st_mode)
+    except (FileNotFoundError, NotADirectoryError):   # D-270 (normal; D-305): no marker in this folder
+        return False
+    except OSError:   # D-270 (closed; D-305): a folder that cannot be read counts as marked
+        return True
+
+
 def _read_output_file_text(path):
     """The last assistant text in a task's own output file (D-65). The file may be a JSONL
     transcript in the same shape as the main one (assistant `message.content` text blocks) or
-    plain text; None on anything unreadable rather than raise (the caller then has no returned text, which is a problem line)."""
+    plain text; None on anything unreadable rather than raise. D-293: a file that exists but cannot be read is a fault (it blocks,
+    named), not "no text": the gate's answer may be in it."""
     try:
         content = open(path, encoding="utf-8", errors="replace").read()
-    except Exception:  # D-259 (closed): no text from the gate means no valid verdict, which blocks
+    except Exception as exc:  # D-293 (closed): the gate's output file could not be read: a fault that names it
+        fault("the read of a gate's output file (%s)" % path, exc)
         return None
-    last_text, parsed_any, cut_assistant = None, False, False
+    last_parts, last_id, parsed_any, cut_assistant = None, None, False, False
     for line in content.splitlines():
         line = line.strip()
         if not line:
@@ -2163,13 +2224,21 @@ def _read_output_file_text(path):
             continue           # D-270: JSON that is not an object is not an event
         parsed_any = True
         if ev.get("type") == "assistant":
-            for blk in ((ev.get("message") or {}).get("content") or []):
-                if isinstance(blk, dict) and blk.get("type") == "text":
-                    last_text = blk.get("text")
+            msg = ev.get("message") if isinstance(ev.get("message"), dict) else {}
+            texts = [b.get("text") for b in (msg.get("content") or []) if isinstance(b, dict) and b.get("type") == "text"
+                     and isinstance(b.get("text"), str)]
+            if not texts:
+                continue
+            mid = msg.get("id")
+            # Audit 13 R2: every text part of the final message is the answer, in order; a message stored as several lines shares one id
+            if last_parts is not None and mid and mid == last_id:
+                last_parts.extend(texts)
+            else:
+                last_parts, last_id = list(texts), mid
     if cut_assistant:
         return None            # D-286: the last assistant line is unreadable, so the text of an earlier turn must not stand as the gate's answer
     if parsed_any:
-        return last_text
+        return "\n\n".join(last_parts) if last_parts else None
     return content or None
 
 
@@ -2212,7 +2281,26 @@ def _carries_tool_result(ev):
 
 SNAP_SKIP = {".git", "node_modules", ".venv", "venv", "__pycache__", ".pytest_cache", ".tox", ".mypy_cache"}
 SNAP_LIMIT = 20000         # entries one walk covers before it gives up (D-279: a skip is announced on the Stop, never silent)
-DISK_SKIP = {"reason": None}   # D-279: why the last disk_snapshot() could not check, or None
+MARKER_DEPTH = 8           # D-294: how deep the search for marked folders inside git-ignored folders goes (the claims hook's `find -maxdepth 8`)
+DISK_SKIP = {"reason": None, "partial": None}   # D-279: why the last disk_snapshot() could not check, or None; D-294: what it could not search
+
+
+def _is_marker_name(path):
+    """Audit 13 R5: a file named .br-assets in any case is a marker where the write hook's lookup (_marker_in, a stat of the exact name)
+    would find it, so the disk check and the write hook agree on a file system that ignores case."""
+    return os.path.basename(path).lower() == ".br-assets" and _marker_in(os.path.dirname(path))
+
+
+class _Unreadable(Exception):
+    """D-289: a folder on the disk check's walk could not be read."""
+
+
+def _walk_error(err):
+    """os.walk's onerror (D-289). Without it os.walk drops a folder it cannot read and the check silently shrinks."""
+    raise _Unreadable(getattr(err, "filename", None) or "?")
+
+
+GIT_UNREADABLE = re.compile(r"could not open directory '([^']*)'")
 
 
 def _snap_candidates(root):
@@ -2220,12 +2308,72 @@ def _snap_candidates(root):
     come from `git ls-files` (tracked, and untracked but not ignored: where a script-written verdict file shows up), plus a bounded walk
     of the folders marked with .br-assets (which may hold git-ignored files). Outside git, or if git fails, the whole tree is walked up
     to SNAP_LIMIT entries. Returns [relative path] or None, with DISK_SKIP["reason"] set when it cannot. Files in git-ignored folders
-    outside marked folders are out of scope by design; the hooks README says so."""
-    names, walked_marked = None, []
+    outside marked folders are out of scope by design; the hooks README says so. D-289: a folder that cannot be read (os.walk's error,
+    or git's "could not open directory" warning, which it gives with exit 0) is a skip with its reason, never a smaller check.
+    D-294: marked folders inside git-ignored folders are found by a bounded search of those folders; DISK_SKIP["partial"] says when
+    that search stopped short."""
+    try:
+        return _snap_candidates_walk(root)
+    except _Unreadable as exc:   # D-289 (closed): an unreadable folder is a skip the Stop announces, never a smaller check
+        rel = os.path.relpath(str(exc), root) if os.path.isabs(str(exc)) else str(exc)
+        DISK_SKIP["reason"] = "a folder could not be read: %s" % rel.rstrip("/")
+        return None
+
+
+def _ignored_markers(root):
+    """D-294: the folders marked with .br-assets that sit inside git-ignored folders (git ls-files never lists them). A bounded search
+    of the ignored folders git names, pruning SNAP_SKIP, MARKER_DEPTH deep, at most SNAP_LIMIT entries. Past that bound, or at an
+    ignored folder it cannot read, DISK_SKIP["partial"] says so and the markers found so far are kept: the rest of the check still runs."""
+    def partial(err):
+        DISK_SKIP["partial"] = DISK_SKIP["partial"] or ("a git-ignored folder could not be read (%s), so a marked folder inside it may "
+                                                        "not be found" % os.path.relpath(getattr(err, "filename", None) or root, root))
+    p = subprocess.run(["git", "-C", root, "ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--directory"],
+                       capture_output=True, timeout=max(1, min(20, time_left())), env=dict(os.environ, LC_ALL="C"))
+    if p.returncode != 0:
+        raise OSError("git ls-files --ignored exit %d" % p.returncode)
+    bad = GIT_UNREADABLE.search(p.stderr.decode("utf-8", "replace"))
+    if bad:
+        partial(OSError(13, "unreadable", os.path.join(root, bad.group(1).rstrip("/"))))
+    found, seen = [], 0
+    for x in sorted(set(y.decode("utf-8", "replace") for y in p.stdout.split(b"\0") if y)):
+        if not x.endswith("/"):
+            if _is_marker_name(os.path.join(root, x)):
+                found.append(os.path.dirname(x))        # the marker file itself is ignored
+            continue
+        rel0 = x.rstrip("/")
+        if os.path.basename(rel0) in SNAP_SKIP:
+            continue
+        if rel0.count("/") >= MARKER_DEPTH:      # D-306 (audit 12 R5): an ignored folder already at the bound is not searched, and the Stop says so
+            DISK_SKIP["partial"] = DISK_SKIP["partial"] or ("the search for marked folders inside git-ignored folders stops %d levels "
+                                                            "deep (%s goes deeper)" % (MARKER_DEPTH, rel0))
+            continue
+        for dp, ds, fs in os.walk(os.path.join(root, rel0), onerror=partial):
+            rel = os.path.relpath(dp, root)
+            if any(_is_marker_name(os.path.join(dp, f)) for f in fs):
+                found.append(rel)
+            keep = sorted(d for d in ds if d not in SNAP_SKIP)
+            if keep and rel.count("/") + 1 >= MARKER_DEPTH:   # D-294 (string gate): the depth bound is announced, never silent
+                DISK_SKIP["partial"] = DISK_SKIP["partial"] or ("the search for marked folders inside git-ignored folders stops %d levels "
+                                                                "deep (%s goes deeper)" % (MARKER_DEPTH, rel))
+                keep = []
+            ds[:] = keep
+            seen += len(fs) + len(ds)
+            if seen > SNAP_LIMIT:
+                DISK_SKIP["partial"] = ("the git-ignored folders hold more than %d entries, so a marked folder inside them may not "
+                                        "be found" % SNAP_LIMIT)
+                return found
+    return found
+
+
+def _snap_candidates_walk(root):
+    names = None
     try:
         p = subprocess.run(["git", "-C", root, "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
-                           capture_output=True, timeout=max(1, min(20, time_left())))
+                           capture_output=True, timeout=max(1, min(20, time_left())), env=dict(os.environ, LC_ALL="C"))
         if p.returncode == 0:
+            bad = GIT_UNREADABLE.search(p.stderr.decode("utf-8", "replace"))
+            if bad:            # D-289: git leaves the folder out of the list and still exits 0
+                raise _Unreadable(bad.group(1))
             names = sorted(set(x.decode("utf-8", "replace") for x in p.stdout.split(b"\0") if x))
     except subprocess.TimeoutExpired:   # D-279 (closed): git is too slow here; the bounded walk below runs, and says so if it cannot finish
         names = None
@@ -2233,7 +2381,11 @@ def _snap_candidates(root):
         names = None
     out, seen = set(), 0
     if names is not None:
-        marked = sorted(os.path.dirname(x) for x in names if os.path.basename(x) == ".br-assets")
+        marked = sorted(os.path.dirname(x) for x in names if _is_marker_name(os.path.join(root, x)))
+        try:
+            marked = sorted(set(marked) | set(_ignored_markers(root)))
+        except (OSError, subprocess.TimeoutExpired):   # D-294 (closed): the search could not run; the Stop says what was not searched
+            DISK_SKIP["partial"] = "the git-ignored folders could not be searched for marked folders"
         in_marked = lambda rel: any(m == "" or rel == m or rel.startswith(m + "/") for m in marked)
         for rel in names:
             fl = rel.lower()
@@ -2241,7 +2393,7 @@ def _snap_candidates(root):
                 out.add(rel)
         for m in marked:        # git-ignored files inside a marked folder are walked
             base = os.path.join(root, m) if m else root
-            for dp, ds, fs in os.walk(base):
+            for dp, ds, fs in os.walk(base, onerror=_walk_error):
                 ds[:] = sorted(d for d in ds if d not in SNAP_SKIP)
                 seen += len(fs) + len(ds)
                 if seen > SNAP_LIMIT:
@@ -2253,13 +2405,13 @@ def _snap_candidates(root):
                         out.add(os.path.relpath(os.path.join(dp, f), root))
         return sorted(out)
     marked_roots = []
-    for dp, ds, fs in os.walk(root):
+    for dp, ds, fs in os.walk(root, onerror=_walk_error):
         ds[:] = sorted(d for d in ds if d not in SNAP_SKIP)
         seen += len(fs) + len(ds)
         if seen > SNAP_LIMIT:
             DISK_SKIP["reason"] = "no git to list the files, and the tree holds more than %d entries" % SNAP_LIMIT
             return None
-        if ".br-assets" in fs:
+        if any(_is_marker_name(os.path.join(dp, f)) for f in fs):
             marked_roots.append(dp)
         marked = any(dp == m or dp.startswith(m + os.sep) for m in marked_roots)
         for f in fs:
@@ -2274,7 +2426,7 @@ def disk_snapshot(project_dir):
     None when it cannot be taken, with DISK_SKIP["reason"] saying why (D-279: the Stop then says the check was skipped)."""
     step("the disk check")
     import hashlib
-    DISK_SKIP["reason"] = None
+    DISK_SKIP["reason"] = DISK_SKIP["partial"] = None
     root = os.path.realpath(project_dir)
     cands = _snap_candidates(root)
     if cands is None:
@@ -2301,12 +2453,17 @@ def snapshot_mode(event, payload):
     if not tpath:
         return 0
     project_dir = os.path.realpath(os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd())
+    sp = _snap_path(tpath)
+    _SNAP["path"] = sp
+    started = time.time()      # D-332: taken before the files are read, so a file modified after it was modified in this turn
+    carry_legacy_count(sp)     # D-328: before this call can replace or drop the file
     cur = disk_snapshot(project_dir)
     if cur is None:
+        invalidate_snapshot(sp)   # audit 13 R4: a snapshot that could not be taken leaves no older baseline in place
         return 0
-    sp = _snap_path(tpath)
     if event == "turn-start":
-        state = {"turn_start": cur, "last": cur, "after_bash": []}
+        state = {"turn_start": cur, "last": cur, "after_bash": [], "root": project_dir, "session": payload.get("session_id"),
+                 "started": started}
     else:
         try:
             state = json.load(open(sp))
@@ -2319,9 +2476,46 @@ def snapshot_mode(event, payload):
         state["last"] = cur
     try:
         json.dump(state, open(sp, "w"))
-    except OSError:   # D-270 (closed): no snapshot written, so the Stop check uses its fallback baseline, which counts unknown files as changed
-        pass
+    except OSError:   # D-270 (closed; D-323): not written, so the older one is dropped and the Stop uses its fallback baseline
+        invalidate_snapshot(sp)
     return 0
+
+
+_SNAP = {"path": None}         # the snapshot file a --snapshot call is writing, for its deadline path (audit 13 R4)
+
+
+def carry_legacy_count(sp):
+    """D-328 (audit 13S S6): before 2.8.4 the block count lived in the snapshot file. Before a snapshot file is replaced or dropped,
+    and only while the count has no file of its own, copy that older count into its own file (_blocks_path), so an upgrade in the
+    middle of a session cannot lose it. A count file that already exists is never touched here."""
+    bp = sp[:-len(".br-snapshot.json")] + ".br-stop-blocks.json"
+    if os.path.exists(bp):
+        return
+    try:
+        legacy = json.load(open(sp)).get("stop_blocks")
+    except Exception:   # D-270 (normal; D-328): no readable snapshot, so no older count in it to carry
+        return
+    if isinstance(legacy, dict) and legacy:
+        try:
+            json.dump({"stop_blocks": legacy}, open(bp, "w"))
+        except OSError:   # D-270 (closed; D-328): not carried; the Stop then reads no count file and falls back to the snapshot, if any
+            pass
+
+
+def invalidate_snapshot(sp):
+    """Audit 13 R4, R7; D-323 (audit 13R F5): remove the turn-start snapshot, so the Stop uses its fallback baseline (which counts files
+    it cannot compare as changed) instead of a record from an earlier moment. The block count is in its own file (D-322), and an
+    older hook's count in this file is carried there first (D-328), so no count is lost with it."""
+    carry_legacy_count(sp)     # D-328 (audit 13S S6): an older hook's count in this file is moved out before the file goes
+    try:
+        os.remove(sp)
+    except FileNotFoundError:   # D-270 (normal; D-323): no snapshot to drop
+        pass
+    except OSError:   # D-270 (closed; D-323): it cannot be removed; emptied instead, so it holds no baseline for the Stop to use
+        try:
+            open(sp, "w").close()
+        except OSError:   # D-270 (closed; D-323): neither: the Stop still requires this project and session, and says nothing worse
+            pass
 
 
 def _fallback_baseline(project_dir, cur, turn_ts):
@@ -2366,27 +2560,51 @@ def _hook_frame(exc):
     return name
 
 
+def _own_tool_result(ev):
+    """turn_identity(own=True)'s copy of _carries_tool_result: the same test, so the crash and deadline paths need no other helper."""
+    c = (ev.get("message") or {}).get("content") if isinstance(ev.get("message"), dict) else None
+    return isinstance(c, list) and any(isinstance(b, dict) and b.get("type") == "tool_result" for b in c)
+
+
+def _own_user_notice(ev):
+    """turn_identity(own=True)'s copy of _notice_text for a `user` event: a task notice by its origin or its opening tag."""
+    c = (ev.get("message") or {}).get("content") if isinstance(ev.get("message"), dict) else None
+    if isinstance(c, list):
+        c = "\n".join(b.get("text", "") for b in c if isinstance(b, dict) and b.get("type") == "text")
+    return (ev.get("origin") or {}).get("kind") == "task-notification" or (isinstance(c, str) and c.lstrip().startswith("<task-notification>"))
+
+
+def turn_identity(lines, own=False):
+    """D-322 (audit 13R F3): (index, key) of the current turn's real user message, by the one rule every path uses: a `user` event
+    that is not synthetic or meta, carries no tool result and is not a task notice. key is its timestamp, or idx<n>. (0, "idx0")
+    when there is none. The main check uses the shared helpers; the crash and deadline paths pass own=True and use this function's
+    copies of the same two tests, so a helper that hung or failed cannot stop them (the grid checks both give the same turn)."""
+    tool_result = _own_tool_result if own else _carries_tool_result
+    notice = _own_user_notice if own else (lambda ev: _notice_text(ev) is not None)
+    idx_, key_ = 0, "idx0"
+    for idx, line in enumerate(lines):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            ev = json.loads(line)
+        except Exception:  # D-259 (b): a line that is not JSON is not an event (the current turn's lines are checked, D-270)
+            continue
+        if not isinstance(ev, dict) or ev.get("type") != "user" or ev.get("isSynthetic") or ev.get("isMeta"):
+            continue
+        if tool_result(ev) or notice(ev):      # a tool result is stored as a user event (D-112); a task notice is not the user (D-164)
+            continue
+        idx_, key_ = idx, ev.get("timestamp") or "idx%d" % idx
+    return idx_, key_
+
+
 def _crash_turn_key(tpath):
-    """A key for the turn, to bound the crash block: the timestamp of the last real user line (the main loop's rule,
-    written without the helpers that may be what crashed)."""
-    key = "crash"
+    """The key of the turn, to bound the crash block (D-322: turn_identity(), the problem path's own rule), or None when the turn
+    cannot be read, so the block is counted as pending and a Stop already bounced ends loudly."""
     try:
-        for idx, line in enumerate(open(tpath, encoding="utf-8", errors="replace").read().splitlines()):
-            if "task-notification" in line:
-                continue
-            try:
-                ev = json.loads(line)
-            except Exception:   # D-270 (b): the key that bounds the crash block; an unreadable line is skipped, and the key falls back to 'crash'
-                continue
-            if not isinstance(ev, dict) or ev.get("type") != "user" or ev.get("isSynthetic") or ev.get("isMeta"):
-                continue
-            c = ev.get("message", {}).get("content") if isinstance(ev.get("message"), dict) else None
-            if isinstance(c, list) and any(isinstance(b, dict) and b.get("type") == "tool_result" for b in c):
-                continue
-            key = "crash:%s" % (ev.get("timestamp") or "idx%d" % idx)
-    except Exception:   # D-270 (b): the key that bounds the crash block; an unreadable line is skipped, and the key falls back to 'crash'
-        pass
-    return key
+        return turn_identity(open(tpath, encoding="utf-8", errors="replace").read().splitlines(), own=True)[1]
+    except Exception:   # D-270 (closed; D-322): the turn cannot be read; None counts the block as pending
+        return None
 
 
 def stop_closed(payload, key, msg, bound="count"):
@@ -2424,12 +2642,14 @@ def main():
         try:
             what = str(late) or "the verdict check"
             if snapshot:
+                if _SNAP["path"]:
+                    invalidate_snapshot(_SNAP["path"])   # audit 13 R4: the older baseline must not stand for this turn
                 print(json.dumps({"systemMessage": "Verdict check: the turn snapshot ran out of time (%s); the Stop check falls back to counting "
                                   "files it cannot compare as changed." % what}))
                 return 0
             payload = _STOP["payload"] or {}
             tp = payload.get("transcript_path") if isinstance(payload, dict) else None
-            stop_closed(payload, _crash_turn_key(tp) if isinstance(tp, str) and tp else "crash",
+            stop_closed(payload, _crash_turn_key(tp) if isinstance(tp, str) and tp else None,
                         "the verdict check ran out of time (%s): this turn is not gated; report it" % what,
                         "count" if isinstance(tp, str) and tp else "active")
         except Exception:      # D-278 (closed): the answer itself failed: a plain block
@@ -2440,6 +2660,8 @@ def main():
         try:
             where = _hook_frame(exc)
             if len(sys.argv) > 2 and sys.argv[2] == "--snapshot":
+                if _SNAP["path"]:
+                    invalidate_snapshot(_SNAP["path"])   # D-323 (audit 13R F5): the older baseline must not stand for this turn
                 print(json.dumps({"systemMessage": "Verdict check: the turn snapshot could not be recorded (%s at %s); the Stop check "
                                   "falls back to counting files it cannot compare as changed." % (type(exc).__name__, where)}))
                 return 0
@@ -2448,7 +2670,7 @@ def main():
                 return 1
             payload = _STOP["payload"] or {}
             tp = payload.get("transcript_path") if isinstance(payload, dict) else None
-            stop_closed(payload, _crash_turn_key(tp) if isinstance(tp, str) and tp else "crash",
+            stop_closed(payload, _crash_turn_key(tp) if isinstance(tp, str) and tp else None,
                         "the verdict check crashed (%s at %s): this turn is not gated; report it" % (type(exc).__name__, where),
                         "count" if isinstance(tp, str) and tp else "active")
         except Exception:      # D-270 (closed): the guard itself failed: say so, plainly, with a block
@@ -2501,9 +2723,9 @@ def _main():
     try:
         lines = open(tpath, encoding="utf-8", errors="replace").read().splitlines()
     except Exception as exc:   # D-259: a transcript that cannot be read is not a turn with nothing to judge
-        n_blocks = bump_stop_blocks(tpath, payload, "unreadable-transcript")
+        n_blocks = bump_stop_blocks(tpath, payload, None)   # audit 13 R12: the turn cannot be read, so the block is counted as pending
         msg = "the verdict check could not read the transcript (%s): this turn is not gated" % type(exc).__name__
-        if (n_blocks > MAX_STOP_BLOCKS) if n_blocks is not None else bool(payload.get("stop_hook_active")):   # D-286 (X9): no count kept, so a Stop already bounced once ends loudly
+        if bool(payload.get("stop_hook_active")) or (n_blocks is not None and n_blocks > MAX_STOP_BLOCKS):   # a Stop already bounced this turn ends loudly
             print(json.dumps({"systemMessage": "Verdict check FAILED and was not fixed: " + msg}))
         else:
             print(json.dumps({"decision": "block", "reason": "This turn cannot be treated as gated. Fix and re-emit:\n  - "
@@ -2524,21 +2746,8 @@ def _main():
     # A tool result is ALSO stored as a `type: "user"` event (D-112, audit F1: measured on a live
     # `claude -p` transcript), so it never starts a turn; nor does an `isMeta` event. Without this the
     # turn began at the LAST tool result, after every dispatch, and the hook never saw a gate.
-    turn_start, turn_ts = 0, None
-    for idx, line in enumerate(lines):
-        line_s = line.strip()
-        if not line_s:
-            continue
-        try:
-            ev = json.loads(line_s)
-        except Exception:  # D-259 (b): a line that is not JSON is not an event (the current turn's lines are checked below, D-270)
-            continue
-        if not isinstance(ev, dict):
-            continue
-        if ev.get("type") == "user" and not ev.get("isSynthetic") and not ev.get("isMeta") \
-                and not _carries_tool_result(ev) and _notice_text(ev) is None:   # a task notice is not the user (D-164)
-            turn_start = idx
-            turn_ts = ev.get("timestamp")
+    turn_start, turn_key = turn_identity(lines)       # D-322: the same rule the crash path uses
+    turn_ts = None if turn_key.startswith("idx") else turn_key
     session_lines = lines      # the whole session, for the executed-command check (D-146)
     lines = lines[turn_start:]
 
@@ -2555,6 +2764,7 @@ def _main():
     all_dispatched = {}        # tool_use_id -> slug, EVERY Task/Agent dispatch (R22 author check)
     agent_ids = {}             # tool_use_id -> the subagent's agentId (toolUseResult.agentId)
     notifications = {}         # tool_use_id -> {"summary": str|None, "output_file": str|None}
+    notice_idx = {}            # tool_use_id -> index of its completion notice in this turn (D-309)
     draft_writes = []          # [(index, abs_path)] — DRAFT writes under a marked directory
     claims_gate_at = []        # [index, ...] — every claims-gate dispatch, in transcript order
     md_writes = []             # [(index, abs_path, content)] — every Write of a *.md file
@@ -2595,12 +2805,14 @@ def _main():
             tuid = ev.get("tool_use_id")
             if tuid:
                 notifications[tuid] = {"summary": ev.get("summary"), "output_file": ev.get("output_file")}
+                notice_idx.setdefault(tuid, idx)
         ntext = _notice_text(ev)
         if ntext:
             n = _parse_notice(ntext)
             if n.get("tool-use-id"):
                 notifications[n["tool-use-id"]] = {"summary": n.get("summary"), "output_file": n.get("output-file"),
                                                    "result": n.get("result"), "status": n.get("status")}
+                notice_idx.setdefault(n["tool-use-id"], idx)
         for blk in ((ev.get("message") or {}).get("content") or []):
             if not isinstance(blk, dict):
                 continue
@@ -2617,7 +2829,7 @@ def _main():
                 if slug == "claims-gate":
                     claims_gate_at.append(idx)
             elif blk.get("type") == "tool_use" and blk.get("name") == "Bash":
-                bash_verdict_refs.extend(VERDICT_REF.findall(str((blk.get("input") or {}).get("command") or "")))
+                bash_verdict_refs.extend(verdict_refs(str((blk.get("input") or {}).get("command") or ""), project_dir))
                 bash_cmds.append(str((blk.get("input") or {}).get("command") or ""))
             elif blk.get("type") == "tool_use" and blk.get("name") == "SendMessage":
                 send_msgs.append((idx, blk.get("id"), str((blk.get("input") or {}).get("to") or "").strip()))
@@ -2664,6 +2876,7 @@ def _main():
     # D-219: every return of each agent in the session, so a chain names returns from earlier turns too.
     _sess_ret = []             # [(session index, tool_use_id, agentId or `to`, is_resume)]
     _sess_text, _sess_notice, _sess_sm = {}, {}, {}
+    _sess_aid, _sess_who = {}, {}  # D-309: dispatch tool_use_id -> agentId; SendMessage tool_use_id -> resumedAgentId
     for s_idx, sl in enumerate(session_lines):
         try:
             sev = json.loads(sl)
@@ -2697,11 +2910,14 @@ def _main():
                 if b.get("tool_use_id") in _sess_tu and isinstance(tur, dict) and tur.get("agentId"):
                     slug_, name_ = _sess_tu[b.get("tool_use_id")]
                     slug_by_aid[str(tur["agentId"])] = slug_
+                    _sess_aid[b.get("tool_use_id")] = str(tur["agentId"])
                     if name_:
                         aid_by_name[name_] = str(tur["agentId"])
                     _sess_ret.append((s_idx, b.get("tool_use_id"), str(tur["agentId"]), False))
                 elif b.get("tool_use_id") in _sess_sm:
                     who = (tur or {}).get("resumedAgentId") if isinstance(tur, dict) else None
+                    if who:
+                        _sess_who[b.get("tool_use_id")] = str(who)
                     _sess_ret.append((s_idx, b.get("tool_use_id"), str(who or _sess_sm[b.get("tool_use_id")][1]), True))
 
     def earlier_returns(aid):
@@ -2715,6 +2931,25 @@ def _main():
                 text_ = _sess_notice.get(tid)
             out_.append(text_)
         return out_
+    # D-309 (audit 12 R8): a background result that lands after a newer user message is judged in the turn it arrives. Its notice is in
+    # this turn; its dispatch (or SendMessage) is in an earlier one, so it joins this turn's dispatches with the notice's place.
+    for tuid_, n_idx in sorted(notice_idx.items(), key=lambda kv: kv[1]):
+        if tuid_ in all_dispatched or tuid_ in ladder_ids or any(tuid_ == sm_ for _i, sm_, _t in send_msgs):
+            continue
+        if tuid_ in _sess_tu:
+            slug_ = _sess_tu[tuid_][0]
+            all_dispatched[tuid_] = slug_
+            results.setdefault(tuid_, _sess_text.get(tuid_))
+            if _sess_aid.get(tuid_):
+                agent_ids[tuid_] = _sess_aid[tuid_]
+            if slug_ in GATES:
+                dispatched[tuid_] = slug_
+                task_idx[tuid_] = n_idx
+        elif tuid_ in _sess_sm:
+            send_msgs.append((n_idx, tuid_, _sess_sm[tuid_][1]))
+            results.setdefault(tuid_, _sess_text.get(tuid_))
+            if _sess_who.get(tuid_):
+                resumed_aid[tuid_] = _sess_who[tuid_]
     resumes = {}               # agentId -> [SendMessage tool_use_id, ...] in transcript order (D-208)
     resume_slug = {}           # SendMessage tool_use_id -> the resumed agent's slug
     for _i, sm_id, to in sorted(send_msgs, key=lambda x: x[0]):
@@ -2722,17 +2957,23 @@ def _main():
         if not aid:
             # No resumedAgentId: count it only if `to` names a known agent and its reply holds a block.
             cand = to if to in slug_by_aid else aid_by_name.get(to)
-            if cand and FENCE.search(results.get(sm_id) or ""):
+            if cand and (FENCE.search(results.get(sm_id) or "") or sm_id in notifications):   # D-308 (Rule F review): or its reply came in a notice
                 aid = cand
         if aid and aid in slug_by_aid:
             resumes.setdefault(aid, []).append(sm_id)
             resume_slug[sm_id] = slug_by_aid[aid]
+    resumed_aids = sorted(resumes)   # D-308: every agent resumed this turn, before the chains below take them
 
     last_error = {"msg": ""}   # the validator's first error from the latest validates() call (2.3.3: say why a gate's text failed)
 
+    class ValidatorDidNotRun(Exception):
+        """D-293: the validator ended without a report (a crash, a fatal error): the text was not judged at all."""
+
     def validates(text):
         """Run validate_verdict.py over `text`; True if it contains at least one valid block. Keeps the
-        validator's first error in last_error so a block message says WHY (no block vs a bad block)."""
+        validator's first error in last_error so a block message says WHY (no block vs a bad block).
+        D-293: a validator that cannot run (an exception, a timeout, a missing interpreter, or an exit with no JSON report) is a
+        fault that blocks, named "the verdict validator"; it is not the same as "the text is not a valid verdict"."""
         step("the validator")
         tmp = None
         last_error["msg"] = ""
@@ -2744,14 +2985,19 @@ def _main():
                                capture_output=True, text=True, timeout=max(1, min(30, time_left())))      # D-278: the time that is left, not a fixed 30 s
             if p.returncode != 0:
                 try:
-                    errs = json.loads(p.stdout or "{}").get("errors") or []
-                    last_error["msg"] = ("no ```verdict block in the returned text" if p.returncode == 3
-                                         else str(errs[0]) if errs else "validator rc=%d" % p.returncode)
-                except Exception:  # D-259 (closed): the validator already returned non-zero
-                    last_error["msg"] = "validator rc=%d" % p.returncode
+                    rep = json.loads(p.stdout or "")
+                except ValueError:   # D-293 (closed): no JSON report: the validator did not finish, raised just below
+                    rep = None
+                errs = rep.get("errors") if isinstance(rep, dict) else None
+                if p.returncode not in (1, 3) or not isinstance(errs, list):
+                    raise ValidatorDidNotRun("exit %d with no report" % p.returncode)
+                last_error["msg"] = ("no ```verdict block in the returned text" if p.returncode == 3
+                                     else str(errs[0]) if errs else "validator rc=%d" % p.returncode)
             return p.returncode == 0
-        except Exception:  # D-259 (closed): not validated, which blocks
-            return False       # fail-closed on THIS lookup only; caller still tries other locations
+        except Exception as exc:  # D-293 (closed): the validator could not run: a fault that blocks, never read as "invalid"
+            fault("the verdict validator", exc)
+            last_error["msg"] = "the verdict validator could not run (%s)" % type(exc).__name__
+            return False
         finally:
             if tmp and os.path.exists(tmp):
                 try:
@@ -2762,9 +3008,16 @@ def _main():
     problems = []
     validated = []             # [(slug, text, agentId or None)] — every gate text or file content that validated (D-146)
 
+    _ret_cache = {}
+
     def gate_return(tuid, resume):
         """(text, location, problem) for one dispatch or one SendMessage resume. (None, None, None): the
-        result never landed, not this hook's call."""
+        result never landed, not this hook's call. D-304: resolved once, so the author checks read the same text the judgment does."""
+        if (tuid, resume) not in _ret_cache:
+            _ret_cache[(tuid, resume)] = _gate_return(tuid, resume)
+        return _ret_cache[(tuid, resume)]
+
+    def _gate_return(tuid, resume):
         tool_out = results.get(tuid)
         # A resume's own tool_result is "Resuming agent ..." (no block): its text comes in a notice (D-208).
         is_stub = isinstance(tool_out, str) and (tool_out.startswith(STUB_PREFIX)
@@ -2785,6 +3038,12 @@ def _main():
                     text = _read_output_file_text(out_file)
                     if text:
                         return text, "task_notification output_file (%s)" % out_file, None
+                    if os.access(out_file, os.R_OK):     # D-293 (Rule F review): it finished, and its output holds no answer
+                        return None, None, "the gate finished, but its output file holds no final text (%s): this gate is not passed" % out_file
+                elif out_file:                           # D-293 (Rule F review): a finished gate whose output is gone is not "still running"
+                    return None, None, "the gate finished, but its output file is missing (%s): this gate is not passed" % out_file
+                elif note.get("status") == "completed" and tool_out is not None and is_stub:
+                    return None, None, "the gate finished, but its completion notice carries no text and no output file: this gate is not passed"
         if tool_out is None:
             return None, None, None   # still running, or the result never landed — not this hook's call
         if is_stub:
@@ -2804,21 +3063,23 @@ def _main():
         if slug in GATES:      # a gate dispatched in an earlier turn, resumed in this one
             sm_idx = min(i for i, sm, _t in send_msgs if sm in sms)
             chains.append((slug, [(sm, True) for sm in sms], sm_idx, aid))
-    judged = set()             # slugs judged this turn (the W-09 count)
+    judged = set()             # slugs judged this turn (the W-09 count: "gates checked")
+    no_result = set()          # D-292: gates dispatched this turn whose result never landed (INCOMPLETE, not a block)
     extra_notes = set()        # D-218: "changed-file check skipped: no git"
     disk_note = None           # D-279: set when the disk check had to skip
     ci_pending = set()         # D-252: a quality PASS whose CI judge is still running or could not be read
     chain_notes = []           # D-214: "<slug>: latest of N returns; earlier: <verdicts>"
 
-    # Check 1: every dispatched gate's verdict validates — inline (2.0.0), or in a file it wrote
-    # (D-57, 2.1.0): council/<slug>.verdict.md for any GATES member dispatched as a seat, or
-    # <name>.verdict.md beside <name>.DRAFT.md for claims-gate specifically.
+    # Check 1: every dispatched gate's own returned text validates (2.0.0). Since D-321 a file the gate's block is copied into
+    # (council/<slug>.verdict.md, or <name>.verdict.md beside a draft) is checked against that return (check 1c), never used instead.
     for slug, chain, t_idx, chain_aid in chains:
         judged.add(slug)
         rets = [gate_return(t, r) for t, r in chain]
         if rets[-1][0] is None:
             if rets[-1][2]:
                 problems.append("%s: %s" % (slug, rets[-1][2]))
+            else:              # D-292: dispatched, and no result landed by the Stop: not gated, and not a verdict to count as valid
+                no_result.add(slug)
             continue          # the latest return is not in yet (or never landed): not judged on an older one
         with_block = [i for i, r in enumerate(rets) if r[0] is not None and FENCE.search(r[0])]
         j = with_block[-1] if with_block else len(rets) - 1
@@ -2839,54 +3100,25 @@ def _main():
             validated.append((slug, out, chain_aid))
             continue
 
-        locations_checked = ["%s (%s)" % (out_location, last_error["msg"][:160]) if last_error["msg"] else out_location]
-        found_valid = False
-
-        seat_path_suffix = os.path.join("council", "%s.verdict.md" % slug)
-        for w_idx, abs_path, content in md_writes:
-            if w_idx < t_idx:
-                continue
-            if abs_path.endswith(seat_path_suffix):
-                locations_checked.append(os.path.relpath(abs_path, project_dir))
-                if validates(content):
-                    validated.append((slug, content, None))
-                    found_valid = True
-                    break
-        if found_valid:
-            continue
-
-        if slug == "claims-gate":
-            # The DRAFT is written by the PRODUCER, earlier in the transcript than claims-gate's
-            # own dispatch — no ordering constraint relative to t_idx here. What must come at/after
-            # t_idx is the *.verdict.md write itself, so a stale verdict from an unrelated earlier
-            # draft/gate pair cannot satisfy this dispatch.
-            draft_stems = {dp[: -len(".DRAFT.md")] for _w_idx2, dp in draft_writes}
-            for w_idx, abs_path, content in md_writes:
-                if w_idx < t_idx or not abs_path.endswith(".verdict.md"):
-                    continue
-                stem = abs_path[: -len(".verdict.md")]
-                if stem in draft_stems:
-                    locations_checked.append(os.path.relpath(abs_path, project_dir))
-                    if validates(content):
-                        validated.append((slug, content, None))
-                        found_valid = True
-                        break
-        if found_valid:
-            continue
-
+        # D-321 (audit 13R F2): a gate counts only on its own return. A council seat file or a claims verdict file is a copy of the
+        # block the gate returned and is checked against it (check 1c below); it never rescues a return that failed. Once a file had to
+        # hold the block the dispatch itself returned, unchanged (D-304, D-315), that fallback had no use but this one.
+        where = "%s (%s)" % (out_location, last_error["msg"][:160]) if last_error["msg"] else out_location
         detail = ("no valid verdict found in: %s. Every gate ends its output with a valid "
                    "```verdict block (schema v3.4: verdict, integer confidence 0-10, falsifier, "
                    "evidence opening with MEASURED, CITED, COMPUTED, ESTIMATED or ASSUMED, "
                    "standards[]; a PASS also needs a path:line or a backticked command and "
-                   "never rests on ASSUMED; MEASURED names the backticked command it ran), or — for a council seat or the claims gate — writes "
-                   "one to the file location this hook checked." % "; ".join(locations_checked))
+                   "never rests on ASSUMED; MEASURED names the backticked command it ran). A council seat file or a claims-gate "
+                   "verdict file is a copy of that block and counts only with it." % where)
         problems.append("%s: %s" % (slug, detail))
 
     # Check 1b (D-112, R22): a verdict block's `agent` must be the agent whose dispatch returned it.
     # Applies to EVERY dispatch, gate or not, so a producer cannot hand back a block signed as a gate.
     all_returns = dict(all_dispatched)
     all_returns.update(resume_slug)        # a resumed agent's reply is that agent's return too (D-208)
-    for tuid, slug in sorted(all_returns.items(), key=lambda kv: str(kv[0])):
+    def returned_texts(tuid):
+        """Every text a dispatch or a resume returned this turn: the notice summary and result, the tool result, and (D-304) the text
+        the judgment resolved, which may come from the task's output file."""
         texts = []
         note = notifications.get(tuid) or {}
         if (note.get("summary") or "").strip():
@@ -2896,7 +3128,13 @@ def _main():
         out = results.get(tuid)
         if isinstance(out, str) and not out.startswith(STUB_PREFIX):
             texts.append(out)
-        for text in texts:
+        resolved = gate_return(tuid, tuid in resume_slug)[0]
+        if resolved and resolved not in texts:
+            texts.append(resolved)
+        return texts
+
+    for tuid, slug in sorted(all_returns.items(), key=lambda kv: str(kv[0])):
+        for text in returned_texts(tuid):
             for raw in FENCE.findall(text):
                 try:
                     obj = json.loads(raw)
@@ -2919,17 +3157,9 @@ def _main():
         return "COULD NOT ASSESS" if v == "COULD_NOT_ASSESS" else v
 
     returned = set()           # {(agent slug, verdict)} from every dispatch's returned text this turn
+    returned_blocks = {}       # D-304 (Rule F review): agent slug -> [every block it returned this turn, parsed], so a file holds that block unchanged
     for tuid, slug in all_returns.items():
-        texts = []
-        note = notifications.get(tuid) or {}
-        if (note.get("summary") or "").strip():
-            texts.append(note.get("summary"))
-        if (note.get("result") or "").strip():          # a backgrounded seat's stored notice (D-164)
-            texts.append(note.get("result"))
-        out = results.get(tuid)
-        if isinstance(out, str) and not out.startswith(STUB_PREFIX):
-            texts.append(out)
-        for text in texts:
+        for text in returned_texts(tuid):
             for raw in FENCE.findall(text):
                 try:
                     obj = json.loads(raw)
@@ -2937,20 +3167,26 @@ def _main():
                     continue
                 if isinstance(obj, dict) and str(obj.get("agent") or "").split(":")[-1].strip() == slug:
                     returned.add((slug, _norm_v(obj.get("verdict"))))
+                    returned_blocks.setdefault(slug, []).append(obj)
     # A dispatched subagent's own writes live in its own transcript, beside the main one:
     # <transcript_path minus .jsonl>/subagents/agent-<agentId>.jsonl, linked by the dispatch's
     # toolUseResult.agentId (measured on client 2.1.288). Read them for every dispatch of this turn, so a
     # producer subagent with Write cannot write a verdict file or a marked .md unseen (D-117).
     sub_dir = os.path.join(tpath[: -len(".jsonl")] if tpath.endswith(".jsonl") else tpath, "subagents")
     sub_dir_missing = False
-    for tuid in all_dispatched:
-        aid = agent_ids.get(tuid)
-        if not aid or not all(c.isalnum() or c in "-_" for c in aid):
+    # D-308 (audit 12 R7): every agent whose work is judged this turn: dispatched in it, resumed in it, or completed in it (D-309)
+    scan_aids = []
+    for aid in [agent_ids.get(t_) for t_ in all_dispatched] + resumed_aids:
+        if aid and aid not in scan_aids:
+            scan_aids.append(aid)
+    for aid in scan_aids:
+        if not all(c.isalnum() or c in "-_" for c in aid):
+            fault("the subagent transcript check of agent %r (an id the hook cannot use as a file name)" % aid[:40], ValueError("bad agentId"))
             continue
         try:
             sub_lines = open(os.path.join(sub_dir, "agent-%s.jsonl" % aid), encoding="utf-8",
                              errors="replace").read().splitlines()
-        except FileNotFoundError as exc:   # D-286 (closed): a dispatched agent whose own transcript is missing is a fault; no folder at all is announced
+        except FileNotFoundError as exc:   # D-286, D-291 (closed): a dispatched agent's missing transcript, or a missing subagents folder, is a fault
             if os.path.isdir(sub_dir):
                 fault("the subagent transcript check of agent %s (its transcript is missing)" % aid, exc)
             else:
@@ -2983,7 +3219,7 @@ def _main():
             content_blocks = (sev.get("message") or {}).get("content")
             for sblk in content_blocks if isinstance(content_blocks, list) else []:
                 if isinstance(sblk, dict) and sblk.get("type") == "tool_use" and sblk.get("name") == "Bash":
-                    bash_verdict_refs.extend(VERDICT_REF.findall(str((sblk.get("input") or {}).get("command") or "")))
+                    bash_verdict_refs.extend(verdict_refs(str((sblk.get("input") or {}).get("command") or ""), project_dir))
                     bash_cmds.append(str((sblk.get("input") or {}).get("command") or ""))
                     continue
                 if not (isinstance(sblk, dict) and sblk.get("type") == "tool_use"
@@ -3002,18 +3238,25 @@ def _main():
                 elif not ap.endswith(".DRAFT.md") and find_marker_dir(os.path.dirname(ap), project_dir):
                     marked_md_writes.append((-1, ap))
 
-    if sub_dir_missing:   # D-279, D-286: no subagents folder beside the transcript, so the writes of the agents dispatched this turn were not read
-        extra_notes.add("subagent transcripts not found: writes by the agents dispatched this turn are not checked")
+    if sub_dir_missing:   # D-291: no subagents folder beside the transcript, though an agent ran this turn: its writes cannot be read (Claude Code 2.1.288 and newer write it)
+        problems.append("subagent transcripts are missing (%s): this turn is not gated; Claude Code 2.1.288 or newer is required" % sub_dir)
 
     # D-190: the disk check. A verdict file or marked .md that appeared or changed since turn start with no
     # Write or Edit of it this turn was written by something no command-text match can see.
     try:
         cur = disk_snapshot(project_dir)
+        if cur is not None and DISK_SKIP["partial"]:   # D-294: the check ran, but not everywhere; the Stop says where it did not look
+            disk_note = ("disk check partial (%s): a marked asset there that a script or shell command wrote may not be caught this turn"
+                         % DISK_SKIP["partial"])
+            extra_notes.add(disk_note)
         if cur is not None:
             try:
                 state = json.load(open(_snap_path(tpath)))
                 if "turn_start" not in state:
-                    raise KeyError("turn_start")    # only the D-209 block count is in the file
+                    raise KeyError("turn_start")    # an older hook's file holding only its block count
+                if state.get("root") != project_dir or (state.get("session") and payload.get("session_id")
+                                                         and state.get("session") != payload.get("session_id")):
+                    raise KeyError("root")          # audit 13 R7: a snapshot of another project or session is not this turn's start
                 base = state.get("turn_start") or {}
                 by_bash = {c for e in state.get("after_bash") or [] for c in e.get("changed") or []}
             except Exception:  # D-259 (closed): the fallback baseline is computed instead, and it counts unknown files as changed
@@ -3060,7 +3303,8 @@ def _main():
         fault("the Bash write check of marked folders", exc)      # D-259
 
     # D-175: a verdict file a Bash command named this turn. With a Write/Edit origin, re-read it from disk
-    # (the shell may have changed it); with none, it is not produced by a gate dispatch.
+    # (the shell may have changed it); with none, it is not produced by a gate dispatch. D-336: no exception for a file the turn
+    # did not change (D-331 is moved to 2.8.5): the hook cannot tell from a command's text which file it touched (its folder).
     bash_paths = set()
     for ref in bash_verdict_refs:
         if placeholder_verdict_name(ref):
@@ -3102,11 +3346,53 @@ def _main():
                     "'%s': verdict file not produced by a gate dispatch this turn (block agent '%s', "
                     "verdict %s; no dispatch of that agent returned that verdict in this turn)" % (
                         os.path.relpath(ap, project_dir), key[0] or "?", key[1]))
+            elif obj not in returned_blocks.get(key[0], []):   # D-304 (Rule F review): the gate's own block, unchanged
+                problems.append(
+                    "'%s': verdict file not produced by a gate dispatch this turn (block agent '%s', verdict %s; its block is not the "
+                    "one that agent returned this turn: a verdict file holds the gate's block unchanged)" % (
+                        os.path.relpath(ap, project_dir), key[0] or "?", key[1]))
+            if key[0] != "claims-gate" and find_marker_dir(os.path.dirname(ap), project_dir):   # D-304 (Rule F review)
+                problems.append("'%s': a verdict file in a marketing-asset folder carries a block signed by '%s'; only the claims gate "
+                                "clears an asset" % (os.path.relpath(ap, project_dir), key[0] or "?"))
+
+    def claims_cleared(ap):
+        """D-304 (Rule F review): None when the asset's sibling verdict file validates and every block in it is a claims-gate PASS; else why
+        not. The claims hook's rule for a write, read again at the Stop for the writes it could not see."""
+        vp = (ap[:-3] if ap.lower().endswith(".md") else ap) + ".verdict.md"
+        rel_v = os.path.relpath(vp, project_dir)
+        if os.path.exists(vp) and os.path.realpath(vp) not in written:
+            # Audit 13 R3: the asset changed this turn, so only a verdict on this turn's copy clears it: a verdict file written this turn
+            # (its blocks are then checked against what the claims gate returned this turn, check 1c above)
+            return "'%s' was not written this turn: an approval from an earlier turn does not clear copy written in this one" % rel_v
+        try:
+            content = open(vp, encoding="utf-8", errors="replace").read()
+        except FileNotFoundError:   # D-270 (closed; D-304): no verdict file, so the asset is not cleared
+            return "no '%s' beside it" % rel_v
+        except Exception as exc:   # D-270 (closed): an unreadable verdict file clears nothing
+            return "'%s' could not be read (%s)" % (rel_v, type(exc).__name__)
+        objs = []
+        for raw in FENCE.findall(content):
+            try:
+                objs.append(json.loads(raw))
+            except Exception:  # D-259 (closed): a block that does not parse clears nothing
+                objs.append(None)
+        if not objs or any(not isinstance(o, dict) or str(o.get("agent") or "").split(":")[-1].strip() != "claims-gate"
+                           or o.get("verdict") != "PASS" for o in objs):
+            return "'%s' is not a claims-gate PASS" % rel_v
+        if not validates(content):
+            return "'%s' does not validate (%s)" % (rel_v, last_error["msg"][:160])
+        return None
+
     for _w_idx, ap in marked_md_writes:
         if not claims_gate_at:
             problems.append(
                 "DRAFT/GATED: '%s' was written under a marketing-asset directory with no claims-gate "
                 "dispatch this turn." % os.path.relpath(ap, project_dir))
+        else:
+            why = claims_cleared(ap)
+            if why:
+                problems.append("DRAFT/GATED: '%s' was written under a marketing-asset directory without a claims-gate PASS beside it "
+                                "(%s)." % (os.path.relpath(ap, project_dir), why))
 
     # Check 3 (D-146): a MEASURED verdict must cite a command this session ran. Executed commands come
     # from every Bash tool_use in the main transcript (all turns) and every subagent transcript.
@@ -3190,8 +3476,8 @@ def _main():
                 ev = obj.get("evidence") if isinstance(obj, dict) else None
                 if not isinstance(ev, str):
                     continue
-                quality_pass = (str(obj.get("agent") or "").split(":")[-1].strip() in QUALITY_GATES
-                                and obj.get("verdict") == "PASS" and re.match(r"^(CITED|MEASURED)\b", ev))
+                # D-304 (audit 12 R1): a quality gate is the gate that was dispatched, never the name its block carries
+                quality_pass = (slug in QUALITY_GATES and obj.get("verdict") == "PASS" and re.match(r"^(CITED|MEASURED)\b", ev))
                 if quality_pass:   # D-222
                     prob = quality_pass_problem(slug)
                     if prob:
@@ -3242,20 +3528,26 @@ def _main():
                 "claims-gate dispatch afterward in this session." % (
                     os.path.relpath(abs_path, project_dir)))
 
-    if not problems and ci_pending:
+    # D-292: "gates checked" counts every gate dispatched or resumed this turn; "verdicts valid" counts only the gates whose verdict
+    # validated. A gate whose result never landed is INCOMPLETE: the turn is not gated, and the model cannot fix a missing result.
+    n_valid = len({s_ for s_, _t, _a in validated})
+    incomplete = ["%s returned no result: this turn is not gated" % s_ for s_ in sorted(no_result)]
+    notes = chain_notes + sorted(extra_notes) + incomplete      # D-295: every note, on every outcome
+
+    if not problems and (ci_pending or incomplete):
         # D-252: nothing to fix in the turn, but a quality PASS is not a PASS until CI says so. The turn may end.
-        print(json.dumps({"systemMessage": "Verdict check INCOMPLETE: %s. Gates checked %d; a later turn re-reads CI%s." % (
-            "; ".join(sorted(ci_pending)), len(judged), "".join("; " + x for x in chain_notes + sorted(extra_notes)))}))
+        print(json.dumps({"systemMessage": "Verdict check INCOMPLETE: %s. Gates checked %d, verdicts valid %d%s%s." % (
+            "; ".join(sorted(ci_pending) + incomplete), len(judged), n_valid, "; a later turn re-reads CI" if ci_pending else "",
+            "".join("; " + x for x in chain_notes + sorted(extra_notes)))}))
         return 0
 
     if not problems and judged:
         # W-09 completion signal (2.3.3): one line after a clean turn that dispatched gates, so a
         # quiet Stop hook is distinguishable from an absent one. Not a block: no "decision" key.
-        n = len(judged)
         print(json.dumps({"systemMessage": "BlackRaptor verdict check: gates checked %d, verdicts valid %d; "
                           "measured: %d runs matched, %d non-zero%s."
-                          % (n, n, len(measured_matched), len(measured_matched & failed_ids["ids"]),
-                             "".join("; " + x for x in chain_notes + sorted(extra_notes)))}))
+                          % (len(judged), n_valid, len(measured_matched), len(measured_matched & failed_ids["ids"]),
+                             "".join("; " + x for x in notes))}))
         return 0
 
     if problems:
@@ -3270,20 +3562,25 @@ def _main():
                 seen.add(p)
                 deduped.append(p)
         problems = deduped
-        n_blocks = bump_stop_blocks(tpath, payload, turn_ts or "idx%d" % turn_start)   # D-209
+        # D-295: the block names every problem (the first five, then "and N more") and carries every note
+        listed = problems[:5] + (["and %d more" % (len(problems) - 5)] if len(problems) > 5 else [])
+        tail = ("\nAlso: " + "; ".join(notes)) if notes else ""
+        n_blocks = bump_stop_blocks(tpath, payload, turn_key)   # D-209, D-322
         if (n_blocks > MAX_STOP_BLOCKS) if n_blocks is not None else bool(payload.get("stop_hook_active")):   # D-286 (X9): no count kept, so a Stop already bounced once ends loudly
             running = [p_.split(":")[0] for p_ in problems if p_.endswith("gate seat still running; wait for its result before ending the turn")]
             if len(running) == len(problems):   # D-220: a gate still running is not a failed verdict
                 print(json.dumps({"systemMessage": "Verdict check INCOMPLETE: %s still running at turn end; this turn "
-                                  "is not gated until %s returns." % (", ".join(running), "it" if len(running) == 1 else "they")}))
+                                  "is not gated until %s returns.%s" % (", ".join(running), "it" if len(running) == 1 else "they", tail)}))   # D-307
                 return 0
-            print(json.dumps({"systemMessage": "Verdict check FAILED and was not fixed: after %d blocks this turn the "
-                              "problems remain, so this turn is not gated:\n  - %s" % (MAX_STOP_BLOCKS, "\n  - ".join(problems[:5]))}))
+            after = ("after %d blocks this turn" % MAX_STOP_BLOCKS) if n_blocks is not None else \
+                "the block count could not be saved, so after one block this turn"     # D-286 path: say what happened (string gate, 2.8.4)
+            print(json.dumps({"systemMessage": "Verdict check FAILED and was not fixed: %s the "
+                              "problems remain, so this turn is not gated:\n  - %s%s" % (after, "\n  - ".join(listed), tail)}))
             return 0
         print(json.dumps({
             "decision": "block",
             "reason": ("This turn cannot be treated as gated. Fix and re-emit:\n  - "
-                       + "\n  - ".join(problems[:5])
+                       + "\n  - ".join(listed) + tail
                        + "\nIf you believe this block is wrong, stop and report it to the human with the "
                          "reason above; do not disable the check."),
         }))

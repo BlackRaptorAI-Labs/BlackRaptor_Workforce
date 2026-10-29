@@ -1,15 +1,17 @@
 # Updating Your BlackRaptor Workforce
 
 *BlackRaptor Workforce alpha — updating installed packs. Covers the alpha packs: Core,
-Engineering, Council, Hardware, Marketing. Last updated 2026-10-20.*
+Engineering, Council, Hardware, Marketing. Last updated 2026-10-26.*
 
 Claude turns automatic updates **off by default** for marketplaces that Anthropic doesn't run,
 including ours — so unless you've switched auto-update on for the BlackRaptor marketplace,
 updates won't reach you on their own. Either way, a new pack version won't appear in a
 conversation that's already running. This page shows you how to update, on both surfaces.
 
-> **Workforce 2.8.3 needs /workforce-init --upgrade in each repo (run it from your own terminal). Until then
-> test-auditor and completion-auditor passes are blocked.** See [2.8.3](#283--what-changed-and-what-you-must-update).
+> **Coming from 2.8.3: update the plugins; plugin-mode repos with a recorded test command need nothing else, copy-mode
+> repos run /workforce-init --upgrade once.** See [2.8.4](#284--what-changed-and-what-you-must-update). Coming from an older version: 2.8.3 needs
+> /workforce-init --upgrade in each repo (run it from your own terminal); until then test-auditor and completion-auditor
+> passes may be blocked. See [2.8.3](#283--what-changed-and-what-you-must-update).
 
 ## 2.0.0 — what changed, and what you must update
 
@@ -44,7 +46,9 @@ disabled, the hook writes one line to stderr. Interactive sessions show it; `cla
 surface hook stderr, so on that path check the `BR_VERDICT_HOOK` variable instead. It fails closed on its own
 errors (D-267): a crash blocks the turn with "the verdict check crashed (...): this turn is not gated; report it",
 and a missing python3 or helper prints "gates in this turn are NOT checked" on every stop. It judges every stop, including the one after it blocked, so a re-emitted block is checked too; it
-blocks at most 3 times in one turn, and after that it lets the turn end with a message that starts
+blocks at most 3 times in one turn (4 when the first block came from the shell wrapper answering for a check that could not;
+a damaged background-task notice in the transcript can give one turn a second count of three blocks, a known limit to be fixed in 2.8.5),
+and after that it lets the turn end with a message that starts
 "Verdict check FAILED and was not fixed:", so the failure is on record.
 
 ### 3. Two gate seats moved (Engineering pack)
@@ -87,10 +91,11 @@ site to the guarded fallback.
 
 Marketing asset producers (and `product-marketing`, `product-docs-writer`) write an asset as
 `<name>.DRAFT.md`; it becomes `<name>.md` only once the isolated `claims-gate` agent has written a
-validating `<name>.verdict.md` (PASS or CONCERNS, no BLOCK-graded claim). Two new controls enforce
+validating `<name>.verdict.md` holding a claims-gate PASS, written in the same turn as the asset (a CONCERNS verdict is a HOLD:
+fix the copy and gate it again; an approval from an earlier turn does not clear new copy). Two new controls enforce
 it, both scoped to a directory your session has marked with a `.br-assets` file (written by the
-`marketing-core` and `marketing-campaign` skills) — outside a marked directory neither one does
-anything:
+`marketing-campaign` skill at campaign start) — outside a marked directory neither one judges asset
+writes (the hooks README lists what the write gate still checks everywhere):
 
 - A **PreToolUse hook** refuses an ungated `Write`/`Edit` of the final `.md` inside a marked
   directory. **Kill switch:** `BR_CLAIMS_HOOK=off`.
@@ -98,8 +103,8 @@ anything:
   marked directory and never dispatched `claims-gate` afterward in the same session. Same kill
   switch as before, `BR_VERDICT_HOOK=off`, covers this check too.
 
-If either hook gets in your way on a non-marketing directory, that is a bug — this class of
-false block is exactly what the scoping is designed to prevent, so please report it.
+If either hook gets in your way on a non-marketing directory and the hooks README (beside the hooks in the installed Core
+plugin) does not describe that block, that is a bug, so please report it.
 
 ### 3. The verdict hook now waits for a subagent still running in the background
 
@@ -133,10 +138,49 @@ If you start sessions with `ALLOW_TIER3=1` to allow intentional Tier-3 edits, sw
 
 ### 3. One switch turns every Core hook off
 
-`BR_HOOKS=off` turns off all four Core hooks at once. `BR_VERDICT_HOOK=off` and
+`BR_HOOKS=off` turns off all five Core hooks at once. `BR_VERDICT_HOOK=off` and
 `BR_CLAIMS_HOOK=off` still work for one hook each. No action needed unless you want it.
 
 ---
+
+## 2.8.4 — what changed, and what you must update
+
+### 1. Update the plugins; most repos need nothing else
+
+Update the marketplace and the installed plugins. A repo installed with 2.8.3 in plugin mode (the default) that has a recorded test
+command needs no re-run of `/workforce-init`: the hooks run from the plugin. One with no test command is still told at session
+start to run `/workforce-init --upgrade`, as in 2.8.3; add `--test-cmd "<your test command>"`. A repo installed in copy mode keeps its own copies of the agents and skills (the gate hooks
+run from the plugin in every mode), so run `/workforce-init --upgrade` there once, from your own terminal, to copy in the 2.8.4
+versions; each session start says so until you do. A repo
+installed before 2.8.3 still needs the 2.8.3 steps below.
+
+### 2. Claude Code 2.1.288 or newer
+
+The verdict check now blocks a turn that ran an agent when the agent's own transcript folder is missing ("subagent transcripts
+are missing"). That folder was confirmed on Claude Code 2.1.288 and 2.1.296; an older client may not write it. Update Claude Code if yours is older; `/workforce-doctor` checks it.
+
+### 3. What changed in the checks
+
+- A folder the disk check cannot read is reported on every turn ("disk check skipped (a folder could not be read: ...)"), and
+  marked folders inside git-ignored folders are now checked too, up to 8 levels deep and outside node_modules and Python
+  environment and cache folders.
+- The marketing write gate is built to answer within 9 of its 10 seconds when its helper hangs (a 7-second watchdog, then 1 second
+  to stop the helper). When its helper is missing, crashes or runs out of time, it denies a write to a file named `.md` and a shell
+  command that names a `.md` file, copies a folder, unpacks an archive, copies with a wildcard or is over 2048 characters long,
+  until the helper works, without
+  searching for marked folders; other calls pass (the hooks README lists what it cannot see).
+- A marketing asset is cleared only by a claims-gate PASS in the verdict file beside it, and a verdict file counts only when it
+  holds the block the gate returned, unchanged. If your workflow edited a gate's block before saving it, save it unchanged.
+- A verdict counts only for the gate that was dispatched, wherever its result came from, and whether a test-auditor or
+  completion-auditor pass needs CI is decided by the gate dispatched, not by the name in its block.
+- A background gate whose result arrives after you sent another message is checked in that turn; an agent resumed with
+  SendMessage has its own transcript checked.
+- The verdict check answers within 840 of the Stop call's 900 seconds, and its shell watchdog by about 856, at least 30 seconds
+  before the 900.
+- A verdict validator that cannot run, or a gate's output file that cannot be read, blocks the turn and says which.
+- A gate dispatched with no result at the end of a turn is reported as INCOMPLETE; the closing line counts only verdicts that
+  passed the validator.
+- A block lists every note and, past five problems, says how many more.
 
 ## 2.8.3 — what changed, and what you must update
 

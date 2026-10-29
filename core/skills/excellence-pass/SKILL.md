@@ -84,7 +84,7 @@ the full pass. Do not turn trivial tasks into checklist theater.
 
 Set this to your own roster. How hard to enforce, by tier:
 
-- **Top tier (your strongest model: `best` for the architecture seat, `opus` with `effort: high` for the gates and deep-judgment seats):** treat the skill as a checklist backstop rather
+- **Top tier (your strongest model: `best` for the architecture seat, `opus` for the gates and deep-judgment seats; `effort: high` is pinned on the gates only, and on the architecture seat):** treat the skill as a checklist backstop rather
   than a script — keep the latitude, but still run checks 1, 2, and 3.
 - **Everyday build tier (e.g. sonnet):** run the pass as an explicit,
   confirmable checklist, giving particular weight to checks 1 (hidden
