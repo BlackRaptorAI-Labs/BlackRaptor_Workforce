@@ -60,12 +60,33 @@ deny() {
   printf 'If you believe this block is wrong, stop and report it to the human with the reason above; do not disable the check.\n' >&2
   exit 2
 }
+# D-351 (2.8.5, audit 14P F12): with the helper broken, a Write, Edit or MultiEdit whose target is a link, or whose real folder is a
+# marked folder or inside one, is denied. Shell built-ins only: the folder is resolved through links with `cd -P` (the fallback ends
+# right after, so moving this shell's folder is harmless; no subshell), and each folder up to the root is tested for a .br-assets marker
+# with `[ -e ]`; no program is run and nothing is searched.
+marked_parent() {
+  local t="$1" d rp cwd=""
+  [[ $PAYLOAD =~ $re_cwd ]] && cwd="${BASH_REMATCH[1]}"
+  case "$t" in /*) ;; *) t="${cwd:-$PWD}/$t" ;; esac
+  [ -L "$t" ] && return 0
+  d="${t%/*}"; [ -n "$d" ] || d="/"
+  while [ ! -d "$d" ] && [ "$d" != "/" ] && [ -n "$d" ]; do d="${d%/*}"; [ -n "$d" ] || d="/"; done
+  cd -P -- "$d" 2>/dev/null || return 0     # a folder that cannot be resolved is not ruled out
+  rp="$PWD"
+  while :; do
+    [ -e "$rp/.br-assets" ] && return 0
+    [ "$rp" = "/" ] || [ -z "$rp" ] && return 1
+    rp="${rp%/*}"; [ -n "$rp" ] || rp="/"
+  done
+}
 fallback() {   # $1 = why the helper could not answer. D-305: no scan and no program, only the payload text, so it answers at once
   shopt -s nocasematch
   tool=""; fp=""; cmd=""
   re_tool='"tool_name"[[:space:]]*:[[:space:]]*"([^"]*)"'
   re_fp='"file_path"[[:space:]]*:[[:space:]]*"([^"]*)"'
+  re_cwd='"cwd"[[:space:]]*:[[:space:]]*"([^"\\]*)"'
   re_cmd='"command"[[:space:]]*:[[:space:]]*"(([^"\\]|\\.)*)"'
+  re_two_cmd='"command"[[:space:]]*:.*"command"[[:space:]]*:'   # D-340: a second literal command key anywhere
   # a folder copy, an archive or a wildcard copy writes files the fallback cannot name (the list in enforce-draft-gate.py's BULK_WRITE)
   re_bulk='(^|[;&|( `])((cp|gcp|mv|install|ln)([[:space:]][^;&|]*)?[[:space:]](-[a-z]*[ra][a-z]*([^a-z]|$)|--(recursive|archive))|(cp|gcp|mv|install|ln)[[:space:]][^;&|]*[*?[]|(rsync|ditto|cpio|pax|unzip|7z|7za)([^a-z0-9]|$)|(tar|bsdtar|gtar)[[:space:]]+(-?[a-z]*x|--extract|--get|[^;&|]*[[:space:]](-[a-z]*x|--extract|--get)))'
   [[ $PAYLOAD =~ $re_tool ]] && tool="${BASH_REMATCH[1]}"
@@ -73,13 +94,21 @@ fallback() {   # $1 = why the helper could not answer. D-305: no scan and no pro
   case "$tool" in
     Write|Edit|MultiEdit)
       if [[ -z $fp || $fp == *\\* ]]; then
-        [[ $PAYLOAD == *.md* ]] && deny "$1"     # the target cannot be read whole: a call that names a .md is denied
+        deny "$1; the target path cannot be read whole"   # an escaped or missing path cannot be ruled out of a marked folder
       elif [[ $fp == *.md ]]; then
         deny "$1"
+      else
+        marked_parent "$fp" && deny "$1; the target is a link, sits in a marked folder, or its folder could not be checked"
       fi ;;
     "")
       deny "$1" ;;                               # the call cannot be read: no tool name, so nothing can be ruled out
     Bash)
+      # D-340 (2.8.5, audit 14P F06): the command is read only from a payload whose shape is proven: one literal "command" key, no
+      # \u escape anywhere (an escaped key could be the real field while a literal one is not), at most 64 KB. Anything else is
+      # denied: this runs only while the helper is broken, so a false denial here is announced and acceptable.
+      [ "${#PAYLOAD}" -le 65536 ] || deny "$1; the call is too large to read safely without the helper"
+      [[ $PAYLOAD =~ $re_two_cmd ]] && deny "$1; the call holds more than one command field, so it cannot be read safely without the helper"
+      [[ $PAYLOAD == *'\u'* ]] && deny "$1; the call holds an escaped character, so it cannot be read safely without the helper"
       [[ $PAYLOAD =~ $re_cmd ]] || deny "$1"     # the command cannot be read
       cmd="${BASH_REMATCH[1]}"
       # D-329 (audit 13S S7 class): bash 3.2 rewrites long text in quadratic time (D-329 records the measured times), and

@@ -113,7 +113,7 @@ This kit practices what it preaches, so here is its own CONCERNS verdict:
   (CI + branch protection + the owner's approval) are the real enforcement.
 - Agent verdicts are only as good as the model and the context you give them; the
   human signature is there because the model can be wrong.
-- The merge design (one approving review, the owner's while write access stays with the owner and one agent account, plus the required checks)
+- The merge design (one approving review, the owner's, while write access stays with the owner and one agent account, plus the required checks)
   depends on GitHub branch-protection behaving as documented — **run the verification
   tests** in `docs/branch-protection-checklist.md` before trusting it.
 - Compliance framing (SOC 2-style compensating controls) is a design pattern, not

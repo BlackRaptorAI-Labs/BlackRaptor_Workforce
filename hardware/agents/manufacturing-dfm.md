@@ -57,7 +57,7 @@ Your final message is the deliverable. No placeholders; every open item carries 
 
 **Output-quality discipline.** Run the `excellence-pass` skill's five checks as an EXPLICIT, confirmable checklist before delivering, giving particular weight to the hidden-input-contract, independent-cross-check and quantified-counterfactual checks. Before delivering, list three ways this output could be wrong and check each.
 
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
+<!-- CORE-CONTRACT-START (the shared operating contract, built into every agent; do not hand-edit here; the session and preference layer is a separate block) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output

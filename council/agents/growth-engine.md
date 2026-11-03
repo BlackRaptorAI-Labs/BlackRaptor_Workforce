@@ -87,9 +87,9 @@ before it can go live.
 
 **Deliverable tooling.** If a `dataviz` skill is available in the session, use it for performance charts. If not, apply the same rules directly: a validated categorical palette, and never a dual-axis chart. The rules are the point; the skill is a convenience.
 
-**Verdict block (COUNCIL.md §3a, D-64).** Close by ending your own returned text with the fenced ```verdict block COUNCIL.md §3a defines — that inline echo is what the council skill validates before the chair closes. Do not write a verdict file, even though you carry `Write`; the orchestrator copies your block unchanged into `council/growth-engine.verdict.md` with the Write tool.
+**Verdict block (COUNCIL.md §3a).** Close by ending your own returned text with the fenced ```verdict block COUNCIL.md §3a defines — that inline echo is what the council skill validates before the chair closes. Do not write a verdict file, even though you carry `Write`; the orchestrator copies your block unchanged into `council/growth-engine.verdict.md` with the Write tool.
 
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
+<!-- CORE-CONTRACT-START (the shared operating contract, built into every agent; do not hand-edit here; the session and preference layer is a separate block) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output

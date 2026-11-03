@@ -59,13 +59,13 @@ dissent and a human signature on consequential calls.
   calls. A large council consulted on a small question is theater.
 - **Independent drafts.** Seats answer in parallel without seeing each other's
   drafts — independence before synthesis prevents anchoring and groupthink.
-- **Seat-to-seat cross-review is a candidate feature (D4, 4 September 2026); the orchestrator
+- **Seat-to-seat cross-review is a candidate feature (4 September 2026); the orchestrator
   review step is the control in force.** Before the chair wave, the orchestrator (the main
-  session — there is no orchestrator subagent, P1/P2) reads every seat's returned verdict block
-  (§3a), re-runs each numbers seat's model per Decision 2a and records match or mismatch
-  beside the figure, and passes the chair the seat blocks verbatim. This replaces the
-  seat-to-seat cross-review this section described before 4 September 2026, at a fraction of the
-  token cost of a dispatch round that has every seat read every other seat's draft.
+  session — there is no orchestrator subagent) reads every seat's returned verdict block
+  (§3a), re-runs each numbers seat's model under the Output contract in that seat's agent file and
+  records match or mismatch beside the figure, and passes the chair the seat blocks verbatim. This
+  replaces the seat-to-seat cross-review this section described before 4 September 2026, a dispatch
+  round in which every seat read every other seat's draft.
 - **Adversarial mode.** For consequential decisions, the orchestrator assigns
   advocates and skeptics and synthesizes neutrally.
 - **Distinct reasoning methods.** Each seat argues with its own method (listed
@@ -124,16 +124,15 @@ both `gate` and `agent`:
 {"gate":"<your seat slug>","agent":"<your seat slug>","artifact":"<the decision or question you reviewed>","verdict":"<PASS|CONCERNS|FAIL|COULD NOT ASSESS>","confidence":<0-10>,"falsifier":"<the one observation that would flip this>","evidence":"MEASURED|CITED|COMPUTED|ESTIMATED|ASSUMED (pick one) — <the concrete basis>","standards":["none: practice applied: <the practice>"],"conditions":["<required and non-empty on CONCERNS and FAIL>"]}
 ```
 
-**End your own returned text with this block, verbatim, every time (D-64,
-GO-BLOCK-P2-BUILD-v1-AMENDMENT-7).** No second, different block, and no restatement of it in prose
+**End your own returned text with this block, verbatim, every time.** No second, different block, and no restatement of it in prose
 substitutes for it. A seat never writes a verdict file, even with `Write` in its grant.
 
-**Who writes `council/<slug>.verdict.md` (D-175, 2.8.2).** Only the orchestrator, and only by copying
+**Who writes `council/<slug>.verdict.md` (2.8.2).** Only the orchestrator, and only by copying
 a seat's returned block unchanged with the Write tool, or not at all. It never writes a seat verdict
 file with Bash (a heredoc, `>`, `tee` or a script): the core PreToolUse hook blocks that, and the Stop
 hook treats any verdict file a Bash command names as unverified. Read verdict files with the Read tool.
 
-**Who validates the seat blocks (D-176, 2.8.2).** The council skill, before the chair closes: it runs
+**Who validates the seat blocks (2.8.2).** The council skill, before the chair closes: it runs
 `validate_verdict.py` over every seat's block and records one MEASURED row per seat, and the chair
 does not close while any block is invalid (council SKILL.md §6). The core Stop hook checks only the
 seats that are also gates (`ethics-governance` and `evidence-auditor`); it does not check the other
@@ -141,7 +140,7 @@ seats' blocks.
 
 `chair` is **exempt from this section** — it holds no domain vote, so it carries no verdict block of
 its own; its output is the synthesis in §5, not a seat verdict. **The chair is dispatched only after
-every seat's result has arrived (D-65, GO-BLOCK-P2-BUILD-v1-AMENDMENT-8 §1).** Do not end the turn
+every seat's result has arrived.** Do not end the turn
 while any seat task is still running; wait for every seat's result (a blocking wait on each task),
 then dispatch the chair.
 
@@ -161,7 +160,7 @@ What You Lose: ~$40k ARR/quarter from existing entry-tier customers grandfathere
 ```
 Returned inline with its fenced block; the orchestrator copies the block unchanged into
 `council/pricing-strategy.verdict.md` with the Write tool, validates it, re-runs the cited elasticity
-model (D2a) before the chair wave, records "match," and passes the block to `chair` verbatim.
+model before the chair wave, records "match," and passes the block to `chair` verbatim.
 
 ## 4. Co-decisions (never decided in a silo)
 
@@ -251,7 +250,7 @@ no CSO. The CMO function is carried by two seats, not one: `market-insight`
 ## 6. Grounding (required setup, run by the orchestrator before any seat is dispatched)
 
 A generic council gives conventional wisdom. **The orchestrator is the main session — there is
-no orchestrator subagent (P1/P2)** — and it grounds the convening itself, before dispatching
+no orchestrator subagent** — and it grounds the convening itself, before dispatching
 anyone: read `BUSINESS-CONTEXT.md` at the project root the user is working in, or an explicit
 path they name. If it is missing or still the blank template (first line
 `<!-- TEMPLATE — not onboarded -->`), invoke the shared `context-onboarding` skill first, which

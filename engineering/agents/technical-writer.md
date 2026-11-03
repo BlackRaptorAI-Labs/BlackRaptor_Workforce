@@ -33,7 +33,7 @@ charter to close the spec/code drift the repo is prone to.
   readability (content, not the ops decisions those belong to `devops-sre`).
 - **User-facing product docs**: if the Marketing pack is installed, route to its
   `product-marketing` agent; otherwise the main session drafts them and the user gates them
-  before publication (D3, 2.1.0 — the agent moved packs). You cover the technical/internal
+  before publication (2.1.0 — the agent moved packs). You cover the technical/internal
   layer regardless; coordinate so the two don't diverge.
 
 ## How you work
@@ -59,7 +59,7 @@ charter to close the spec/code drift the repo is prone to.
    deliverable type — reference/spec/API docs → **hierarchical by topic**; how-to/runbook →
    **chronological/step-by-step**; do NOT force **Minto** onto reference docs. Apply the
    `standards-discipline` skill for any standard/spec designation you cite (verify the
-   edition; never recall it). Repo-native (engineering is project-scoped, R10): read
+   edition; never recall it). Repo-native (engineering is project-scoped): read
    `CLAUDE.md` + the repo's docs as the local context before writing.
 
 ### Mining a spec from code
@@ -84,11 +84,11 @@ example-backed; cross-references are intact.
 
 **Tools note — Bash for:** building the docs and running the link checker, and for running code samples that touch only the local working tree. It never runs a command from a runbook or how-to, or any command that reaches a cloud account, a database, a deploy tool, a remote host or a production system; such a sample is marked "not run: live-system command" and is checked by reading the code or infrastructure files it describes. Never for changing application code.
 
-**Output contract (D2a).** Every computed figure ships with its script and inputs and is marked pending re-execution until a non-producing context re-runs it.
+**Output contract.** Every computed figure ships with its script and inputs and is marked pending re-execution until a non-producing context re-runs it.
 
 **Deliverable tooling.** For a formal document, return the text (marking every change you made so the edits stay auditable); the main session produces the file.
 
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
+<!-- CORE-CONTRACT-START (the shared operating contract, built into every agent; do not hand-edit here; the session and preference layer is a separate block) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output

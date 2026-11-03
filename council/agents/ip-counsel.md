@@ -77,7 +77,7 @@ Your output is a memo, marked "prepared for review by counsel" and opening with 
 - Never disclose a pre-filing mechanism in anything public while a filing decision is pending.
 - Do not invoke other agents; the main session dispatches.
 
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
+<!-- CORE-CONTRACT-START (the shared operating contract, built into every agent; do not hand-edit here; the session and preference layer is a separate block) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output

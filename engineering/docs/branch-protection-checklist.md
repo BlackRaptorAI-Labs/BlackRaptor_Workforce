@@ -2,9 +2,10 @@
 
 Target: `main` on `{{ORG}}/{{REPO}}`.
 Context: written for an owner who works with agents ({{DEPLOY_MODEL}}). The owner approves every pull
-request; required checks and the owner's approval gate the merge (D-258, D-260). GitHub blocks
+request an agent or the build account opens; for those, required checks and the owner's approval gate the merge
+(the owner's own pull requests merge by an admin override, below). GitHub blocks
 self-approval, and it counts one approval from anyone with write access, so the settings below are chosen for that
-reality and the write list matters (D-273).
+reality and the write list matters.
 
 > GitHub offers two mechanisms: classic **branch protection rules** and newer
 > **rulesets**. This checklist is written for classic branch protection
@@ -20,7 +21,7 @@ reality and the write list matters (D-273).
 - [ ] Install the kit's `change-record-required.yml` into `.github/workflows/` and let it
       run once on a test PR (a check must run at least once before GitHub lets
       you mark it "required").
-- [ ] `/workforce-init` installs `workforce-proof.yml` (the CI judge, D-251) into
+- [ ] `/workforce-init` installs `workforce-proof.yml` (the CI judge) into
       `.github/workflows/`. Push one branch so its `head-suite` and `base-suite` jobs
       run once.
 
@@ -49,8 +50,8 @@ reality and the write list matters (D-273).
       untested combination.
 - [ ] Mark **required**: your test/lint/typecheck/coverage checks,
       and **`change-record-required`** (the file-presence check).
-- [ ] Mark **required**: **`head-suite`** and **`base-suite`**, source **GitHub Actions**
-      (D-253). These are workforce-proof's two jobs; CI is the judge of whether the tests
+- [ ] Mark **required**: **`head-suite`** and **`base-suite`**, source **GitHub Actions**.
+      These are workforce-proof's two jobs; CI is the judge of whether the tests
       pass, and the Stop hook reads the same two. `/workforce-init --setup-branch-protection`,
       run from your own terminal with an admin login, asks GitHub for both checks (up to date with
       the base), one approving review, stale approvals dismissed and the last push approved, in one
@@ -75,8 +76,9 @@ reality and the write list matters (D-273).
 You are the admin, and GitHub does not let you approve your own pull request.
 
 - **Recommended: OFF (`enforce_admins: false`).** Agents' pull requests still need your approval and
-  the checks. Your own pull requests merge by an admin override, which GitHub shows as a bypass on the
-  pull request: that record is the evidence. Keep the agent and build accounts out of the admin role.
+  the checks. Your own pull requests merge by an admin override (by default, GitHub does not apply branch protection
+  to admins or to custom roles with the "bypass branch protections" permission). Keep the agent and build accounts out
+  of the admin role and out of any role with that permission.
 - If you turn it ON, your own pull requests cannot merge without a second person's approval.
 - Emergency path (prod down): merge the hotfix by admin override, then within 24h file a retroactive
   Change Record marked **EMERGENCY** with what/why/when.
@@ -91,7 +93,9 @@ You are the admin, and GitHub does not let you approve your own pull request.
 - [ ] A pull request touching a gated path with no Change Record file → blocked by
       `change-record-required`.
 - [ ] A pull request whose change breaks an existing test → blocked by `base-suite`.
-- [ ] Your own pull request → merges only by an admin override, shown as a bypass.
+- [ ] Your own pull request → still needs an approving review, which you cannot give (GitHub does not let you
+      approve your own), and merges by your admin override. An approval from the agent or build account would also count, since that account has
+      write access, so do not have it approve your pull requests.
 
 ## For your auditor (control description language)
 
@@ -99,6 +103,6 @@ Describe this as: *"Compensating controls for a single-owner environment:
 (1) required CI quality gates on every pull request an agent opens, including a CI judge that runs the
 base branch's own tests; (2) documented self-attestation Change Records for security/privacy/compliance
 review, informed by automated analysis; (3) the owner's approval required on every pull request an
-agent opens. The owner's own changes and emergency merges skip the required checks by admin override,
-which GitHub records as a bypass."* Confirm acceptability with
+agent opens. The owner's own changes and emergency merges can merge by admin override without the required checks
+or an approving review."* Confirm acceptability with
 your specific auditor — SOC 2 permits compensating controls, but acceptance is auditor-specific.

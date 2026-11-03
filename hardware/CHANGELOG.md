@@ -1,3 +1,7 @@
+## 2.8.5 — 2026-11-02 — Docs, agents and skills no longer cite decision numbers or private test records
+
+Decision numbers, internal spec codes and pointers to the maintainers' private test records are removed from this pack's agents, skills and changelog. The edits remove or reword those references; figures in this changelog that cited those records are withdrawn.
+
 ## 2.8.4 — 2026-10-26 — The operating standard names principal-architect's effort
 
 The shipped operating standard now says that the gates and `principal-architect` pin `effort: high` in their agent files and every other agent follows your session's effort. No agent in this pack changed model or effort.
@@ -93,12 +97,8 @@ hw-design-reviewer and compliance-cert flag a code change that arrives without t
 - `PROGRAM-CONTEXT.md` rewritten with explicit fields and one filename. The cross-domain
   hardware review matrix is unchanged.
 
-### Measured, not fixed
-- `compliance-cert` emitted one malformed verdict block during Phase 2 calibration testing
-  (D-53): a missing closing bracket in its `standards[]` array, a JSON-syntax defect in the model's
-  own emission, not a hook or schema bug. Tracked as a measured contract-compliance rate (32/33
-  verdict blocks schema-valid across the calibration batch), not a shipped fix. Ref:
-  `docs/TEST-BATTERY-DOSSIER.md` §6(c) calibration read.
+### Withdrawn note
+- Withdrawn in 2.8.5: a note on how often `compliance-cert` wrote a malformed verdict block, with its figures, rested on test records that do not ship, so it is not repeated.
 
 ## Corrections — 3 Sep 2026
 
@@ -106,20 +106,18 @@ The pre-release claims gate for 2.0.0 found published statements this pack could
 substantiate. They are retracted or qualified here rather than edited out of the entries below,
 which stay as written.
 
-- **Retracted: the model-gap study.** Several surfaces cited "a small-N, non-blind model-gap study
-  recorded in the maintainers' test-battery dossier" and reported findings from it — that Sonnet's
+- **Retracted: the model-gap study.** Several places cited a "small-N, non-blind model-gap" study or test
+  and reported findings from it — that Sonnet's
   gaps concentrated in the Excellence Pass checks, that Opus was at near-parity, that a
-  4-task x 3-model side-by-side test established which behaviours separate the tiers. **No such
-  record exists** in the dossier, in `_eval/`, or anywhere else. Every statement resting on it is
+  4-task x 3-model side-by-side test established which behaviours separate the tiers. **No record of
+  it could be found.** Every statement resting on it is
   removed across the operating standard, the `excellence-pass` skill, the per-tier notes and the
   shared output-quality lines carried by individual agents. The five Excellence Pass checks
   themselves are unchanged and stand on being cheap, self-evidently good practice — which is the
   only claim now made for them.
 - **Corrected: the release validation stamp.** Its basis line said the "agent-trigger eval sets"
-  were run for this release. They were not: T-A is deferred to Phase 3. The stamp now names only
-  what ran — T-C gate liveness on the 20-artifact seeded-defect corpus (n=3, before and after,
-  2026-09-02) and the agent-behaviour eval set (19 sets / 53 scenarios, 2026-09-03), both on
-  `claude-opus-4-8` under Claude Code 2.1.258 — and says plainly that T-A was not run.
+  were run for this release. They were not. The figures this entry once gave for what did run are not
+  repeated here.
 - **Retracted: "Testing showed this pairing outperforms any single agent."** The hardware README
   said this of the producer → `hw-design-reviewer` → revise loop. No such test exists. The loop is
   kept because self-review cannot catch the producer's own blind spots, which is an argument from
@@ -137,7 +135,7 @@ which stay as written.
   was previously told to "run all arithmetic programmatically" and to "keep or extend the program's
   `sim/` scripts" while holding `Read, Grep, Glob` — an instruction the grant could not obey.
 - **`hw-design-reviewer` gains `Bash`** to re-execute a seat's `sim/` script on its stated inputs.
-  It never authors one: it is the reviewer, and per D2a its job is to re-run the producer's number
+  It never authors one: it is the reviewer, and under the Output contract in its agent file its job is to re-run the producer's number
   and record match or mismatch. A mismatch goes back to the producing seat and is never averaged.
 - Every computed figure now ships with its script and inputs and is marked pending re-execution
   until a context that did not produce it re-runs it.
@@ -178,11 +176,11 @@ Validated against `claude-opus-4-8` as of 2026-09-02.
 
 ## 1.2.4 — 2026-08-20
 
-- First-run welcome & interview experience (R7–R14) via the shared `context-onboarding` skill. Adds the units display preference (R13.3): `hw-operating-standard` reads the `units` USER-PREFS key and presents quantities as metric / imperial / both (default) — display only, dimension checks unaffected. Seven-dimension preference wire-up (R13) via the shared Core contract.
+- First-run welcome & interview experience via the shared `context-onboarding` skill. Adds the units display preference: `hw-operating-standard` reads the `units` USER-PREFS key and presents quantities as metric / imperial / both (default) — display only, dimension checks unaffected. Seven-dimension preference wire-up via the shared Core contract.
 
 ## 1.2.3 — 2026-08-19
 
-- `hw-operating-standard` gains the standardized context trigger: before substantive work on a program, resolve its `PROGRAM-CONTEXT-<program>.md` at the **project root** per the resolution order; if missing or still the template, invoke the shared `context-onboarding` skill first (interviewing against the program-context template fields) and write the approved, dated file to the project root — never into the pack (R1–R3). The in-pack `templates/program-context.md` now carries a `<!-- TEMPLATE — not onboarded -->` marker.
+- `hw-operating-standard` gains the standardized context trigger: before substantive work on a program, resolve its `PROGRAM-CONTEXT-<program>.md` at the **project root** per the resolution order; if missing or still the template, invoke the shared `context-onboarding` skill first (interviewing against the program-context template fields) and write the approved, dated file to the project root — never into the pack. The in-pack `templates/program-context.md` now carries a `<!-- TEMPLATE — not onboarded -->` marker.
 
 ## 1.2.2 — 2026-08-18
 

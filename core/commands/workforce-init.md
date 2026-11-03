@@ -50,7 +50,7 @@ Arguments given: `$ARGUMENTS`
      Show the list it printed and ask whether to delete them; only on a yes, run it again with
      `--upgrade --confirm-removals`.
    - If the sandbox is already on, the script cannot write the files it manages and prints "cannot write
-     ... run this from your own terminal" with the exact command (on macOS and on Linux, D-247). Show that command to the user and ask
+     ... run this from your own terminal" with the exact command (on macOS and on Linux). Show that command to the user and ask
      them to run it in their own terminal. Never change the sandbox settings, and never try to run it
      outside the sandbox, to get around it.
 5. After an install or an upgrade, run the `workforce-doctor` skill and report its result. After a

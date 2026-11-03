@@ -1,7 +1,7 @@
 # AI tells — human-voice avoid-list (all packs)
 
 The combined avoid-list. Loaded on demand by `content-craft`; not inline in the skill and never in
-the Core contract (token discipline). ONE list, applied in every pack. **Refresh date: 2026-08-21 (§2.6 extended, R20)**
+the Core contract (token discipline). ONE list, applied in every pack. **Refresh date: 2026-08-21 (§2.6 extended)**
 — re-pull current tells quarterly (or when the writing agents' output starts showing a new tic); a
 frozen list decays (the 2026 tells below were missing from the first draft's pre-2026 sources).
 

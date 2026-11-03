@@ -207,7 +207,7 @@ This kit practices what it preaches, so here's its own CONCERNS verdict:
   slash-commands load from the plugin.
 - Agent verdicts are only as good as the model and the context you give them.
   The Change Record exists precisely because a human must stay accountable.
-- The merge design (one approving review, the owner's while write access stays with the owner and one agent account, plus the required checks)
+- The merge design (one approving review, the owner's, while write access stays with the owner and one agent account, plus the required checks)
   depends on GitHub branch-protection behavior — **run the verification tests**
   before trusting it.
 - Compliance framing (SOC 2-style compensating controls) is a design pattern,

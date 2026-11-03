@@ -1,15 +1,15 @@
 # Verified Anchor Map — governing standards by discipline
 
-> **Sanctioned Rule-3 registry (SPEC §9.2).** This map is keyed by *discipline* (which some packs
+> **A shared registry.** This map is keyed by *discipline* (which some packs
 > name identically to an agent slug, e.g. `power-electronics`, `compliance-cert`); the slugs are row
 > labels for a domain→standard catalogue, not agent-dispatch instructions, and confer no cross-pack
-> dependency. `verify.sh`'s Rule-3 grep skips this file, as the audit sanctioned for the gate registry.
+> dependency.
 
 The per-agent standards map and its drift-control rules. Load your pack's section when applying or citing a standard. The **method** (provenance labels, verify-before-cite, conformance-from-record, citation-block placement) is in the `standards-discipline` SKILL.md; this file is the map it points to.
 
-## Verification stamps (per-entry; seeds `[4h]`'s 180-day re-verification window)
+## Verification stamps (per-entry; each date starts a 180-day re-verification window)
 
-Each line records a verification actually performed against the **issuing body** this session, with the date and source (a secondary/reseller confirmation is not accepted — issuing body or UNVERIFIED, nothing between). `[4h]` reads these dates; an entry older than 180 days, marked UNVERIFIED, or absent must be re-verified before citing. **The pass is in progress; entries not yet stamped rest on the 3 Aug 2026 table-level date below and are red-by-truth under `[4h]` until stamped.** Stable-sorted by pack then designation.
+Each line records a verification actually performed against the **issuing body**, with the date and source (a secondary/reseller confirmation is not accepted — issuing body or UNVERIFIED, nothing between). The build checks the dates in this section's tables: a stamp older than 180 days, or a row marked UNVERIFIED without an accepted-residual note, fails that check. **An entry in the map below with no stamp here rests on the 3 Aug 2026 table-level date; the build's date check does not read it, so re-verify it at the issuing body before citing.** Stable-sorted by pack then designation.
 
 | Designation | Status | Verified | Source (issuing body) |
 |---|---|---|---|
@@ -59,20 +59,20 @@ Each line records a verification actually performed against the **issuing body**
 | IPC-2221C | current (Revision C) | 2026-08-07 | shop.ipc.org/ipc-2221 (Revision-c) |
 | ISO 10007:2017 Ed. 3 | current (confirmed 2023) | 2026-08-07 | iso.org/standard/70400.html |
 | ANSI/NEMA 250-2020 | current (confirmed at ANSI 2026-08-12: ANSI-approved 2020-12-08; **revises/supersedes ANSI/NEMA 250-2018; NO successor; NOT rescinded**. The earlier task-#8 secondary lead — "rescinded → ANSI/NEMA EN 10250-2024" — is REFUTED by the issuing authority and removed.) | 2026-08-12 | ANSI (blog.ansi.org) |
-| AJP-2.1 (NATO; STANAG 2191) | **UNVERIFIED — `[4h] accepted-residual`** (owner-accepted 2026-08-12): cited **only** for the **Admiralty Code** (Table 3.1 — source-reliability × credibility), a convention **stable across editions**. NATO NSO (nso.nato.int) is access-restricted, so the exact edition is unconfirmable; because the cited substance is **version-invariant**, the citation stands. Reported, but does not hard-fail `[4h]` (mirrors `[4l]`'s ratified-exception discipline). | — | nso.nato.int access-restricted; cited substance version-invariant |
+| AJP-2.1 (NATO; STANAG 2191) | **UNVERIFIED — accepted-residual** (owner-accepted 2026-08-12): cited **only** for the **Admiralty Code** (Table 3.1 — source-reliability × credibility), a convention **stable across editions**. NATO NSO (nso.nato.int) is access-restricted, so the exact edition is unconfirmable; because the cited substance is **version-invariant**, the citation stands. Reported, but does not fail the build's date check. | — | nso.nato.int access-restricted; cited substance version-invariant |
 
 **1.4 verification pass — CLOSED. FINAL COUNTS: 45 verified · 2 UNVERIFIED · 1 superseded/withdrawn finding.**
 - **45 verified** carry a fresh 2026-08-07 issuing-body stamp above (secondary/reseller confirmations were rejected per the issuing-body-only rule — which caught the RSS-Gen wrong-date).
-- **UPDATE 2026-08-12 (both former 1.4 UNVERIFIED entries resolved):** `ANSI/NEMA 250-2020` is now **VERIFIED** at ANSI (current; revises NEMA 250-2018; not rescinded — the earlier rescission lead was refuted). `AJP-2.1` is an **owner-ACCEPTED RESIDUAL** (`[4h] accepted-residual`): cited only for the version-invariant Admiralty Code, NSO access-restricted. **Current section total: 49 verified · 1 accepted-residual · 0 hard-UNVERIFIED** — so `[4h]` is GREEN (the accepted residual is reported, not failed, mirroring `[4l]`).
-- **1 superseded/withdrawn finding → [4f]:** `ISED RSS-Gen Issue 5` → Issue 6 (30 Jul 2026). Recorded as **organic catch #1** in `docs/ORGANIC-CATCHES.md` (maintainer record, not shipped with this plugin).
+- **UPDATE 2026-08-12 (both former 1.4 UNVERIFIED entries resolved):** `ANSI/NEMA 250-2020` is now **VERIFIED** at ANSI (current; revises NEMA 250-2018; not rescinded — the earlier rescission lead was refuted). `AJP-2.1` is an **owner-ACCEPTED RESIDUAL** (accepted-residual): cited only for the version-invariant Admiralty Code, NSO access-restricted. **Section total as of 2026-08-12: 49 verified · 1 accepted-residual · 0 hard-UNVERIFIED** (the accepted residual is reported, not failed). Two later stamps (`ISO 9241-11:2018` and `ISO 9241-210:2019`, both 2026-10-12) bring the build's date check to 51 verified.
+- **1 superseded/withdrawn finding → the WITHDRAWN table:** `ISED RSS-Gen Issue 5` → Issue 6 (30 Jul 2026).
 - **STABLE class (no current-edition drift; cited correctly by the map, not given a fresh per-entry stamp):** the FTC interpretive policy statements (Deception 1983, Substantiation 1984), case law (POM Wonderful, Removatron, Thompson Medical, Castrol), the FTC Penalty Offense notices (2021/2023), `.com Disclosures` (2013, FTC review open since 2022, no replacement), and FASB ASC + IFRS (continuously amended — cite the specific Topic/Standard + as-of date, no version number). These are statutes/case-law/policy/continuously-amended instruments with no edition to re-verify.
 - **N/A (negative case / not a standard):** cost-engineer & the council disciplines with "no published standard governs"; the Kohavi textbook (explicitly not a standard); NAD/BBB (no designation); the CIA Tradecraft Primer (training primer). No verification applicable.
 
-**SUPERSEDED FINDING → WITHDRAWN list (for `[4f]`):** **ISED RSS-Gen Issue 5** (April 2018 + Amendment 2, 2021-02) is **SUPERSEDED by RSS-Gen Issue 6, published 30 July 2026** (confirmed at the ISED page). Successor designation: **RSS-Gen Issue 6 (2026-07-30)**; ~1-year transition during which either issue is accepted, then Issue 6 only. The map's prior caveat ("Issue 6 is in consultation, not published; Issue 5 remains in force") is now false and is corrected below. *(Secondary sources reported "February 2026" — wrong; the issuing body states 30 July 2026. Issuing-body-only verification caught the error.)*
+**SUPERSEDED FINDING → WITHDRAWN list (for the withdrawn-designation check):** **ISED RSS-Gen Issue 5** (April 2018 + Amendment 2, 2021-02) is **SUPERSEDED by RSS-Gen Issue 6, published 30 July 2026** (confirmed at the ISED page). Successor designation: **RSS-Gen Issue 6 (2026-07-30)**; ~1-year transition during which either issue is accepted, then Issue 6 only. The map's prior caveat ("Issue 6 is in consultation, not published; Issue 5 remains in force") is now false and is corrected below. *(Secondary sources reported "February 2026" — wrong; the issuing body states 30 July 2026. Issuing-body-only verification caught the error.)*
 
-### Post-1.4 additions — designations cited by agents, surfaced by `[4e]` (2026-08-12); VERIFIED (task #8)
+### Post-1.4 additions — designations cited by agents, found by the map-coverage check (2026-08-12); VERIFIED
 
-These are named in agent bodies (`compliance-officer`, `security-architect`, `power-electronics`) but were **absent from the map** — a real `[4e]` coverage finding, now tracked. **All three were verified against their issuing bodies on 2026-08-12 (task #8)** — issuing-body only, no secondary/reseller sources. The 1.4-pass counts above (45 verified · 2 UNVERIFIED) are historical to that pass. After the 2026-08-12 resolutions (these 3 verified + `ANSI/NEMA 250-2020` verified at ANSI + `AJP-2.1` accepted-residual), the section carries **49 verified · 1 accepted-residual (`AJP-2.1`) · 0 hard-UNVERIFIED** → `[4h]` GREEN.
+These are named in agent bodies (`compliance-officer`, `security-architect`, `power-electronics`) but were **absent from the map** — a real coverage finding, now tracked. **All three were verified against their issuing bodies on 2026-08-12** — issuing-body only, no secondary/reseller sources. The 1.4-pass counts above (45 verified · 2 UNVERIFIED) are historical to that pass. After the 2026-08-12 resolutions (these 3 verified + `ANSI/NEMA 250-2020` verified at ANSI + `AJP-2.1` accepted-residual), the section carried **49 verified · 1 accepted-residual (`AJP-2.1`) · 0 hard-UNVERIFIED** as of that date; with the two `ISO 9241` stamps of 2026-10-12 the build's date check now counts 51.
 
 | Designation | Status | Verified | Source (issuing body) |
 |---|---|---|---|
@@ -91,9 +91,9 @@ iso.org refused a direct fetch on 2026-10-12 (HTTP 403). The status below was re
 
 ---
 
-## WITHDRAWN / superseded designations — `[4f]` reads this table
+## WITHDRAWN / superseded designations — the withdrawn-designation check reads this table
 
-Do not cite these as current. **`verify.sh [4f]` derives its match set from the `Match key` column below** — single source of truth, no hand-maintained regex. A withdrawn designation stays here permanently so an agent encountering one in a customer document recognises it.
+Do not cite these as current. **The `Match key` column below is the one list of withdrawn designations.** A withdrawn designation stays here permanently so an agent encountering one in a customer document recognises it.
 
 | Withdrawn designation | Match key | Successor (current) | Superseded / withdrawn |
 |---|---|---|---|
@@ -111,7 +111,7 @@ Do not cite these as current. **`verify.sh [4f]` derives its match set from the 
 | MIL-HDBK-217 | `MIL-HDBK-217` | IEC 61709 / Telcordia SR-332 | obsolete for new design, Notice 2 1995 (3-Aug caveat) |
 | IEEE 828-2012 | `IEEE 828-2012` | CM clauses of 12207:2026 / 15288:2023 | inactive-reserved 2023-03-30 (3-Aug caveat) |
 
-**Provenance:** the top 8 rows' successors were verified against issuing bodies in the 1.4 pass (2026-08-07); the bottom 5 rest on the map's original 3-Aug caveats (not re-verified this session — flagged for the next sweep). **Every `[4f]` match key now has a table row — no orphan regex entries.**
+**Provenance:** the top 8 rows' successors were verified against issuing bodies in the 1.4 pass (2026-08-07); the bottom 5 rest on the map's original 3-Aug caveats (not re-verified this session — flagged for the next sweep). **Every match key now has a table row — no orphan regex entries.**
 
 ---
 

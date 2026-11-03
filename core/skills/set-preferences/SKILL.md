@@ -32,8 +32,8 @@ DRY, and it applies everywhere without touching any agent body.
 | question style | `question-style` | **`ask`** / `assume-and-flag` | on mid-task ambiguity: stop and ask, or make a labeled ASSUMED assumption and continue |
 | checkpoint frequency | `checkpoint-frequency` | `frequent` / **`milestones`** | how often to pause for confirmation |
 | decisions grouping | `decisions-grouping` | **`one-at-a-time`** / `grouped` | how choices are brought to the user — honored in ALL interactions |
-| context-review cadence | `context-review-cadence` | **`quarterly`** / `at-launches` / `off` | in-session staleness reminder (R13.2); never out-of-session contact |
-| units | `units` | `metric` / `imperial` / **`both`** | measurement display; honored in the hardware pack (R13.3), inert elsewhere |
+| context-review cadence | `context-review-cadence` | **`quarterly`** / `at-launches` / `off` | in-session staleness reminder; never out-of-session contact |
+| units | `units` | `metric` / `imperial` / **`both`** | measurement display; honored in the hardware pack, inert elsewhere |
 
 Optional keys, written only when set: `role` (free text, from onboarding) · `declined` (list of
 dimensions the user declined to tune) · `offered` (list of dimensions offered once via
@@ -67,11 +67,9 @@ units: both                       # metric | imperial | both
 
 ## Conformance (how "honored" is checked)
 
-- **Schema:** `_eval/baseline/prefs_conformance.py validate --prefs USER-PREFS.md` confirms all
-  seven required keys are present with allowed values, and that optional `role`/`declined`/`offered`
-  are well-formed when present. Schema validation proves the keys exist — not behavioral conformance.
+- **Schema:** all seven required keys must be present with allowed values, and optional
+  `role`/`declined`/`offered` well-formed when present. A schema check proves the keys exist — not behavioral conformance.
 - **Behavioral (graded):** `reading-level: plain` → prose scores **≤ grade 10** (Flesch–Kincaid);
-  `verbosity: brief` → answers stay **within the word cap**. `prefs_conformance.py check` measures
-  these, not asserts them. The other five dimensions are honored by named mechanisms at their cited
-  file:line (units in hardware, cadence at the context-resolution step, decisions-grouping in every
-  interaction), demonstrated rather than FK/word-count graded.
+  `verbosity: brief` → answers stay **within the word cap**. These two can be checked by scoring the text and counting the words. The other five (question style, checkpoint
+  frequency, decisions grouping, context-review cadence, units) are instructions the agents follow, such as units in
+  hardware work and the cadence check at the context-resolution step; they are not graded by a score or a word count.

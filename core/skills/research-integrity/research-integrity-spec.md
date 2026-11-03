@@ -20,13 +20,13 @@
 
 7. **Proportionality — the default is light; heavy machinery escalates on stakes.** *(New, from red-team E.)* An always-heavy integrity system trains its users to route around it, so it fails to run when it matters. Effort scales to stakes, irreversibility, and public-facing exposure.
 
-8. **The integrity system must obey its own independence rule.** *(New, from red-team G2/D1.)* A reviewer that is another instance of the producer's architecture running the same checklists is *correlated failure*, not independence. Deterministic checks run outside the LLM; high-stakes review uses a different model family.
+8. **The integrity system must obey its own independence rule.** *(New, from a red-team review.)* A reviewer that is another instance of the producer's architecture running the same checklists is *correlated failure*, not independence. The design target: deterministic checks run outside the LLM, and high-stakes review uses a different model family (§9.1 states what the skill does today).
 
 ---
 
 ## 1. Intake Triage (run FIRST — before the mode-selector)
 
-*(New layer, red-team E1/F1.)* Two quick classifications set the weight of everything downstream.
+*(New layer.)* Two quick classifications set the weight of everything downstream.
 
 ### 1.1 Stakes / reversibility triage → sets the TRACK WEIGHT
 
@@ -51,7 +51,7 @@ For each load-bearing claim, pre-classify whether a root is even reachable in pr
 
 Classify every task into exactly one mode. Ambiguous tasks decompose into sub-tasks, each classified separately and fused per §5.6.
 
-### 2.0 Source-genre pre-filter (runs BEFORE Q1–Q3) *(New, red-team C1)*
+### 2.0 Source-genre pre-filter (runs BEFORE Q1–Q3) *(New)*
 Route by *what the artifact actually is*, not by whether it calls itself a "study" or "report":
 - Peer-reviewed / registered / methods-transparent scientific study → **A-track appraisal tools** (GRADE/RoB).
 - Commercial / grey / vendor / practitioner artifact (whitepaper, marketing benchmark, analyst report, industry survey, forum post) → **B-track tools** (astroturf/independence-of-testimony/provenance-tiering) **even if it is titled "study" or "report."**
@@ -81,7 +81,7 @@ Q3. Are we gathering DIRECT facts + practitioner testimony (spec sheets,
       → YES → MODE B (Direct-Source Aggregation)
 ```
 
-**C split resolves the v1 Q1/step-8 contradiction** *(red-team C2)*: "benchmarks WE run" for a decision are **C-internal** (they feed a Mode-B decision matrix as a `measured` provenance-tier cell); only benchmarks intended as a published root are **C-publishable**.
+**C split resolves the v1 Q1/step-8 contradiction**: "benchmarks WE run" for a decision are **C-internal** (they feed a Mode-B decision matrix as a `measured` provenance-tier cell); only benchmarks intended as a published root are **C-publishable**.
 
 ### 2.2 Tells
 
@@ -103,7 +103,7 @@ Q3. Are we gathering DIRECT facts + practitioner testimony (spec sheets,
 
 ## 3. (numbering note) Tracks A/B/C follow. Lite track is §4.0.
 
-## 4.0 The LITE Track *(New, red-team E1)*
+## 4.0 The LITE Track *(New)*
 For LITE-tier tasks only. Minimal, still-honest pipeline:
 1. Identify the 1–2 **load-bearing** facts/numbers.
 2. Trace each to its **root** and verify at the primary/vendor source (value + URL + retrieval date; hash optional at LITE).
@@ -126,7 +126,7 @@ Lite is *not* a lower-integrity track; it is a smaller surface. The anti-woozle 
 4. **Dual independent screening** — two agents, blind to each other; log Cohen's κ (target ≥0.80; floor ≥0.61); pre-agreed adjudication; PRISMA 4-phase flow with exclusions-and-reasons.
 5. **De-duplicate to origin** — collapse multiple reports of one trial/dataset; run the Independence Audit (§5.2). **Report effective-N of independent origins, not citation count.** Kills "continuing a woozle."
 6. **Per-study reliability appraisal** — RoB 2 / ROBINS-I → Low / Some-concerns / High; incoming *syntheses* via AMSTAR-2. Grade using the **anchored rubric + worked exemplars** (§5.1) and dual-grade a sample for grading-κ (§5.1).
-7. **Coordinated-literature / conflict-of-interest check** *(New, red-team F3)* — cluster studies by **common funder / shared lab / shared sponsor**. A body substantially funded by an interested party is treated as a **single-agenda cluster** for effective-N (a vendor's 12 funded studies ≈ 1 origin for independence purposes). This is the A-track analogue of astroturf detection.
+7. **Coordinated-literature / conflict-of-interest check** *(New)* — cluster studies by **common funder / shared lab / shared sponsor**. A body substantially funded by an interested party is treated as a **single-agenda cluster** for effective-N (a vendor's 12 funded studies ≈ 1 origin for independence purposes). This is the A-track analogue of astroturf detection.
 8. **Pool + quantify heterogeneity** — random-effects default; report I², τ², Cochran's Q, and a **prediction interval**; explain heterogeneity (pre-specified subgroups/meta-regression) before averaging it away.
 9. **Publication/originating-woozle panel** — funnel plot; Egger's (only if ≥10 studies); trim-and-fill *as sensitivity only*; registry + unpublished-data hunt.
 10. **Grade the body per outcome (GRADE)** — rubric below; use **CERQual** for qualitative/heterogeneous bodies (GRADE is calibrated to effect-estimate meta-analysis).
@@ -137,9 +137,9 @@ Lite is *not* a lower-integrity track; it is a smaller surface. The anti-woozle 
 **Per-source, two Admiralty axes (anchored, graded via §5.1 protocol):** reliability **A–F**; claim credibility **1–6** (a "1" requires independence *verified*, else it is circular reporting).
 
 **Per-outcome body certainty (GRADE):** start High (RCT) / Low (observational).
-- **Downgrade** (−1/−2 each): (1) risk of bias, (2) inconsistency, (3) indirectness, (4) imprecision — **computed, not asserted**: is OIS met? does the CI cross the MID/decision threshold? *(red-team B3)*, (5) publication bias, **(6) NON-INDEPENDENCE** (circular reporting/double-counting), **(7) QUALIFIER-DRIFT from origin**.
+- **Downgrade** (−1/−2 each): (1) risk of bias, (2) inconsistency, (3) indirectness, (4) imprecision — **computed, not asserted**: is OIS met? does the CI cross the MID/decision threshold? (5) publication bias; then two downgrades this spec adds beyond GRADE's five (the GRADE Handbook, updated October 2013, Table 5.2; they are not GRADE domains): **(6) NON-INDEPENDENCE** (circular reporting/double-counting), **(7) QUALIFIER-DRIFT from origin**.
 - **Upgrade** (observational, no downgrades): large effect (RR>2/<0.5; +2 if >5/<0.2), dose-response, plausible confounding working *against* the effect.
-- **Aggregate rule:** certainty = **lowest surviving domain** (bottleneck). **Single-study cap** *(New, red-team B3)*: a body of n=1 publishes **no higher than Moderate** regardless of RoB. Output {High/Moderate/Low/Very-low}, footnoted per domain.
+- **Aggregate rule:** certainty = **lowest surviving domain** (bottleneck). **Single-study cap** *(New)*: a body of n=1 publishes **no higher than Moderate** regardless of RoB, unless the logged per-claim override in §9.2 #5 applies. Output {High/Moderate/Low/Very-low}, footnoted per domain.
 
 ### Guardrails
 Frozen protocol vs final report; re-citation adds *zero* weight; duplicate/ shared-author/ shared-dataset/ **shared-funder** de-dup; two axes never merged; "reputable journal" never auto-upgrades certainty; any single test = sensitivity, not truth; CERQual for qualitative bodies.
@@ -215,7 +215,7 @@ p-hacking, HARKing, forking-paths, optional stopping, selective reporting, obser
 
 ## 5. The Shared Spine (all modes)
 
-### 5.1 Two-axis grading — now OPERATIONAL *(red-team B1/B2)*
+### 5.1 Two-axis grading: operational rules
 Every load-bearing claim carries, separately: **source reliability** (Admiralty A–F, per-claim-domain); **claim/evidence certainty** (Admiralty 1–6 *and*, where a body exists, GRADE); **likelihood** for estimative claims (§5.5 lexicon).
 
 **Anchored rubric requirement (fixes "aspirational grading").** Admiralty/GRADE terms ship **only** with:
@@ -228,27 +228,27 @@ Every load-bearing claim carries, separately: **source reliability** (Admiralty 
 For every load-bearing claim:
 1. **Backward citation-chase** — follow each cite upstream hop-by-hop until (a) primary data/method or (b) an unsupported assertion. Record edge list `[claim ← A ← B ← ORIGIN]`; stop echoing at the first ungrounded node.
 2. **Origin de-dup → effective-N** — collapse cites to roots; report independent-origin count (the "4-million-victims"/Porter-Jick opioid cases).
-3. **Independence audit — SEVEN shared-dependency channels** *(expanded, red-team D1).* A corroborating source counts as independent only if clean on all seven: shared **data**; shared **author/lab**; shared **upstream citation**; shared **funder/agenda**; shared **propagation vector** (both scraped from one Wikipedia sentence = citogenesis); **#6 shared-model/shared-corpus** (were both lines produced or mediated by the same model family or the same training crawl? — two "independent" agent summaries can echo because both models absorbed the same source); **#7 temporal-cascade** (did line B appear *only after and downstream of* line A's publication date — the citogenesis timing signature? require dates on all lines).
+3. **Independence audit — SEVEN shared-dependency channels** *(expanded).* A corroborating source counts as independent only if clean on all seven: shared **data**; shared **author/lab**; shared **upstream citation**; shared **funder/agenda**; shared **propagation vector** (both scraped from one Wikipedia sentence = citogenesis); **#6 shared-model/shared-corpus** (were both lines produced or mediated by the same model family or the same training crawl? — two "independent" agent summaries can echo because both models absorbed the same source); **#7 temporal-cascade** (did line B appear *only after and downstream of* line A's publication date — the citogenesis timing signature? require dates on all lines).
 4. **Qualifier-drift diff** — compare wording at each hop vs origin; flag modal downgrades ("may"→"is"), dropped scope/sample caveats, contextomy. Catches us *originating* a woozle in our own drafts. **Machine-checkable target: drift-diff must be empty for a high-confidence claim.**
-5. **Consilience when origin unreachable — disjointness must be ARGUED, not asserted** *(red-team D2).* Require ≥2 lines differing in **method AND data AND investigator**, converging. **Default-skeptical prior: treat error modes as CORRELATED unless disjointness is affirmatively argued** (name each line's failure mode; show by argument or data that the two methods do not fail on the same inputs). Absent that argument, **consilience does NOT upgrade confidence.** Extremize/upgrade only across genuinely independent lines.
+5. **Consilience when origin unreachable — disjointness must be ARGUED, not asserted** Require ≥2 lines differing in **method AND data AND investigator**, converging. **Default-skeptical prior: treat error modes as CORRELATED unless disjointness is affirmatively argued** (name each line's failure mode; show by argument or data that the two methods do not fail on the same inputs). Absent that argument, **consilience does NOT upgrade confidence.** Extremize/upgrade only across genuinely independent lines.
 
 ### 5.3 The Release Gate — with root-veracity, hard-fail, and staleness
-A claim ships as OUR judgment only if it passes ALL. Items marked **[MACHINE]** are checked by a deterministic non-LLM checker (§7.2), not an agent.
+A claim ships as OUR judgment only if it passes ALL. Items marked **[MACHINE]** are meant to be checked by a deterministic non-LLM checker (§7.2) where one can run; otherwise the agent checks them itself (§9.1).
 
 - [ ] **[MACHINE] Traced to root** (root reached, root-type recorded) **AND**
-- [ ] **Root-veracity established** *(New, red-team A1/A2).* For any load-bearing claim resting on a **single origin**, one of: (a) an independent confirming line (consilience, §5.2.5), or (b) an explicit **`single-sourced, unverified-at-root`** flag that **caps published confidence** — such a claim may not ship above "Low/roughly-even" and may never be labeled FACT. A clean single root is **not** high-confidence by default.
-- [ ] **Mechanism = a checked entailment, not a narrative** *(New, red-team A2).* "Why it's true" passes only if ≥1 **entailment was checked against independent data** ("if this mechanism holds, X and Y must also be observed — are they?"). An unchecked causal story is tagged **JUDGMENT, not FACT.** (LLM agents generate plausible mechanisms for false claims; narrative alone is not evidence.)
+- [ ] **Root-veracity established** *(New).* For any load-bearing claim resting on a **single origin**, one of: (a) an independent confirming line (consilience, §5.2.5), or (b) an explicit **`single-sourced, unverified-at-root`** flag that **caps published confidence** — such a claim may not ship above "Low/roughly-even" and may never be labeled FACT. A clean single root is **not** high-confidence by default.
+- [ ] **Mechanism = a checked entailment, not a narrative** *(New).* "Why it's true" passes only if ≥1 **entailment was checked against independent data** ("if this mechanism holds, X and Y must also be observed — are they?"). An unchecked causal story is tagged **JUDGMENT, not FACT.** (LLM agents generate plausible mechanisms for false claims; narrative alone is not evidence.)
 - [ ] **[MACHINE] Effective-N and independence verified** — 7-channel audit clean; effective-N **≥2** required for any high-confidence claim.
 - [ ] **[MACHINE] Qualifier-drift diff = empty** vs origin.
 - [ ] Two-axis grade recorded (reliability × certainty); body-certainty where applicable; grading-κ ≥ floor.
 - [ ] If origin unreachable, **consilience across argued-disjoint error modes** documented (§5.2.5).
-- [ ] **[MACHINE] Staleness / retraction check** *(New, red-team F2).* Vaulting freezes provenance, not currency. Re-validate at publish against a mode-specific TTL: **prices ≤ days, specs ≤ months, literature = query retraction databases at release.** A stale/retracted root fails the gate.
+- [ ] **[MACHINE] Staleness / retraction check** *(New).* Vaulting freezes provenance, not currency. Re-validate at publish against a mode-specific TTL: **prices ≤ days, specs ≤ months, literature = query retraction databases at release.** A stale/retracted root fails the gate.
 - [ ] Meets the mode-specific confidence floor (A: not Very-low unless flagged; B: ROBUST or fragile-with-named-flip; C-publishable: confirmatory + reliability floor + ≥Moderate validity).
 - [ ] Dissent/counter-line preserved.
 - [ ] Low-confidence grading kept internal (logged, not published as fact).
 - [ ] Calibrated confidence stated (no hedge-mush, no overclaim).
 
-**HARD-FAIL class (cannot be softened) *(New, red-team F1).*** A load-bearing claim with **neither a reachable root NOR argued independent consilience** cannot publish as any grade of fact **or** judgment. It enters the decision only as a labeled **assumption/open-question**, and the decision's robustness must be tested **as if that claim could go either way** (wire into §4.2-step-10 sensitivity). This closes the v1 "publish with a downgrade" escape hatch for the unknowable case.
+**HARD-FAIL class (cannot be softened) *(New).*** A load-bearing claim with **neither a reachable root NOR argued independent consilience** cannot publish as any grade of fact **or** judgment. It enters the decision only as a labeled **assumption/open-question**, and the decision's robustness must be tested **as if that claim could go either way** (wire into §4.2-step-10 sensitivity). This closes the v1 "publish with a downgrade" escape hatch for the unknowable case.
 
 **All other fails → hold, or publish with an explicit downgrade + stated limitation.** The gate blocks *both* continuing and originating a woozle — and now blocks the *true-looking single root*, which the v1 gate did not.
 
@@ -267,7 +267,7 @@ A claim ships as OUR judgment only if it passes ALL. Items marked **[MACHINE]** 
 **Estimative lexicon (fixed 7 rungs, ODNI):** almost-no-chance 01–05 · very-unlikely 05–20 · unlikely 20–45 · roughly-even 45–55 · likely/probable 55–80 · very-likely 80–95 · almost-certain 95–99. Reject free-text probability synonyms.
 **Analytic-confidence rubric (7 factors → H/M/L):** source reliability; corroboration+independence; expertise; peer-review/collaboration; task complexity; time pressure; structured-method-actually-used. Confidence is *not* probabilistic and never merged with likelihood.
 
-### 5.6 Fusion protocol for mixed/decomposed tasks *(New, red-team C3)*
+### 5.6 Fusion protocol for mixed/decomposed tasks *(New)*
 When a task decomposes (e.g. a Mode-B recommendation embedding a Mode-A literature sub-task):
 1. Each sub-task output enters the parent as a **graded input at its own confidence** — **never upgraded by inclusion.**
 2. When sub-tasks **disagree**, resolve by the independence/diagnosticity logic (§5.2): the line with **argued-disjoint error modes** wins; do not average.
@@ -309,7 +309,7 @@ When a task decomposes (e.g. a Mode-B recommendation embedding a Mode-A literatu
 | 26 | **ICD-203 nine-standard checklist** | source-quality · uncertainties expressed+explained · fact-vs-assumption-vs-judgment · alternatives · relevance/"so what" · logical argumentation · consistency/change-from-prior · accuracy · effective visuals | all |
 | 27 | **Root-veracity & single-source card** *(new)* | root-reachability Y/N · root-veracity method {consilience / checked-entailment / single-sourced-flag} · mechanism entailment checked Y/N · confidence cap applied | all |
 | 28 | **Fusion ledger** *(new)* | sub-task · mode · own-confidence · conflict-with · resolution (diagnosticity/independence) · parent-confidence-cap applied Y/N | mixed tasks |
-| 29 | **Weakest-load-bearing-input statement** *(new, red-team G3)* | the single weakest cell/source the conclusion rests on; artifact-completeness explicitly NOT a pass criterion | all reviewer output |
+| 29 | **Weakest-load-bearing-input statement** *(new)* | the single weakest cell/source the conclusion rests on; artifact-completeness explicitly NOT a pass criterion | all reviewer output |
 
 ---
 
@@ -319,9 +319,9 @@ When a task decomposes (e.g. a Mode-B recommendation embedding a Mode-A literatu
 Runs **intake triage (§1)** then the **mode-selector (§2)** as entry point; routes to Lite / A / B / C-internal / C-publishable; exposes artifacts (§6) as fillable templates; enforces the **release gate (§5.3)** as a hard pre-publish check with deterministic [MACHINE] predicates; emits the **dual-uncertainty judgment block (#24)**. Loads on any research/analysis/reporting/recommendation deliverable.
 
 ### 7.2 Workflow shapes that enforce it
-- **Producer/Reviewer split with ARCHITECTURAL INDEPENDENCE (HEAVY, mandatory)** *(red-team A3/G2).* The reviewer must be a **different model family and/or config** than the producer — not another instance of the same architecture (same corpus, same blind spots = illusory independence, the D1 problem applied to ourselves). The reviewer re-runs the independence audit, checks qualifier-drift, challenges the least-disconfirmed conclusion, verifies each load-bearing claim to root, and **states the weakest load-bearing input (#29)** — passing is forbidden on artifact-completeness alone ("beautifully-documented garbage" test). Reviewer has standing to fail the gate.
-- **Deterministic (non-LLM) gate checker** *(red-team A3/G2).* All **[MACHINE]** predicates — hash present for every priced spec, effective-N ≥2, drift-diff empty, weights-lock-timestamp precedes first score, TTL not expired — are checked by **rules code, not an LLM.** LLMs never self-certify the machine-checkable items.
-- **Gate-pass-rate alarm** *(red-team A3).* Log gate-pass rate. A near-100% pass rate means the gate is rubber-stamping; it trips an alarm and forces rubric/reviewer recalibration.
+- **Producer/Reviewer split (HEAVY, mandatory), architecturally independent where the context allows (§9.1)** The reviewer should be a **different model family and/or config** than the producer where the context allows (§9.1) — not another instance of the same architecture (same corpus, same blind spots = illusory independence, the shared-model problem applied to ourselves). The reviewer re-runs the independence audit, checks qualifier-drift, challenges the least-disconfirmed conclusion, verifies each load-bearing claim to root, and **states the weakest load-bearing input (#29)** — passing is forbidden on artifact-completeness alone ("beautifully-documented garbage" test). Reviewer has standing to fail the gate.
+- **Deterministic (non-LLM) gate checker** All **[MACHINE]** predicates — hash present for every priced spec, effective-N ≥2, drift-diff empty, weights-lock-timestamp precedes first score, TTL not expired — are meant to be checked by **rules code, not an LLM**; in the skill they run as tool or code checks where possible (§9.1); where no such check can run, the producing agent applies them itself, and an agent can skip them (§9.1).
+- **Gate-pass-rate alarm** Log gate-pass rate. A near-100% pass rate means the gate is rubber-stamping; treat it as an alarm and recalibrate the rubric or reviewer.
 - **Adversarial verify / dissent institution.** C: adversarial-collaboration pair (proponent + skeptic pre-agree what each outcome proves). B: pre-mortem with silent independent write-down (blocks the woozle-in-the-room). A: devil's-advocate on the hypothesis set ("which hypothesis did we NOT consider?").
 - **Completeness critic.** Re-reads the request line-by-line, checks ICD-203 nine standards (#26), confirms dissent preserved and low-confidence grades kept internal.
 - **Independent-method verifier.** Verifies load-bearing numbers by a *different route* than the one that produced them (brute-force vs clever; bottom-up rebuild of a top-down figure; a second independent source) — catches wrong thinking, not just typos.
@@ -332,16 +332,16 @@ Runs **intake triage (§1)** then the **mode-selector (§2)** as entry point; ro
 3. **Grading gate** — no load-bearing claim proceeds without two-axis grade (anchored rubric + grading-κ) + 7-channel independence audit + effective-N.
 4. **Release gate** — §5.3, [MACHINE] items by the deterministic checker, judgment items by the architecturally-independent reviewer; hard-fail class cannot be softened.
 
-### 7.4 Calibration feedback loop — with proxy-resolution *(red-team G1)*
+### 7.4 Calibration feedback loop — with proxy-resolution
 Log every published probabilistic judgment. Where ground truth arrives, score it (Brier + Murphy, #23) and down-weight poorly-calibrated agents/sources in future aggregation (GJP track-record weighting). **Because most research/synthesis claims never resolve against reality, add proxy-resolution:** score against **later independent replications, post-hoc primary-source discovery, and reviewer-caught errors.** State honestly: **for never-resolving claims the long-run defense is the producer/reviewer split and the release gate, not calibration** — calibration is *a* defense, not *the* defense.
 
 ---
 
 ## 8. Rejected / partially-rejected critiques (with reason)
 
-- **[PARTIALLY REJECTED] B3 "domain-splitting games the bottleneck."** The concern that "catastrophic on one domain vs on all seven land at the same grade" is *by design* — a single fatal flaw should cap the grade regardless of other strengths (a bottleneck is not an average, and that is the point). We adopt the *actionable* half (single-study cap + computed imprecision) but reject adding an anti-"domain-splitting" mechanic: the GRADE domains are fixed and not analyst-addable, so there is nothing to split. No change beyond the single-study cap.
-- **[NOTED, NOT A SPEC CHANGE] "26 artifacts look authoritative regardless of input (G3)."** Correct and important, but the fix is behavioral, not structural: it is handled by the **weakest-load-bearing-input statement (#29)** and the reviewer duty in §7.2, plus the proportional Lite track (§4.0) that stops most tasks from generating the full 29-artifact edifice at all. We add the artifact and the duty; we do not add a further meta-artifact (which would itself be more paperwork).
-- **[ACCEPTED with scope note] D1 shared-model dependency.** Fully adopted as channels #6/#7. Scope note: channel #6 can over-fire (nearly all modern web text is model-touched), so it is a *flag-and-argue* channel, not an auto-reject — it demands an independence argument, matching the §5.2.5 default-skeptical treatment.
+- **[PARTIALLY REJECTED] "domain-splitting games the bottleneck."** The concern that "catastrophic on one domain vs on all seven land at the same grade" is *by design* — a single fatal flaw should cap the grade regardless of other strengths (a bottleneck is not an average, and that is the point). We adopt the *actionable* half (single-study cap + computed imprecision) but reject adding an anti-"domain-splitting" mechanic: the GRADE domains are fixed and not analyst-addable, so there is nothing to split. No change beyond the single-study cap.
+- **[NOTED, NOT A SPEC CHANGE] "26 artifacts look authoritative regardless of input."** Correct and important, but the fix is behavioral, not structural: it is handled by the **weakest-load-bearing-input statement (#29)** and the reviewer duty in §7.2, plus the proportional Lite track (§4.0) that stops most tasks from generating the full 29-artifact edifice at all. We add the artifact and the duty; we do not add a further meta-artifact (which would itself be more paperwork).
+- **[ACCEPTED with scope note] Shared-model dependency.** Fully adopted as channels #6/#7. Scope note: channel #6 can over-fire (nearly all modern web text is model-touched), so it is a *flag-and-argue* channel, not an auto-reject — it demands an independence argument, matching the §5.2.5 default-skeptical treatment.
 
 ---
 

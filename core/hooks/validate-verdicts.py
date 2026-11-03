@@ -200,6 +200,7 @@ a command that ran, unless the heredoc feeds sh, bash, zsh, python or node (D-21
 
 from __future__ import print_function
 
+import errno
 import glob
 import hashlib
 import json
@@ -214,6 +215,23 @@ import sys
 import tempfile
 import time
 import traceback
+
+# D-337 (2.8.5): the one reader of the client's transcript, shared with the write hook. A module that cannot be loaded is not a crash
+# of this file: the Stop then has no turn ("unknown") and charges its block by D-337's rule below; it is never a fresh allowance.
+sys.dont_write_bytecode = True     # no __pycache__ beside the shipped hook
+try:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import br_transcript as BRT
+    BRT_ERROR = None
+except Exception as _brt_exc:   # D-270 (closed; D-337): the Stop announces it and bounds the block by the unknown-turn rule
+    BRT, BRT_ERROR = None, type(_brt_exc).__name__
+try:                           # D-357 (audit 14f): 2.8.4's own count code, frozen; without it no count is kept (FAILED, never a block)
+    import br_count284 as R284
+except Exception:              # D-270 (closed; D-357): bump_stop_blocks() then returns None, so a Stop that would block ends with FAILED
+    R284 = None
+finally:
+    if sys.path and sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+        sys.path.pop(0)
 
 # D-192 (2.8.2, audit 3 G9): the gate roster is read from verdict-schema.json (`gates`, beside the validator),
 # the one list verify.sh, this hook and validate_verdict.py share. `council_seats` may also sign a verdict
@@ -345,6 +363,183 @@ def verdict_refs(cmd, project_dir):
         if os.path.exists(ap):
             refs = [x for x in refs if x.replace("\\", "") != short] + [full]
     return refs
+
+# D-341 (2.8.5, R10; owner "Excuse safe reads"): a Bash call that names a verdict file is excused only by what the command can do and
+# what it measurably changed, never by guessing which file its text means. All four must hold; any doubt keeps 2.8.3's block:
+#   1. safe_read_command(): a simple command or a pipeline of the programs below, each with only the options listed, plain arguments.
+#   2. real_program(): the shell snapshots hold no alias or function of that name (the call ran with one of them, PATCH-285 M9), PATH
+#      finds it first in /bin or /usr/bin, the file is a compiled program owned by root and not writable by others, and no variable
+#      that loads code or changes these programs is set (the hook's own environment, which the call shares, and every snapshot export).
+#      grep is not on the list (string gate r19, owner "Fix the code"): a shell grep of a verdict file always blocks, whatever the
+#      client defines (2.1.310 defines `grep` and `find` as functions in every snapshot, M9); the Read and Grep tools read it.
+#   3. the call's own per-call record (snapshot_mode) belongs to this turn, covers the whole disk check, lists no changed file, and no
+#      other record was taken between the call's start and its own record (no overlapping call).
+#   4. it is not a background call, nor a call of a background agent.
+SAFE_PROGRAMS = {      # program -> (single-letter flags with no value, flags that take a value)
+    "cat": ("nbsuv", ""), "head": ("", "nc"), "tail": ("r", "nc"), "wc": ("lwcm", ""),
+    "diff": ("uqbwiNa", ""), "cmp": ("sl", ""), "stat": ("lLn", ""), "ls": ("laA1hdtrSRFG", ""),
+}
+SAFE_REJECT = re.compile(r"[$`(){}<>;&\n\r*?\[\]~\\!#]|\|\|")
+ENV_DENY = re.compile(r"^(DYLD_|LD_|Malloc|GREP_COLOR)|^(BASH_ENV|ENV|GREP_OPTIONS|LESSOPEN|LESSCLOSE)$")
+SNAP_ALIAS = re.compile(r"^\s*alias\s+((?:-[A-Za-z]+\s+)*)(?:--\s+)?([^=\s]+)=", re.M)
+SNAP_FUNC = re.compile(r"^\s*(?:function\s+([^\s(){}]+)|([^\s(){}=;|&]+)\s*\(\s*\))", re.M)
+SNAP_EXPORT = re.compile(r"^\s*export\s+([A-Za-z_][A-Za-z0-9_]*)=(.*)$", re.M)
+
+
+def safe_read_command(cmd):
+    """[program, ...] when cmd is a safe read under rule 1 above, else None."""
+    if not isinstance(cmd, str) or not cmd.strip() or SAFE_REJECT.search(cmd):
+        return None
+    try:
+        lex = shlex.shlex(cmd, posix=True, punctuation_chars="|")
+        lex.whitespace_split = True
+        toks = list(lex)
+    except ValueError:   # D-270 (closed; D-341): a command that will not tokenise is not a safe read
+        return None
+    segs, cur = [], []
+    for t in toks + ["|"]:
+        if t == "|":
+            if not cur:
+                return None
+            segs.append(cur)
+            cur = []
+        elif "|" in t:
+            return None
+        else:
+            cur.append(t)
+    progs = []
+    for seg in segs:
+        name = seg[0]
+        base = name[len("/usr/bin/"):] if name.startswith("/usr/bin/") else name[len("/bin/"):] if name.startswith("/bin/") else name
+        if base not in SAFE_PROGRAMS or "=" in name or ("/" in base):
+            return None
+        plain, valued = SAFE_PROGRAMS[base]
+        args, k, ended = seg[1:], 0, False
+        while k < len(args):
+            a = args[k]
+            if not ended and a == "--":
+                ended = True
+            elif not ended and a.startswith("-") and a != "-":
+                if a.startswith("--"):
+                    return None
+                if base in ("head", "tail") and a[1:].isdigit():
+                    pass                                   # head -20
+                else:
+                    letters = a[1:]
+                    for i, ch in enumerate(letters):
+                        if ch in valued:
+                            rest = letters[i + 1:]
+                            val = rest if rest else (args[k + 1] if k + 1 < len(args) else None)
+                            if val is None or (ch in "nc" and not val.lstrip("+-").isdigit()):
+                                return None
+                            if not rest:
+                                k += 1
+                            break
+                        if ch not in plain:
+                            return None
+            k += 1
+        progs.append(name)
+    return progs
+
+
+def _snapshot_files():
+    """The shell snapshots present now (M9: one per running client process; the call ran with one of them), or None if they cannot
+    be listed. CLAUDE_CONFIG_DIR moves them with the rest of the client's folder."""
+    d = os.path.join(os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~/.claude"), "shell-snapshots")
+    try:
+        names = sorted(f for f in os.listdir(d) if f.startswith("snapshot-") and f.endswith(".sh"))
+    except OSError:   # D-270 (closed; D-341): no snapshot folder to check, so no call is excused
+        return None
+    if not names or len(names) > 64:
+        return None
+    return [os.path.join(d, f) for f in names]
+
+
+def real_program(name, _cache={}):
+    """Rule 2 above for one program name (as the command wrote it). True only when every check holds."""
+    if name in _cache:
+        return _cache[name]
+    ok = _real_program(name)
+    _cache[name] = ok
+    return ok
+
+
+def _real_program(name):
+    base = os.path.basename(name)
+    files = _snapshot_files()
+    if files is None:
+        return False
+    paths, exported = [], set(os.environ)
+    for f in files:
+        try:
+            if os.path.getsize(f) > 4 * 1024 * 1024:
+                return False
+            text = open(f, encoding="utf-8", errors="replace").read()
+        except OSError:   # D-270 (closed; D-341): a snapshot that cannot be read could hold an alias or function: not excused
+            return False
+        for flags, alias in SNAP_ALIAS.findall(text):
+            if "g" in flags or "s" in flags or alias == base:
+                return False      # a global or suffix alias can rewrite any word of the command
+        if any(base in (m[0], m[1]) for m in SNAP_FUNC.findall(text)):
+            return False
+        for var, val in SNAP_EXPORT.findall(text):
+            exported.add(var)
+            if var == "PATH":
+                paths.append(val.strip().strip("'\""))
+    for rc in (os.path.expanduser("~/.zshenv"), os.path.join(os.environ.get("ZDOTDIR") or "", ".zshenv"), "/etc/zshenv", "/etc/zsh/zshenv"):
+        try:
+            text = open(rc, encoding="utf-8", errors="replace").read()
+        except OSError:   # D-270 (normal; D-341): no such startup file, so it defines nothing
+            continue
+        if re.search(r"(^|\s)(alias\b[^\n]*\b%s=|function\s+%s\b|%s\s*\(\s*\))" % ((re.escape(base),) * 3), text, re.M):
+            return False
+    if any(ENV_DENY.search(v) for v in exported):
+        return False
+    if name.startswith("/"):
+        found = [name]
+    else:
+        found = []
+        for p in paths or [os.environ.get("PATH", "")]:
+            hit = next((os.path.join(d, base) for d in p.split(":") if d and os.access(os.path.join(d, base), os.X_OK)
+                        and os.path.isfile(os.path.join(d, base))), None)
+            found.append(hit)
+    for f in found:
+        if not f or os.path.dirname(f) not in ("/bin", "/usr/bin"):
+            return False
+        try:
+            st = os.stat(f)
+            head = open(f, "rb").read(4)
+        except OSError:   # D-270 (closed; D-341): a program that cannot be read cannot be shown to be the system's
+            return False
+        if st.st_uid != 0 or st.st_mode & 0o022:
+            return False
+        if head not in (b"\xcf\xfa\xed\xfe", b"\xce\xfa\xed\xfe", b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca", b"\xfe\xed\xfa\xcf",
+                        b"\x7fELF"):
+            return False          # a script (#!) or anything else is not excused: its interpreter reads the environment
+    return True
+
+
+def safe_read_call(call, turn_id, snap_state):
+    """D-341: True when one Bash call that named a verdict file meets all four rules above."""
+    progs = safe_read_command(call.get("cmd"))
+    if not progs or call.get("background") or not all(real_program(p) for p in progs):
+        return False
+    if not isinstance(snap_state, dict) or not turn_id:
+        return False
+    recs = [r for r in snap_state.get("calls") or [] if isinstance(r, dict)]
+    own = [r for r in recs if r.get("tool_use_id") == call.get("id")]
+    if len(own) != 1:
+        return False
+    rec = own[0]
+    if rec.get("prompt_id") != turn_id or rec.get("coverage") != "complete" or rec.get("changed") or rec.get("background"):
+        return False
+    if (rec.get("agent_id") or None) != (call.get("agent") or None):
+        return False
+    start, t = BRT.parse_ts(call.get("ts")), rec.get("t")
+    if start is None or type(t) not in (int, float) or t < start:
+        return False
+    return not any(r is not rec and type(r.get("t")) in (int, float) and start <= r["t"] <= t for r in recs)
+
 
 # Check 3 match (D-179): simple commands, redirections dropped, compared token for token.
 REDIRECT = re.compile(r"(?<!\S)[0-9]*(?:&>>?|>>?&?|<)\s*[^\s;|&<>]+")
@@ -1126,7 +1321,7 @@ def auto_record_runner(data, root, now):
         if not isinstance(allb, dict):
             return False
     entry = allb.get(root) if isinstance(allb.get(root), dict) else {}
-    entry.update(runner_config=now, runner_config_by="the Stop hook (first record, D-245)",
+    entry.update(runner_config=now, runner_config_by="the Stop hook (first record)",
                  runner_config_date=time.strftime("%Y-%m-%d"))
     allb[root] = entry
     try:
@@ -2121,52 +2316,230 @@ def placeholder_verdict_name(ref):
 MAX_STOP_BLOCKS = 3        # D-209: blocks per turn before the failure is put on record instead
 
 
+def _base(tpath):
+    return tpath[:-len(".jsonl")] if tpath.endswith(".jsonl") else tpath
+
+
 def _blocks_path(tpath):
     """D-322 (audit 13R F4): the block budget's own file beside the transcript. No snapshot call writes or removes it."""
-    return (tpath[:-len(".jsonl")] if tpath.endswith(".jsonl") else tpath) + ".br-stop-blocks.json"
+    return _base(tpath) + ".br-stop-blocks.json"
 
 
-def bump_stop_blocks(tpath, payload, turn_key):
-    """Count one more blocking Stop for this session and turn; return the new count, or None when the count cannot be read or kept
-    (then a Stop that the hook already blocked once ends the turn with the FAILED line instead, D-286). Audit 13 R12: every path that
-    blocks a turn (a problem, a crash, a timeout) counts under the one key of that turn (turn_identity()); a block whose turn cannot be
-    read (turn_key None) is counted as pending and joins the next count of the session. D-322 (audit 13R F4): the count has its own
-    file, so dropping a snapshot never resets it, and a count file that exists but cannot be read is None, never a fresh count of 0."""
-    bp = _blocks_path(tpath)
-    if os.path.exists(bp):
+LOCK_WAIT_S = 20.0         # D-339: a lock not taken in this time: the count is kept without it, as 2.8.4 kept it (audit 14e). A snapshot call can
+                           # hold it through its scan, so the Stop waits up to 20 s of its 840 (code review R4); the deadline path waits 2 s
+SNAP_LOCK_WAIT_S = 6.0     # D-339: a per-call record waits longer for the lock (calls can end together; the snapshot alarm is 12 s)
+WBLOCK = ".br-wblock."     # D-344: one file per block the shell wrapper printed, made with its no-clobber redirect
+LATE = {"granted": None}   # D-345: the late result granted its one extra check by the last bump_stop_blocks(), or None
+
+
+def _lock_file(fh, take):
+    """Take (without waiting) or release the lock on an open lock file: fcntl.flock on macOS and Linux, msvcrt.locking of its first
+    byte on native Windows, where fcntl does not exist (2.8.4 took no lock, so a 2.8.5 hook must not fail there for want of one). A busy
+    lock raises BlockingIOError; a system with neither module raises OSError, the path every caller already handles."""
+    try:
+        import fcntl
+    except ImportError:   # D-270 (normal; D-339): native Windows has no fcntl; its own lock is used
         try:
-            state = json.load(open(bp))
-            if not isinstance(state, dict):
-                raise ValueError("the block count file is not a JSON object")
-        except Exception:      # D-270 (closed; D-322): a count that cannot be read is not 0; None ends a bounced Stop loudly
-            return None
-    else:
-        try:                   # D-322: carry over a count an older hook kept in the snapshot file (an upgrade in mid-session)
+            import msvcrt
+        except ImportError:   # D-270 (closed; D-339): no lock at all is a lock not taken, which every caller handles
+            raise OSError(errno.ENOSYS, "this system has no file lock (neither fcntl nor msvcrt)")
+        fh.seek(0)
+        try:
+            msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK if take else msvcrt.LK_UNLCK, 1)
+        except OSError as exc:   # D-270 (normal; D-339): a lock another holder has is busy; the caller waits, then gives up loudly
+            if not take:
+                raise
+            raise BlockingIOError(errno.EAGAIN, "the lock is held (%s)" % exc)
+        return
+    fcntl.flock(fh, (fcntl.LOCK_EX | fcntl.LOCK_NB) if take else fcntl.LOCK_UN)
+
+class CountLock(object):
+    """D-339 (2.8.5, T5): every Python reader and writer of the block count, the migration of an older count, the import of the
+    wrapper's block records (D-344) and the late-result ledger (D-345) holds an exclusive flock on `<base>.br-stop.lock`, a file that
+    is never replaced or removed, so no waiter can hold an old copy of it. The state itself is read after the lock is taken and
+    replaced through a temporary file. A holder that dies releases the lock with its process (measured on macOS in PATCH-285 P-1b;
+    Linux is not measured). Raises OSError when the lock is not free within LOCK_WAIT_S."""
+
+    def __init__(self, tpath, wait=None):
+        self.path = _base(tpath) + ".br-stop.lock"
+        self.wait = LOCK_WAIT_S if wait is None else wait
+        self.fh = None
+
+    def __enter__(self):
+        self.fh = open(self.path, "a")
+        end = time.time() + self.wait
+        while True:
+            try:
+                _lock_file(self.fh, True)
+                return self
+            except (BlockingIOError, PermissionError):   # D-270 (closed; D-339): busy; wait, then give up loudly below
+                if time.time() >= end:
+                    self.fh.close()
+                    raise OSError("the block count's lock was not free within %g s" % self.wait)
+                time.sleep(0.05)
+
+    def __exit__(self, *exc):
+        try:
+            _lock_file(self.fh, False)
+        finally:
+            self.fh.close()
+        return False
+
+
+class _CountLockOrNone(object):
+    """Audit 14e E05: CountLock when it can be taken; when it cannot (busy past the wait, a lock file that cannot be opened, a system
+    with no lock), the count is read and written without it, as 2.8.4 always did, so a fault of the lock 2.8.4 never took cannot leave
+    2.8.5's count behind 2.8.4's."""
+
+    def __init__(self, tpath):
+        self.lock = CountLock(tpath)
+
+    def __enter__(self):
+        try:
+            self.lock.__enter__()
+        except Exception:   # D-270 (normal; audit 14e E05): no lock; the count is kept without it, as in 2.8.4
+            self.lock = None
+        return self
+
+    def __exit__(self, *exc):
+        if self.lock is not None:
+            self.lock.__exit__(*exc)
+        return False
+
+
+def _read_count_state(tpath):
+    """The count state (under CountLock), or None when it cannot be read. D-357 (audit 14f): 2.8.5's own count is `blocks`;
+    `stop_blocks` is 2.8.4's count, kept only by 2.8.4's own code (br_count284), and never changed here. D-327: every count is a whole
+    number of 0 or more."""
+    try:
+        state = json.load(open(_blocks_path(tpath)))
+    except FileNotFoundError:   # D-270 (normal; D-322): no count file yet; an older count in the snapshot is carried
+        try:
             snap = json.load(open(_snap_path(tpath)))
         except Exception:      # D-270 (normal; D-322): no older count to carry over
             snap = {}
         if not isinstance(snap, dict) or not isinstance(snap.get("stop_blocks", {}), dict):
-            return None        # D-333 (audit 13T T3): a snapshot or older count that is not an object is a count it cannot read, never 0
-        state = {"stop_blocks": snap.get("stop_blocks") or {}}
-    sid = payload.get("session_id") or ""
-    counts = state.setdefault("stop_blocks", {})
-    if not isinstance(counts, dict):
+            return None        # D-333 (audit 13T T3): an older count that is not an object is a count it cannot read, never 0
+        state = {"stop_blocks": dict(snap.get("stop_blocks") or {})}
+    except Exception:          # D-270 (closed; D-322): a count that cannot be read is not 0; None ends a bounced Stop loudly
         return None
-    pend = "%s:pending" % sid
-    key = pend if turn_key is None else "%s:%s" % (sid, turn_key)
-    for k in {key, pend}:      # D-327 (audit 13S S8): a count is a whole number of 0 or more; anything else is a count it cannot read
-        v = counts.get(k, 0)
-        if type(v) is not int or v < 0:
+    if not isinstance(state, dict) or not isinstance(state.get("stop_blocks", {}), dict):
+        return None
+    for name, kind in (("blocks", dict), ("last_key", dict), ("unattributed", dict), ("late_ledger", dict), ("imported_wblocks", list)):
+        if not isinstance(state.setdefault(name, kind()), kind):
             return None
-    if turn_key is None:
-        counts[key] = counts.get(key, 0) + 1
-    else:
-        counts[key] = counts.get(key, 0) + 1 + counts.pop(pend, 0)
-    try:
-        json.dump(state, open(bp, "w"))
-    except OSError:   # D-270 (closed): None means the count cannot be kept, and the hook keeps blocking
+    whole = lambda v: type(v) is int and v >= 0
+    if not all(whole(v) for v in state["blocks"].values()) or not all(whole(v) for v in state["unattributed"].values()):
         return None
-    return counts[key]
+    if not all(isinstance(v, str) for v in list(state["last_key"].values()) + state["imported_wblocks"]):
+        return None
+    if not all(isinstance(v, list) for v in state["late_ledger"].values()):
+        return None
+    return state
+
+
+def _write_count_state(tpath, state):
+    bp = _blocks_path(tpath)
+    tmp = "%s.%d.tmp" % (bp, os.getpid())
+    try:
+        with open(tmp, "w") as fh:
+            json.dump(state, fh)
+        os.replace(tmp, bp)        # D-339: a reader sees the old state or the new one, never half of one
+    except OSError:   # D-270 (normal; audit 14e E05): no temporary file beside it (a folder that cannot be written): the file itself is
+        try:          # written, as 2.8.4 wrote it, so a fault 2.8.4 did not have cannot leave this count behind 2.8.4's
+            os.remove(tmp)
+        except OSError:   # D-270 (normal): there was no temporary file
+            pass
+        with open(bp, "w") as fh:
+            json.dump(state, fh)
+
+
+def _wrapper_block_files(tpath):
+    """D-344: the shell wrapper's block records beside the transcript (`<base>.br-wblock.<pid>.<random><seconds>`)."""
+    folder, pre = os.path.dirname(tpath) or ".", os.path.basename(_base(tpath)) + WBLOCK
+    return sorted(f for f in os.listdir(folder) if f.startswith(pre))
+
+
+_REREAD = object()   # bump_stop_blocks(key284=): 2.8.4's key of the turn is read from the transcript, as 2.8.4's crash and deadline paths did
+
+
+def bump_stop_blocks(tpath, payload, turn_key, late_ids=None, key284=_REREAD):
+    """Count one more blocking Stop for this session and turn; return the new count, or None when the count cannot be read or kept
+    (then the Stop ends the turn with the FAILED line, never a block: D-286, audit 14e E05). Audit 13 R12: every path that
+    blocks a turn (a problem, a crash, a timeout) counts under the one key of that turn (BRT.turn_record()). D-322: the count has its
+    own file, so dropping a snapshot never resets it.
+
+    D-337 (2.8.5), a turn that cannot be read (turn_key None, "unknown") is charged, never given a fresh allowance: to the turn this
+    session last charged (`last_key`), and also to an `unattributed` tally; with no earlier charge, to the session's pending count.
+    The next known Stop of the same turn clears the tally (those blocks were counted there already); a known Stop of a different
+    turn starts with the tally and the pending count already charged. So an unknown Stop always counts against the turn it belonged
+    to, whichever it was (model: _eval/proofs/2026-11-patch285/p0/model_unknown_charging.py). An unknown Stop charged to a turn that
+    already used its blocks ends at once with FAILED, even if it really belonged to a new turn: a turn can end sooner, never later.
+
+    D-344: each wrapper block record not yet imported is charged here too (to the same turn), its name saved in the state before the
+    file is deleted, so a crash between the two cannot count it twice. D-345: `late_ids` are this Stop's late background results whose
+    verdict is invalid; when the count is spent, the first one not in the session's ledger is entered and granted one more block
+    (LATE["granted"]), so each distinct late result gets one extra check and a repeat of the same one gets none.
+
+    D-357 (audit 14f): first, 2.8.4's own bump_stop_blocks() (br_count284, frozen) counts this Stop on 2.8.4's field and key, before any
+    read or folder listing 2.8.4 did not have, exactly as 2.8.4 counted it: `key284` is the key 2.8.4's main check gave the turn, None where 2.8.4
+    counted the Stop as pending, and by default the key 2.8.4's crash and deadline paths read again from the transcript. The larger of
+    the two counts decides, and when 2.8.4's count is None so is this one. So whichever hooks ran before (2.8.4's, 2.8.5's or both)
+    and whatever 2.8.5's own count lost, no Stop blocks after 2.8.4's count would have ended the turn."""
+    LATE["granted"] = None
+    sid = payload.get("session_id") or ""
+    try:
+        with _CountLockOrNone(tpath):
+            try:               # D-357: 2.8.4's count first, under the lock when it can be had (so no 2.8.5 writer overwrites it), and
+                if key284 is _REREAD:   # before the read and the listing 2.8.4 did not have
+                    key284 = R284._crash_turn_key(tpath)
+                n284 = R284.bump_stop_blocks(tpath, payload, key284)
+            except Exception:  # D-270 (closed; D-357): no 2.8.4 count (no module, or it failed): FAILED, never a block
+                n284 = None
+            state = _read_count_state(tpath)
+            if state is None:
+                return None
+            counts, last, tally = state["blocks"], state["last_key"], state["unattributed"]
+            pend = "%s:pending" % sid
+            files = _wrapper_block_files(tpath)
+            new = [f for f in files if f not in state["imported_wblocks"]]
+            state["imported_wblocks"] = [f for f in state["imported_wblocks"] if f in files] + new
+            add = 1 + len(new)
+            if turn_key is None:
+                lk = last.get(sid)
+                if lk:
+                    key = "%s:%s" % (sid, lk)
+                    add += counts.pop(pend, 0)   # audit 14d F01: the pending count joins the next count of the session
+                    tally[sid] = tally.get(sid, 0) + add
+                else:
+                    key = pend
+                counts[key] = counts.get(key, 0) + add
+            else:
+                key = "%s:%s" % (sid, turn_key)
+                carried = 0 if last.get(sid) == turn_key else tally.get(sid, 0) + counts.get(pend, 0)
+                counts[key] = counts.get(key, 0) + add + carried
+                counts.pop(pend, None)
+                tally.pop(sid, None)
+                last[sid] = turn_key
+            n = None if n284 is None else max(counts[key], n284)   # D-357: 2.8.4's own count is the limit
+            if late_ids and n is not None:
+                ledger = state["late_ledger"].setdefault(sid, [])
+                fresh = sorted(set(late_ids) - set(ledger))
+                if n <= MAX_STOP_BLOCKS:
+                    ledger.extend(fresh)          # judged with an ordinary block: not a late result that missed its check
+                elif fresh:
+                    ledger.append(fresh[0])       # not judged before the count was spent: its one extra check
+                    LATE["granted"] = fresh[0]
+            _write_count_state(tpath, state)
+            for f in state["imported_wblocks"]:
+                try:
+                    os.remove(os.path.join(os.path.dirname(tpath) or ".", f))
+                except OSError:   # D-270 (normal; D-344): already gone, or removed next time; its name is saved, so it is not counted again
+                    pass
+            return n
+    except Exception:          # D-270 (closed; D-339): a state not read or not written: the count cannot be kept (audit 14e E05: FAILED)
+        LATE["granted"] = None
+        return None
 
 
 def find_marker_dir(start_dir, project_dir):
@@ -2245,25 +2618,6 @@ def _read_output_file_text(path):
 NOTICE_TAG = re.compile(r"<(tool-use-id|status|result|summary|output-file)>(.*?)</\1>", re.S)
 
 
-def _notice_text(ev):
-    """The `<task-notification>` text a transcript event carries as a stored completion notice, or
-    None (D-164): an `attachment` of type `queued_command`, or a `user` event from a task notice."""
-    att = ev.get("attachment")
-    if ev.get("type") == "attachment" and isinstance(att, dict) and att.get("type") == "queued_command":
-        text = att.get("prompt")
-        if isinstance(text, str) and (att.get("commandMode") == "task-notification"
-                                      or text.lstrip().startswith("<task-notification>")):
-            return text
-    if ev.get("type") == "user":
-        content = (ev.get("message") or {}).get("content")
-        if isinstance(content, list):
-            content = "\n".join(b.get("text", "") for b in content if isinstance(b, dict) and b.get("type") == "text")
-        if isinstance(content, str) and ((ev.get("origin") or {}).get("kind") == "task-notification"
-                                         or content.lstrip().startswith("<task-notification>")):
-            return content
-    return None
-
-
 def _parse_notice(text):
     """{tool-use-id, status, result, summary, output-file} from a stored notice's tags (first of each)."""
     out = {}
@@ -2272,16 +2626,10 @@ def _parse_notice(text):
     return out
 
 
-def _carries_tool_result(ev):
-    """True if the event's message content holds a `tool_result` block (D-112)."""
-    content = (ev.get("message") or {}).get("content")
-    return isinstance(content, list) and any(
-        isinstance(b, dict) and b.get("type") == "tool_result" for b in content)
-
-
 SNAP_SKIP = {".git", "node_modules", ".venv", "venv", "__pycache__", ".pytest_cache", ".tox", ".mypy_cache"}
 SNAP_LIMIT = 20000         # entries one walk covers before it gives up (D-279: a skip is announced on the Stop, never silent)
-MARKER_DEPTH = 8           # D-294: how deep the search for marked folders inside git-ignored folders goes (the claims hook's `find -maxdepth 8`)
+IGNORED_LIMIT = 200000     # D-347 (2.8.5, B5): entries the search for marked folders inside git-ignored folders covers. Measured in
+                           # PATCH-285 M3: a copy of a large real repository holds 76,957 there after pruning, searched in 0.9 s (the snapshot alarm is 12 s)
 DISK_SKIP = {"reason": None, "partial": None}   # D-279: why the last disk_snapshot() could not check, or None; D-294: what it could not search
 
 
@@ -2322,8 +2670,10 @@ def _snap_candidates(root):
 
 def _ignored_markers(root):
     """D-294: the folders marked with .br-assets that sit inside git-ignored folders (git ls-files never lists them). A bounded search
-    of the ignored folders git names, pruning SNAP_SKIP, MARKER_DEPTH deep, at most SNAP_LIMIT entries. Past that bound, or at an
-    ignored folder it cannot read, DISK_SKIP["partial"] says so and the markers found so far are kept: the rest of the check still runs."""
+    of the ignored folders git names, pruning SNAP_SKIP at every level, at most IGNORED_LIMIT entries. Past that bound, or at an ignored
+    folder it cannot read, DISK_SKIP["partial"] says so and the markers found so far are kept: the rest of the check still runs. D-347
+    (2.8.5, B5): no depth bound; the entry bound alone bounds the time (PATCH-285 M3: a copy of a large real repository, 1.05 s with no depth bound;
+    the 8-level bound left it partial, inside a virtual environment in a git-ignored folder)."""
     def partial(err):
         DISK_SKIP["partial"] = DISK_SKIP["partial"] or ("a git-ignored folder could not be read (%s), so a marked folder inside it may "
                                                         "not be found" % os.path.relpath(getattr(err, "filename", None) or root, root))
@@ -2341,26 +2691,17 @@ def _ignored_markers(root):
                 found.append(os.path.dirname(x))        # the marker file itself is ignored
             continue
         rel0 = x.rstrip("/")
-        if os.path.basename(rel0) in SNAP_SKIP:
-            continue
-        if rel0.count("/") >= MARKER_DEPTH:      # D-306 (audit 12 R5): an ignored folder already at the bound is not searched, and the Stop says so
-            DISK_SKIP["partial"] = DISK_SKIP["partial"] or ("the search for marked folders inside git-ignored folders stops %d levels "
-                                                            "deep (%s goes deeper)" % (MARKER_DEPTH, rel0))
-            continue
+        if any(part in SNAP_SKIP for part in rel0.split("/")):
+            continue           # D-347: pruned at every level (git can name a folder inside .pytest_cache or node_modules)
         for dp, ds, fs in os.walk(os.path.join(root, rel0), onerror=partial):
             rel = os.path.relpath(dp, root)
             if any(_is_marker_name(os.path.join(dp, f)) for f in fs):
                 found.append(rel)
-            keep = sorted(d for d in ds if d not in SNAP_SKIP)
-            if keep and rel.count("/") + 1 >= MARKER_DEPTH:   # D-294 (string gate): the depth bound is announced, never silent
-                DISK_SKIP["partial"] = DISK_SKIP["partial"] or ("the search for marked folders inside git-ignored folders stops %d levels "
-                                                                "deep (%s goes deeper)" % (MARKER_DEPTH, rel))
-                keep = []
-            ds[:] = keep
+            ds[:] = sorted(d for d in ds if d not in SNAP_SKIP)
             seen += len(fs) + len(ds)
-            if seen > SNAP_LIMIT:
+            if seen > IGNORED_LIMIT:
                 DISK_SKIP["partial"] = ("the git-ignored folders hold more than %d entries, so a marked folder inside them may not "
-                                        "be found" % SNAP_LIMIT)
+                                        "be found" % IGNORED_LIMIT)
                 return found
     return found
 
@@ -2447,66 +2788,155 @@ def _snap_path(tpath):
     return (tpath[:-len(".jsonl")] if tpath.endswith(".jsonl") else tpath) + ".br-snapshot.json"
 
 
+def _note_tool_write(tpath, project_dir, path):
+    """C5 red-team F5 (2.8.5): a Write, Edit or MultiEdit of a verdict file or a marked asset is recorded in the snapshot's last state, so
+    the next Bash call's record does not list it as changed by that call (which kept a later safe read from being excused)."""
+    import hashlib
+    ap = os.path.realpath(path)
+    rel = os.path.relpath(ap, project_dir)
+    low = rel.lower()
+    if rel.startswith("..") or not (low.endswith(".verdict.md") or (not low.endswith(".draft.md") and find_marker_dir(os.path.dirname(ap), project_dir))):
+        return
+    sp = _snap_path(tpath)
+    try:
+        with CountLock(tpath, wait=SNAP_LOCK_WAIT_S):
+            state = json.load(open(sp))
+            if not isinstance(state, dict) or not isinstance(state.get("last"), dict):
+                return
+            try:
+                state["last"][rel] = hashlib.sha256(open(ap, "rb").read()).hexdigest()
+            except FileNotFoundError:   # D-270 (normal; C5 F5): the tool removed it
+                state["last"].pop(rel, None)
+            tmp = "%s.%d.tmp" % (sp, os.getpid())
+            with open(tmp, "w") as fh:
+                json.dump(state, fh)
+            os.replace(tmp, sp)
+    except Exception:   # D-270 (normal; C5 F5): not recorded; the next call's record lists the file, which only keeps a read from being excused
+        return
+
+
+def _is_notice_prompt(payload):
+    """A UserPromptSubmit that delivers a background result: the client starts a turn for it (PATCH-285 M1), but it is not the user,
+    so the hook's turn (D-164) and its snapshot stay those of the last real user message."""
+    prompt = payload.get("prompt")
+    return isinstance(prompt, str) and prompt.lstrip().startswith("<task-notification>")
+
+
 def snapshot_mode(event, payload):
-    """UserPromptSubmit: record the turn-start snapshot. PostToolUse (Bash): record what that call changed."""
+    """UserPromptSubmit: record the turn-start snapshot, bound to the client's turn id (D-338). PostToolUse (Bash): record what that
+    call changed, as one per-call record for EVERY completed call, including one that changed nothing (D-341): the call's id, its
+    turn, its agent, whether it ran in the background, the coverage of the disk check, the files changed since the previous record,
+    and the time the record was taken. The scan and the write happen under the count's lock (D-339), so records are taken one at a
+    time and each one compares with the record before it."""
     tpath = payload.get("transcript_path")
+    project_dir = os.path.realpath(os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd())
+    if event == "write":
+        ti = payload.get("tool_input") if isinstance(payload.get("tool_input"), dict) else {}
+        fp = ti.get("file_path")
+        if isinstance(fp, str) and fp.lower().endswith(".md") and tpath:
+            _note_tool_write(tpath, project_dir, fp if os.path.isabs(fp) else os.path.join(payload.get("cwd") or project_dir, fp))
+        return 0
     if not tpath:
         return 0
-    project_dir = os.path.realpath(os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd())
     sp = _snap_path(tpath)
-    _SNAP["path"] = sp
-    started = time.time()      # D-332: taken before the files are read, so a file modified after it was modified in this turn
+    _SNAP["path"], _SNAP["event"] = sp, event
     carry_legacy_count(sp)     # D-328: before this call can replace or drop the file
-    cur = disk_snapshot(project_dir)
-    if cur is None:
-        invalidate_snapshot(sp)   # audit 13 R4: a snapshot that could not be taken leaves no older baseline in place
-        return 0
-    if event == "turn-start":
-        state = {"turn_start": cur, "last": cur, "after_bash": [], "root": project_dir, "session": payload.get("session_id"),
-                 "started": started}
-    else:
+    with CountLock(tpath, wait=SNAP_LOCK_WAIT_S):
+        started = time.time()      # D-332: taken before the files are read, so a file modified after it was modified in this turn
+        cur = disk_snapshot(project_dir)
+        if cur is None:
+            if event == "turn-start" and not _is_notice_prompt(payload):
+                invalidate_snapshot(sp, carry=False)   # audit 13 R4: a snapshot that could not be taken leaves no older baseline in place
+                _failed_marker(sp, payload, project_dir, DISK_SKIP["reason"] or "the disk check could not run")
+            # C5 red-team F1 (2.8.5): a per-call scan that fails keeps the turn's own baseline; dropping it let an agent that made a
+            # scan fail fall back to a baseline that trusts file times. The call gets no record (so it is never excused, D-341).
+            return 0
+        coverage = "partial" if DISK_SKIP["partial"] else "complete"
+        if event == "turn-start" and not _is_notice_prompt(payload):
+            pid = payload.get("prompt_id")
+            state = {"turn_start": cur, "last": cur, "after_bash": [], "calls": [], "root": project_dir,
+                     "session": payload.get("session_id"), "started": started,
+                     "turn": pid if isinstance(pid, str) and pid else None}     # D-338: no id, and no Stop or write gate uses it
+        else:
+            try:
+                state = json.load(open(sp))
+                if not isinstance(state, dict) or "turn_start" not in state:
+                    raise ValueError("no turn-start record")
+            except Exception:      # D-259 (b): snapshot mode only records; the Stop check uses its fallback baseline
+                return 0      # no turn-start record: the Stop check uses its fallback baseline
+            last = state.get("last") or {}
+            changed = sorted(k for k in set(cur) | set(last) if last.get(k) != cur.get(k))   # D-341: a removed file is a change too
+            if event != "turn-start":
+                if changed:
+                    state.setdefault("after_bash", []).append({"tool_use_id": payload.get("tool_use_id"), "changed": changed})
+                ti = payload.get("tool_input") if isinstance(payload.get("tool_input"), dict) else {}
+                tr = payload.get("tool_response") if isinstance(payload.get("tool_response"), dict) else {}
+                state.setdefault("calls", []).append({
+                    "tool_use_id": payload.get("tool_use_id"), "prompt_id": payload.get("prompt_id"),
+                    "agent_id": payload.get("agent_id"), "session": payload.get("session_id"), "t": time.time(),
+                    "background": bool(ti.get("run_in_background") or tr.get("backgroundTaskId")),
+                    "coverage": coverage, "changed": changed})
+                del state["calls"][:-200]   # the newest 200 calls of the turn are kept (a turn with more is judged on those)
+            elif changed:          # D-338: a background result's turn keeps the user's turn record; what changed is still recorded
+                state.setdefault("after_bash", []).append({"tool_use_id": None, "changed": changed})
+            state["last"] = cur
         try:
-            state = json.load(open(sp))
-        except Exception:      # D-259 (b): snapshot mode only records; the Stop check uses its fallback baseline
-            return 0      # no turn-start record: the Stop check uses its fallback baseline
-        last = state.get("last") or {}
-        changed = sorted(k for k in cur if last.get(k) != cur[k])
-        if changed:
-            state.setdefault("after_bash", []).append({"tool_use_id": payload.get("tool_use_id"), "changed": changed})
-        state["last"] = cur
-    try:
-        json.dump(state, open(sp, "w"))
-    except OSError:   # D-270 (closed; D-323): not written, so the older one is dropped and the Stop uses its fallback baseline
-        invalidate_snapshot(sp)
+            tmp = "%s.%d.tmp" % (sp, os.getpid())
+            with open(tmp, "w") as fh:
+                json.dump(state, fh)
+            os.replace(tmp, sp)
+        except OSError:   # D-270 (closed; D-323): not written, so the older one is dropped and the Stop uses its fallback baseline
+            invalidate_snapshot(sp, carry=False)
     return 0
 
 
-_SNAP = {"path": None}         # the snapshot file a --snapshot call is writing, for its deadline path (audit 13 R4)
+_SNAP = {"path": None, "event": None}   # the snapshot file a --snapshot call is writing and its event, for its deadline path (audit 13 R4)
+
+
+def _failed_marker(sp, payload, project_dir, reason):
+    """C5 red-team F1 (2.8.5): a turn-start snapshot that could not be taken leaves this marker (no baseline in it), so the Stop knows the
+    turn has none, trusts no file time, and says why. Written only when the folder can be written; otherwise nothing is left, as before."""
+    pid = payload.get("prompt_id")
+    try:
+        tmp = "%s.%d.tmp" % (sp, os.getpid())
+        with open(tmp, "w") as fh:
+            json.dump({"failed": str(reason)[:200], "root": project_dir, "session": payload.get("session_id"),
+                       "turn": pid if isinstance(pid, str) and pid else None, "started": time.time()}, fh)
+        os.replace(tmp, sp)
+    except OSError:   # D-270 (closed; C5 F1): no marker; the Stop then uses its fallback baseline, as in 2.8.4
+        pass
 
 
 def carry_legacy_count(sp):
     """D-328 (audit 13S S6): before 2.8.4 the block count lived in the snapshot file. Before a snapshot file is replaced or dropped,
     and only while the count has no file of its own, copy that older count into its own file (_blocks_path), so an upgrade in the
-    middle of a session cannot lose it. A count file that already exists is never touched here."""
-    bp = sp[:-len(".br-snapshot.json")] + ".br-stop-blocks.json"
-    if os.path.exists(bp):
-        return
+    middle of a session cannot lose it. D-339 (2.8.5, T5): done under the count's lock, and created with O_CREAT|O_EXCL, so a count
+    that appeared first is kept, never overwritten. D-357 (audit 14f F02): a lock that cannot be taken does not stop the carry (2.8.4
+    took none), so a snapshot dropped next never takes the only copy of the count with it."""
+    tpath = sp[:-len(".br-snapshot.json")] + ".jsonl"
+    bp = _blocks_path(tpath)
     try:
-        legacy = json.load(open(sp)).get("stop_blocks")
-    except Exception:   # D-270 (normal; D-328): no readable snapshot, so no older count in it to carry
-        return
-    if isinstance(legacy, dict) and legacy:
-        try:
-            json.dump({"stop_blocks": legacy}, open(bp, "w"))
-        except OSError:   # D-270 (closed; D-328): not carried; the Stop then reads no count file and falls back to the snapshot, if any
-            pass
+        with _CountLockOrNone(tpath):
+            if os.path.exists(bp):
+                return
+            try:
+                legacy = json.load(open(sp)).get("stop_blocks")
+            except Exception:   # D-270 (normal; D-328): no readable snapshot, so no older count in it to carry
+                return
+            if isinstance(legacy, dict) and legacy:
+                fd = os.open(bp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+                with os.fdopen(fd, "w") as fh:
+                    json.dump({"stop_blocks": legacy}, fh)
+    except OSError:   # D-270 (closed; D-328, D-339): not carried (a count appeared, or none can be written); the Stop reads the snapshot's count then
+        pass
 
 
-def invalidate_snapshot(sp):
+def invalidate_snapshot(sp, carry=True):
     """Audit 13 R4, R7; D-323 (audit 13R F5): remove the turn-start snapshot, so the Stop uses its fallback baseline (which counts files
     it cannot compare as changed) instead of a record from an earlier moment. The block count is in its own file (D-322), and an
     older hook's count in this file is carried there first (D-328), so no count is lost with it."""
-    carry_legacy_count(sp)     # D-328 (audit 13S S6): an older hook's count in this file is moved out before the file goes
+    if carry:                  # (False inside the count's lock, where the carry already ran: the lock is not taken twice)
+        carry_legacy_count(sp)     # D-328 (audit 13S S6): an older hook's count in this file is moved out before the file goes
     try:
         os.remove(sp)
     except FileNotFoundError:   # D-270 (normal; D-323): no snapshot to drop
@@ -2532,10 +2962,9 @@ def _fallback_baseline(project_dir, cur, turn_ts):
                     base[rel] = cur[rel]
     except Exception:          # D-259 (closed): a file left out of the baseline counts as changed, so it is checked
         pass
-    if turn_ts:
+    if turn_ts is not None:    # D-337: seconds since the epoch from the turn record; an unknown time adds nothing to the baseline
         try:
-            from datetime import datetime
-            t0 = datetime.fromisoformat(turn_ts.replace("Z", "+00:00")).timestamp()
+            t0 = float(turn_ts)
             for rel, sha in cur.items():
                 if os.path.getmtime(os.path.join(project_dir, rel)) < t0:
                     base[rel] = sha
@@ -2544,7 +2973,7 @@ def _fallback_baseline(project_dir, cur, turn_ts):
     return base
 
 
-_STOP = {"payload": None}      # the Stop payload main() read, for the crash guard
+_STOP = {"payload": None, "key": None, "key284": None}   # the Stop payload main() read, and its turn's key once known (D-337), for the crash guard
 
 
 def _hook_frame(exc):
@@ -2560,50 +2989,15 @@ def _hook_frame(exc):
     return name
 
 
-def _own_tool_result(ev):
-    """turn_identity(own=True)'s copy of _carries_tool_result: the same test, so the crash and deadline paths need no other helper."""
-    c = (ev.get("message") or {}).get("content") if isinstance(ev.get("message"), dict) else None
-    return isinstance(c, list) and any(isinstance(b, dict) and b.get("type") == "tool_result" for b in c)
-
-
-def _own_user_notice(ev):
-    """turn_identity(own=True)'s copy of _notice_text for a `user` event: a task notice by its origin or its opening tag."""
-    c = (ev.get("message") or {}).get("content") if isinstance(ev.get("message"), dict) else None
-    if isinstance(c, list):
-        c = "\n".join(b.get("text", "") for b in c if isinstance(b, dict) and b.get("type") == "text")
-    return (ev.get("origin") or {}).get("kind") == "task-notification" or (isinstance(c, str) and c.lstrip().startswith("<task-notification>"))
-
-
-def turn_identity(lines, own=False):
-    """D-322 (audit 13R F3): (index, key) of the current turn's real user message, by the one rule every path uses: a `user` event
-    that is not synthetic or meta, carries no tool result and is not a task notice. key is its timestamp, or idx<n>. (0, "idx0")
-    when there is none. The main check uses the shared helpers; the crash and deadline paths pass own=True and use this function's
-    copies of the same two tests, so a helper that hung or failed cannot stop them (the grid checks both give the same turn)."""
-    tool_result = _own_tool_result if own else _carries_tool_result
-    notice = _own_user_notice if own else (lambda ev: _notice_text(ev) is not None)
-    idx_, key_ = 0, "idx0"
-    for idx, line in enumerate(lines):
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            ev = json.loads(line)
-        except Exception:  # D-259 (b): a line that is not JSON is not an event (the current turn's lines are checked, D-270)
-            continue
-        if not isinstance(ev, dict) or ev.get("type") != "user" or ev.get("isSynthetic") or ev.get("isMeta"):
-            continue
-        if tool_result(ev) or notice(ev):      # a tool result is stored as a user event (D-112); a task notice is not the user (D-164)
-            continue
-        idx_, key_ = idx, ev.get("timestamp") or "idx%d" % idx
-    return idx_, key_
-
-
 def _crash_turn_key(tpath):
-    """The key of the turn, to bound the crash block (D-322: turn_identity(), the problem path's own rule), or None when the turn
-    cannot be read, so the block is counted as pending and a Stop already bounced ends loudly."""
+    """The key of the turn, to bound the crash block (D-337: BRT.turn_record(), the problem path's own rule), or None ("unknown") when
+    the module cannot be loaded or the turn cannot be read; bump_stop_blocks() then charges it by D-337's rule."""
+    if BRT is None:
+        return None
     try:
-        return turn_identity(open(tpath, encoding="utf-8", errors="replace").read().splitlines(), own=True)[1]
-    except Exception:   # D-270 (closed; D-322): the turn cannot be read; None counts the block as pending
+        rec = BRT.turn_record(open(tpath, encoding="utf-8", errors="replace").read().splitlines())
+        return rec["key"]
+    except Exception:   # D-270 (closed; D-337): the turn cannot be read; None is charged as unknown
         return None
 
 
@@ -2611,17 +3005,19 @@ def stop_closed(payload, key, msg, bound="count"):
     """D-268: a failure that makes this turn not gated. Prints one block, bounded as the problem blocks are: the first
     MAX_STOP_BLOCKS Stops of a turn block, then a loud "Verdict check FAILED" systemMessage. bound="count" keeps the count
     beside the transcript; bound="active" (no transcript to keep it in) ends loudly on a Stop that already arrives with
-    stop_hook_active. When the count cannot be kept, the same rule applies."""
+    stop_hook_active. When a count beside the transcript cannot be read or kept, the turn ends with the FAILED line at once: 2.8.4
+    may have read its own count there, so a block could be one 2.8.4 did not give (audit 14e E05)."""
     payload = payload if isinstance(payload, dict) else {}
-    n = None
+    n, counted = None, False
     if bound == "count":
         try:
             tpath = payload.get("transcript_path")
             if isinstance(tpath, str) and tpath:
+                counted = True
                 n = bump_stop_blocks(tpath, payload, key)
-        except Exception:   # D-270 (closed): the count is unknown, so stop_hook_active bounds the block
+        except Exception:   # D-270 (closed; audit 14e E05): the count is unknown, so the turn ends loudly
             n = None
-    spent = (n > MAX_STOP_BLOCKS) if n is not None else bool(payload.get("stop_hook_active"))
+    spent = (n is None or n > MAX_STOP_BLOCKS) if counted else bool(payload.get("stop_hook_active"))
     if spent:
         print(json.dumps({"systemMessage": "Verdict check FAILED and was not fixed: " + msg}))
     else:
@@ -2639,17 +3035,21 @@ def main():
         return _main()
     except BudgetExceeded as late:   # D-278: the deadline fired. Disarm first so the answer below cannot be cut off
         _disarm_budget()
+        global LOCK_WAIT_S
+        LOCK_WAIT_S = 2.0          # D-339: past the deadline the count's lock is waited for 2 s only, inside the wrapper's watchdog
         try:
             what = str(late) or "the verdict check"
             if snapshot:
-                if _SNAP["path"]:
+                if _SNAP["path"] and _SNAP["event"] == "turn-start":   # C5 F1: a per-call failure keeps the turn's baseline
                     invalidate_snapshot(_SNAP["path"])   # audit 13 R4: the older baseline must not stand for this turn
                 print(json.dumps({"systemMessage": "Verdict check: the turn snapshot ran out of time (%s); the Stop check falls back to counting "
                                   "files it cannot compare as changed." % what}))
                 return 0
             payload = _STOP["payload"] or {}
             tp = payload.get("transcript_path") if isinstance(payload, dict) else None
-            stop_closed(payload, _crash_turn_key(tp) if isinstance(tp, str) and tp else None,
+            # D-337: 2.8.5's own count takes the turn's key if the check had found it, else unknown, charged by bump_stop_blocks()'s
+            # rule; 2.8.4's own count reads the turn again, as 2.8.4's deadline path did (D-357)
+            stop_closed(payload, _STOP["key"],
                         "the verdict check ran out of time (%s): this turn is not gated; report it" % what,
                         "count" if isinstance(tp, str) and tp else "active")
         except Exception:      # D-278 (closed): the answer itself failed: a plain block
@@ -2660,7 +3060,7 @@ def main():
         try:
             where = _hook_frame(exc)
             if len(sys.argv) > 2 and sys.argv[2] == "--snapshot":
-                if _SNAP["path"]:
+                if _SNAP["path"] and _SNAP["event"] == "turn-start":   # C5 F1: a per-call failure keeps the turn's baseline
                     invalidate_snapshot(_SNAP["path"])   # D-323 (audit 13R F5): the older baseline must not stand for this turn
                 print(json.dumps({"systemMessage": "Verdict check: the turn snapshot could not be recorded (%s at %s); the Stop check "
                                   "falls back to counting files it cannot compare as changed." % (type(exc).__name__, where)}))
@@ -2670,7 +3070,7 @@ def main():
                 return 1
             payload = _STOP["payload"] or {}
             tp = payload.get("transcript_path") if isinstance(payload, dict) else None
-            stop_closed(payload, _crash_turn_key(tp) if isinstance(tp, str) and tp else None,
+            stop_closed(payload, _STOP["key"] or (_crash_turn_key(tp) if isinstance(tp, str) and tp else None),   # D-337
                         "the verdict check crashed (%s at %s): this turn is not gated; report it" % (type(exc).__name__, where),
                         "count" if isinstance(tp, str) and tp else "active")
         except Exception:      # D-270 (closed): the guard itself failed: say so, plainly, with a block
@@ -2720,12 +3120,16 @@ def _main():
             stop_closed(payload, "no-transcript", "the verdict check has no transcript to read (%s): this turn is not gated; report it"
                         % ("no transcript path was given" if not tpath else "the transcript file does not exist"), "active")
         return 0
+    if BRT is None:            # D-337: no shared reader, so no turn: an unknown Stop, charged by bump_stop_blocks()'s rule
+        stop_closed(payload, None, "the turn reader br_transcript.py could not be loaded (%s): this turn is not gated; report it"
+                    % BRT_ERROR)
+        return 0
     try:
         lines = open(tpath, encoding="utf-8", errors="replace").read().splitlines()
     except Exception as exc:   # D-259: a transcript that cannot be read is not a turn with nothing to judge
-        n_blocks = bump_stop_blocks(tpath, payload, None)   # audit 13 R12: the turn cannot be read, so the block is counted as pending
+        n_blocks = bump_stop_blocks(tpath, payload, None, None, None)   # audit 13 R12: the turn cannot be read, so the block is counted as pending (by 2.8.4 too)
         msg = "the verdict check could not read the transcript (%s): this turn is not gated" % type(exc).__name__
-        if bool(payload.get("stop_hook_active")) or (n_blocks is not None and n_blocks > MAX_STOP_BLOCKS):   # a Stop already bounced this turn ends loudly
+        if bool(payload.get("stop_hook_active")) or n_blocks is None or n_blocks > MAX_STOP_BLOCKS:   # bounced already, or no count kept (audit 14e E05): ends loudly
             print(json.dumps({"systemMessage": "Verdict check FAILED and was not fixed: " + msg}))
         else:
             print(json.dumps({"decision": "block", "reason": "This turn cannot be treated as gated. Fix and re-emit:\n  - "
@@ -2746,8 +3150,14 @@ def _main():
     # A tool result is ALSO stored as a `type: "user"` event (D-112, audit F1: measured on a live
     # `claude -p` transcript), so it never starts a turn; nor does an `isMeta` event. Without this the
     # turn began at the LAST tool result, after every dispatch, and the hook never saw a gate.
-    turn_start, turn_key = turn_identity(lines)       # D-322: the same rule the crash path uses
-    turn_ts = None if turn_key.startswith("idx") else turn_key
+    turn = BRT.turn_record(lines)      # D-337: the one rule, shared with the crash path and the write hook
+    turn_start, turn_key, turn_ts = turn["index"], turn["key"], turn["ts"]   # turn_ts: seconds since the epoch, or None (never the key)
+    try:                       # D-357: the key 2.8.4's main check gave this turn (its crash path's key when that check failed)
+        _STOP["key284"] = R284.turn_identity(lines)[1]
+    except Exception:          # D-270 (closed; D-357): as in 2.8.4, the crash path's read of the turn
+        _STOP["key284"] = R284._crash_turn_key(tpath) if R284 is not None else None
+    _STOP["key"] = turn_key    # D-337: 2.8.5's own count on the crash and deadline paths uses this key; 2.8.4's own count reads the
+    # turn again there, as 2.8.4 did (D-357)
     session_lines = lines      # the whole session, for the executed-command check (D-146)
     lines = lines[turn_start:]
 
@@ -2771,6 +3181,8 @@ def _main():
     verdict_file_writes = []   # [(index, abs_path, content-or-None)] — Write/Edit/MultiEdit of *.verdict.md (R2)
     marked_md_writes = []      # [(index, abs_path)] — Write/Edit/MultiEdit of a plain .md under a marked dir (R2)
     bash_verdict_refs = []     # [raw path] — *.verdict.md named in a Bash command this turn (D-175)
+    ref_calls = {}             # D-341: raw path -> [the Bash call that named it: id, command, time, agent, background]
+    dispatch_bg = {}           # D-341: dispatch tool_use_id -> it ran in the background
     bash_cmds = []             # every Bash command of the turn, main session and subagents (D-190)
     send_msgs = []             # [(index, tool_use_id, to)] — every SendMessage call of the turn (D-208)
     resumed_aid = {}           # SendMessage tool_use_id -> toolUseResult.resumedAgentId (D-208)
@@ -2806,7 +3218,7 @@ def _main():
             if tuid:
                 notifications[tuid] = {"summary": ev.get("summary"), "output_file": ev.get("output_file")}
                 notice_idx.setdefault(tuid, idx)
-        ntext = _notice_text(ev)
+        ntext = BRT.notice_text(ev)
         if ntext:
             n = _parse_notice(ntext)
             if n.get("tool-use-id"):
@@ -2819,6 +3231,7 @@ def _main():
             if blk.get("type") == "tool_use" and blk.get("name") in ("Task", "Agent"):
                 # subagent_type is "<plugin>:<slug>" for a plugin agent, or a bare slug
                 slug = str((blk.get("input") or {}).get("subagent_type") or "").split(":")[-1].strip()
+                dispatch_bg[blk.get("id")] = bool((blk.get("input") or {}).get("run_in_background"))
                 if ladder_only(slug, blk.get("input")):
                     ladder_ids.add(blk.get("id"))
                     continue           # D-237: a ladder run owes no verdict, and none it returns counts
@@ -2829,8 +3242,12 @@ def _main():
                 if slug == "claims-gate":
                     claims_gate_at.append(idx)
             elif blk.get("type") == "tool_use" and blk.get("name") == "Bash":
-                bash_verdict_refs.extend(verdict_refs(str((blk.get("input") or {}).get("command") or ""), project_dir))
-                bash_cmds.append(str((blk.get("input") or {}).get("command") or ""))
+                cmd_ = str((blk.get("input") or {}).get("command") or "")
+                for r_ in verdict_refs(cmd_, project_dir):
+                    bash_verdict_refs.append(r_)
+                    ref_calls.setdefault(r_, []).append({"id": blk.get("id"), "cmd": cmd_, "ts": ev.get("timestamp"), "agent": None,
+                                                         "background": bool((blk.get("input") or {}).get("run_in_background"))})
+                bash_cmds.append(cmd_)
             elif blk.get("type") == "tool_use" and blk.get("name") == "SendMessage":
                 send_msgs.append((idx, blk.get("id"), str((blk.get("input") or {}).get("to") or "").strip()))
             elif blk.get("type") == "tool_use" and blk.get("name") in ("Write", "Edit", "MultiEdit"):
@@ -2884,7 +3301,7 @@ def _main():
             continue
         if not isinstance(sev, dict):
             continue
-        ntext_ = _notice_text(sev)
+        ntext_ = BRT.notice_text(sev)
         if ntext_:
             n_ = _parse_notice(ntext_)
             if n_.get("tool-use-id") and (n_.get("result") or "").strip():
@@ -2933,6 +3350,7 @@ def _main():
         return out_
     # D-309 (audit 12 R8): a background result that lands after a newer user message is judged in the turn it arrives. Its notice is in
     # this turn; its dispatch (or SendMessage) is in an earlier one, so it joins this turn's dispatches with the notice's place.
+    late_ids = set()           # D-345: these late results, by tool_use_id; an invalid one gets one extra check (bump_stop_blocks)
     for tuid_, n_idx in sorted(notice_idx.items(), key=lambda kv: kv[1]):
         if tuid_ in all_dispatched or tuid_ in ladder_ids or any(tuid_ == sm_ for _i, sm_, _t in send_msgs):
             continue
@@ -2945,7 +3363,9 @@ def _main():
             if slug_ in GATES:
                 dispatched[tuid_] = slug_
                 task_idx[tuid_] = n_idx
+                late_ids.add(tuid_)
         elif tuid_ in _sess_sm:
+            late_ids.add(tuid_)
             send_msgs.append((n_idx, tuid_, _sess_sm[tuid_][1]))
             results.setdefault(tuid_, _sess_text.get(tuid_))
             if _sess_who.get(tuid_):
@@ -3064,9 +3484,12 @@ def _main():
             sm_idx = min(i for i, sm, _t in send_msgs if sm in sms)
             chains.append((slug, [(sm, True) for sm in sms], sm_idx, aid))
     judged = set()             # slugs judged this turn (the W-09 count: "gates checked")
+    late_invalid = set()       # D-345: late results (late_ids) whose return is not a valid verdict
     no_result = set()          # D-292: gates dispatched this turn whose result never landed (INCOMPLETE, not a block)
     extra_notes = set()        # D-218: "changed-file check skipped: no git"
     disk_note = None           # D-279: set when the disk check had to skip
+    snap_note = None           # D-338: set when a turn-start snapshot from an earlier turn could not be replaced
+    snap_state = None          # D-341: this turn's own snapshot (its per-call records), when it is used
     ci_pending = set()         # D-252: a quality PASS whose CI judge is still running or could not be read
     chain_notes = []           # D-214: "<slug>: latest of N returns; earlier: <verdicts>"
 
@@ -3075,9 +3498,11 @@ def _main():
     for slug, chain, t_idx, chain_aid in chains:
         judged.add(slug)
         rets = [gate_return(t, r) for t, r in chain]
+        late_here = {t for t, _r in chain if t in late_ids}
         if rets[-1][0] is None:
             if rets[-1][2]:
                 problems.append("%s: %s" % (slug, rets[-1][2]))
+                late_invalid |= late_here
             else:              # D-292: dispatched, and no result landed by the Stop: not gated, and not a verdict to count as valid
                 no_result.add(slug)
             continue          # the latest return is not in yet (or never landed): not judged on an older one
@@ -3111,6 +3536,7 @@ def _main():
                    "never rests on ASSUMED; MEASURED names the backticked command it ran). A council seat file or a claims-gate "
                    "verdict file is a copy of that block and counts only with it." % where)
         problems.append("%s: %s" % (slug, detail))
+        late_invalid |= late_here
 
     # Check 1b (D-112, R22): a verdict block's `agent` must be the agent whose dispatch returned it.
     # Applies to EVERY dispatch, gate or not, so a producer cannot hand back a block signed as a gate.
@@ -3179,6 +3605,12 @@ def _main():
     for aid in [agent_ids.get(t_) for t_ in all_dispatched] + resumed_aids:
         if aid and aid not in scan_aids:
             scan_aids.append(aid)
+    for t_, slug_ in sorted(all_dispatched.items(), key=lambda kv: str(kv[0])):
+        if t_ in results and not agent_ids.get(t_):
+            # D-343 (2.8.5, RT5, R13): a result that names no agent cannot be tied to that agent's own transcript, so its writes would go
+            # unread; on a turn that dispatched an agent that is a fault, not a silent gap. (Its verdict is still judged above.)
+            fault("the agent id of the %s dispatch (its result names no agentId, so the agent's own writes cannot be read)" % (slug_ or "?"),
+                  ValueError("no agentId"))
     for aid in scan_aids:
         if not all(c.isalnum() or c in "-_" for c in aid):
             fault("the subagent transcript check of agent %r (an id the hook cannot use as a file name)" % aid[:40], ValueError("bad agentId"))
@@ -3219,8 +3651,13 @@ def _main():
             content_blocks = (sev.get("message") or {}).get("content")
             for sblk in content_blocks if isinstance(content_blocks, list) else []:
                 if isinstance(sblk, dict) and sblk.get("type") == "tool_use" and sblk.get("name") == "Bash":
-                    bash_verdict_refs.extend(verdict_refs(str((sblk.get("input") or {}).get("command") or ""), project_dir))
-                    bash_cmds.append(str((sblk.get("input") or {}).get("command") or ""))
+                    cmd_ = str((sblk.get("input") or {}).get("command") or "")
+                    fg = any(agent_ids.get(t_) == aid and dispatch_bg.get(t_) is False for t_ in all_dispatched)   # D-341: a foreground dispatch of this turn
+                    for r_ in verdict_refs(cmd_, project_dir):
+                        bash_verdict_refs.append(r_)
+                        ref_calls.setdefault(r_, []).append({"id": sblk.get("id"), "cmd": cmd_, "ts": sev.get("timestamp"), "agent": aid,
+                                                             "background": not fg or bool((sblk.get("input") or {}).get("run_in_background"))})
+                    bash_cmds.append(cmd_)
                     continue
                 if not (isinstance(sblk, dict) and sblk.get("type") == "tool_use"
                         and sblk.get("name") in ("Write", "Edit", "MultiEdit")):
@@ -3243,6 +3680,7 @@ def _main():
 
     # D-190: the disk check. A verdict file or marked .md that appeared or changed since turn start with no
     # Write or Edit of it this turn was written by something no command-text match can see.
+    cur = None    # audit 14b N02: a snapshot that raised is not a complete scan
     try:
         cur = disk_snapshot(project_dir)
         if cur is not None and DISK_SKIP["partial"]:   # D-294: the check ran, but not everywhere; the Stop says where it did not look
@@ -3250,17 +3688,35 @@ def _main():
                          % DISK_SKIP["partial"])
             extra_notes.add(disk_note)
         if cur is not None:
+            failed_start = None
             try:
                 state = json.load(open(_snap_path(tpath)))
-                if "turn_start" not in state:
+                if isinstance(state, dict) and state.get("failed") and not BRT.other_turn(state.get("turn"), turn["id"]) \
+                        and state.get("root") == project_dir and state.get("session") == payload.get("session_id"):
+                    failed_start = str(state["failed"])       # C5 F1: this turn's start could not be recorded
+                    raise KeyError("failed")
+                if not isinstance(state, dict) or "turn_start" not in state:
                     raise KeyError("turn_start")    # an older hook's file holding only its block count
-                if state.get("root") != project_dir or (state.get("session") and payload.get("session_id")
-                                                         and state.get("session") != payload.get("session_id")):
+                if state.get("root") != project_dir or not state.get("session") or state.get("session") != payload.get("session_id"):
                     raise KeyError("root")          # audit 13 R7: a snapshot of another project or session is not this turn's start
+                if BRT.other_turn(state.get("turn"), turn["id"]):
+                    # D-338 (2.8.5, S5): used only by the turn that made it. One from an earlier turn that is still here could not be
+                    # replaced or removed (a read-only folder, D-323): say so, and use the fallback baseline instead. With no turn id on
+                    # either side (a client that sends none), the 2.8.4 rule above (same project and session) decides, as before.
+                    snap_note = ("the turn-start snapshot %s is from an earlier turn and could not be replaced, so this turn was "
+                                 "checked against its fallback baseline" % _snap_path(tpath))
+                    extra_notes.add(snap_note)
+                    raise KeyError("turn")
                 base = state.get("turn_start") or {}
                 by_bash = {c for e in state.get("after_bash") or [] for c in e.get("changed") or []}
+                snap_state = state
             except Exception:  # D-259 (closed): the fallback baseline is computed instead, and it counts unknown files as changed
-                base, by_bash = _fallback_baseline(project_dir, cur, turn_ts), set()
+                # C5 F1: with the turn's start known to have failed, no file time is trusted (an agent can set one)
+                base, by_bash = _fallback_baseline(project_dir, cur, None if failed_start else turn_ts), set()
+                snap_state = None
+                extra_notes.add(("the turn-start snapshot could not be taken (%s), so files git does not show as clean were counted as "
+                                 "changed" % failed_start) if failed_start else
+                                "no turn-start snapshot of this turn could be used, so this turn was checked against its fallback baseline")
             touched = {os.path.relpath(ap, project_dir) for _i, ap, _c in verdict_file_writes}
             touched |= {os.path.relpath(ap, project_dir) for _i, ap in marked_md_writes}
             for rel in sorted(k for k in cur if base.get(k) != cur[k]):
@@ -3306,16 +3762,21 @@ def _main():
     # (the shell may have changed it); with none, it is not produced by a gate dispatch. D-336: no exception for a file the turn
     # did not change (D-331 is moved to 2.8.5): the hook cannot tell from a command's text which file it touched (its folder).
     bash_paths = set()
-    for ref in bash_verdict_refs:
-        if placeholder_verdict_name(ref):
+    path_calls = {}            # D-341: resolved path -> the calls that named it (None for a name with no call: never excused)
+    for ref0 in bash_verdict_refs:
+        if placeholder_verdict_name(ref0):
             continue           # D-215: `<slug>.verdict.md` in a command's text names no file
-        ref = re.sub(r"\$\{?[A-Za-z_][A-Za-z0-9_]*\}?", "*", ref.strip("'\""))   # `council/$s.verdict.md` in a loop
+        ref = re.sub(r"\$\{?[A-Za-z_][A-Za-z0-9_]*\}?", "*", ref0.strip("'\""))   # `council/$s.verdict.md` in a loop
         base = ref if os.path.isabs(ref) else os.path.join(project_dir, ref)
         found = glob.glob(base) if any(c in ref for c in "*?[") else [base]
-        bash_paths.update(os.path.realpath(f) for f in found)
+        for f in found:
+            bash_paths.add(os.path.realpath(f))
+            path_calls.setdefault(os.path.realpath(f), []).extend(ref_calls.get(ref0) or [None])
     written = {ap for _i, ap, _c in verdict_file_writes}
     verdict_file_writes = [(i, ap, None if ap in bash_paths else c) for i, ap, c in verdict_file_writes]
     for ap in sorted(bash_paths - written):
+        if all(c is not None and safe_read_call(c, turn["id"], snap_state) for c in path_calls.get(ap) or [None]):
+            continue           # D-341: every call that named it was a safe read that changed nothing (its disk check still applies)
         problems.append(
             "'%s': verdict file not produced by a gate dispatch this turn (a Bash command named it and no "
             "Write or Edit made it; verdict files are written with the Write tool so the gate check can read "
@@ -3427,7 +3888,7 @@ def _main():
             """None when the hook's own run of the recorded test command passes and covers the change (D-222, D-227);
             else the problem. The gate's printed output is not read."""
             if not own_run:
-                own_run.update(hook_test_run(project_dir, payload.get("session_id"), turn_ts or "idx%d" % turn_start))
+                own_run.update(hook_test_run(project_dir, payload.get("session_id"), turn_key))   # D-337: the turn's key, never a time
                 extra_notes.update(own_run.get("notes") or [])
                 if not own_run.get("problem"):
                     cmd_ = own_run["cmd"]
@@ -3565,15 +4026,18 @@ def _main():
         # D-295: the block names every problem (the first five, then "and N more") and carries every note
         listed = problems[:5] + (["and %d more" % (len(problems) - 5)] if len(problems) > 5 else [])
         tail = ("\nAlso: " + "; ".join(notes)) if notes else ""
-        n_blocks = bump_stop_blocks(tpath, payload, turn_key)   # D-209, D-322
-        if (n_blocks > MAX_STOP_BLOCKS) if n_blocks is not None else bool(payload.get("stop_hook_active")):   # D-286 (X9): no count kept, so a Stop already bounced once ends loudly
+        n_blocks = bump_stop_blocks(tpath, payload, turn_key, late_invalid, _STOP["key284"])   # D-209, D-322; D-345; D-357
+        spent = n_blocks is None or n_blocks > MAX_STOP_BLOCKS   # audit 14e E05: no count kept ends the turn loudly, never a block
+        if spent and LATE["granted"]:
+            spent = False      # D-345: a distinct late result, not judged before, whose verdict is invalid gets this one block
+        if spent:   # D-286 (X9); audit 14e E05: with no count kept, 2.8.4 may have read its own, so the Stop does not block
             running = [p_.split(":")[0] for p_ in problems if p_.endswith("gate seat still running; wait for its result before ending the turn")]
             if len(running) == len(problems):   # D-220: a gate still running is not a failed verdict
                 print(json.dumps({"systemMessage": "Verdict check INCOMPLETE: %s still running at turn end; this turn "
                                   "is not gated until %s returns.%s" % (", ".join(running), "it" if len(running) == 1 else "they", tail)}))   # D-307
                 return 0
             after = ("after %d blocks this turn" % MAX_STOP_BLOCKS) if n_blocks is not None else \
-                "the block count could not be saved, so after one block this turn"     # D-286 path: say what happened (string gate, 2.8.4)
+                "the block count could not be read or saved, so this Stop does not block;"     # D-286 path, audit 14e E05: say what happened
             print(json.dumps({"systemMessage": "Verdict check FAILED and was not fixed: %s the "
                               "problems remain, so this turn is not gated:\n  - %s%s" % (after, "\n  - ".join(listed), tail)}))
             return 0
@@ -3584,8 +4048,8 @@ def _main():
                        + "\nIf you believe this block is wrong, stop and report it to the human with the "
                          "reason above; do not disable the check."),
         }))
-    elif disk_note:       # D-279: a turn with no gate and no problem still says the disk check was skipped
-        print(json.dumps({"systemMessage": "Verdict check: " + disk_note}))
+    elif disk_note or snap_note:   # D-279: a turn with no gate still says the disk check was skipped; D-338
+        print(json.dumps({"systemMessage": "Verdict check: " + "; ".join(x for x in (disk_note, snap_note) if x)}))
     return 0
 
 

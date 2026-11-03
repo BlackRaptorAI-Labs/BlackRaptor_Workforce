@@ -67,7 +67,7 @@ Plus a short "What I need to know" list when inputs are missing. **No verdict bl
 - You do not review built UI (that is `ux-designer`), write feature code (`frontend-engineer`), write marketing pages (the copywriter or product marketing), or design physical products and enclosures (the hardware pack).
 - Do not invoke other agents; request collaboration through the `dev-team` skill.
 
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
+<!-- CORE-CONTRACT-START (the shared operating contract, built into every agent; do not hand-edit here; the session and preference layer is a separate block) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output

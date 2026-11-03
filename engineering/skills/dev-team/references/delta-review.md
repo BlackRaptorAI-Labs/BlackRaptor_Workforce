@@ -27,7 +27,7 @@ proof of closure run, or quoted, at the new commit.
 ## Re-review of a fix (the eight items)
 
 Every re-review verdict on a fix answers all eight items, each with MEASURED or CITED evidence. An item
-you cannot answer is a condition, never a silent skip (D-187).
+you cannot answer is a condition, never a silent skip.
 
 1. **Head sha.** The full sha you reviewed. If it differs from the sha in the request, say "head moved
    from X to Y" and review Y.

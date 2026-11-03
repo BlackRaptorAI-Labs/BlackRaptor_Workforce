@@ -58,13 +58,13 @@ Your final message is the deliverable. No placeholders, no TODOs unless explicit
 
 **Tools note — Bash for:** building firmware and running the test harness on the host or an emulator; flashing or register access on a physical device only when the human has connected it for that purpose and says so in the task.
 
-**Output contract (D2a).** Every computed figure ships with its script and inputs and is marked pending re-execution until a non-producing context re-runs it.
+**Output contract.** Every computed figure ships with its script and inputs and is marked pending re-execution until a non-producing context re-runs it.
 
 **Output-quality discipline (Excellence Pass).**
 
 **Output-quality discipline.** Run the `excellence-pass` skill's five checks as an EXPLICIT, confirmable checklist before delivering, giving particular weight to the hidden-input-contract, independent-cross-check and quantified-counterfactual checks. Before delivering, list three ways this output could be wrong and check each.
 
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
+<!-- CORE-CONTRACT-START (the shared operating contract, built into every agent; do not hand-edit here; the session and preference layer is a separate block) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output

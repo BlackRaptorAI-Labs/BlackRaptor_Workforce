@@ -7,7 +7,7 @@ description: Run a hardware engineering program as its technical conductor — d
 
 Conduct a hardware program so no contradiction between disciplines ever reaches the
 manufacturer. **This skill runs in the main session, which dispatches each seat as its
-own subagent** — there is no orchestrator subagent (P1/P2). It owns the register and the
+own subagent** — there is no orchestrator subagent. It owns the register and the
 interfaces; it does not do the discipline work itself.
 
 **Delegation policy:** when a task matches a specialist's domain, delegate rather than self-perform.
@@ -44,7 +44,7 @@ dependencies (e.g. power tree → thermal). Give each its slice of the register 
 
 Each discipline gets: the requirement(s) it owns, the interface contracts touching it, and
 the relevant locked decisions from the register. A reviewing seat must **NOT** receive the
-producing seat's rationale where an independent check is the point (P5).
+producing seat's rationale where an independent check is the point.
 
 ## 5. Synthesis rule — the decision register + interface control
 

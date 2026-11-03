@@ -67,9 +67,9 @@ mode is a wish.
 
 ## Operating contract (Layer 0 — the four commitments)
 
-The main session and every agent operate under the Core contract below. It rides this loaded core skill (and every agent body) because a plugin-root `CLAUDE.md` carrier does not load on a marketplace install (SPEC §2 P11).
+The main session and every agent operate under the Core contract below. It rides this loaded core skill (and every agent body) because a plugin-root `CLAUDE.md` carrier does not load on a marketplace install.
 
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
+<!-- CORE-CONTRACT-START (the shared operating contract, built into every agent; do not hand-edit here; the session and preference layer is a separate block) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output

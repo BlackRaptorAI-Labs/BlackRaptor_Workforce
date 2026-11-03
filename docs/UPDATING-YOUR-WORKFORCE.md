@@ -44,10 +44,10 @@ install yourself — so on a marketplace install nothing checked the contract at
 **If it gets in your way, turn it off:** set `BR_VERDICT_HOOK=off` in your environment. When
 disabled, the hook writes one line to stderr. Interactive sessions show it; `claude -p` does not
 surface hook stderr, so on that path check the `BR_VERDICT_HOOK` variable instead. It fails closed on its own
-errors (D-267): a crash blocks the turn with "the verdict check crashed (...): this turn is not gated; report it",
+errors: a crash blocks the turn once with "the verdict check crashed (...): this turn is not gated; report it", and the next stop
+ends the turn with "Verdict check FAILED and was not fixed: ..." (when that block cannot be counted, the turn ends at once with the FAILED message),
 and a missing python3 or helper prints "gates in this turn are NOT checked" on every stop. It judges every stop, including the one after it blocked, so a re-emitted block is checked too; it
-blocks at most 3 times in one turn (4 when the first block came from the shell wrapper answering for a check that could not;
-a damaged background-task notice in the transcript can give one turn a second count of three blocks, a known limit to be fixed in 2.8.5),
+blocks at most 3 times in one turn, plus once for each distinct background result that arrives late with an invalid verdict
 and after that it lets the turn end with a message that starts
 "Verdict check FAILED and was not fixed:", so the failure is on record.
 
@@ -142,6 +142,28 @@ If you start sessions with `ALLOW_TIER3=1` to allow intentional Tier-3 edits, sw
 `BR_CLAIMS_HOOK=off` still work for one hook each. No action needed unless you want it.
 
 ---
+
+## 2.8.5 — what changed, and what you must update
+
+### 1. Update the plugins; some repos also need /workforce-init --upgrade
+
+Update the marketplace and the installed plugins. A repo installed with 2.8.3 or later in plugin mode (the default) that has a
+recorded test command needs no re-run of `/workforce-init`: the hooks run from the plugin. A repo installed in copy mode keeps its
+own copies of the agents and skills, so run `/workforce-init --upgrade` there once, from your own terminal, to copy in the 2.8.5
+versions; each session start says so until you do. A plugin-mode repo installed before 2.8.3, or with no recorded test command,
+also needs `/workforce-init --upgrade` once (add `--test-cmd "<your test command>"` when it has none); its session start says so too.
+
+### 2. What changed in the checks
+
+- A Bash read of a verdict file with `cat`, `head`, `tail`, `wc`, `diff`, `cmp`, `stat` or `ls` no longer blocks in the plain forms
+  the hooks README lists, when the program is the system's own and the call's own record shows it changed nothing; other forms
+  still block, and the README has the exact rule. The client must send a turn id (Claude Code 2.1.310 does). This was measured on
+  macOS only; on Linux it is expected to work the same but was not measured. `grep` of a verdict file still blocks: use the Read tool.
+- A gate result whose dispatch has no agent id blocks the turn.
+- A turn is blocked at most three times, plus once for each distinct background result that arrives late with an invalid verdict.
+  Apart from those, the block count never lets a stop block after 2.8.4's count would have ended the turn, and when the block count cannot be read or saved the
+  turn ends with "Verdict check FAILED" at once.
+- The write gate resolves `cd "$NAME"` when the same command set NAME to a plain value just before.
 
 ## 2.8.4 — what changed, and what you must update
 
@@ -259,7 +281,7 @@ test-runner config put back. The review check reads those two results for the ex
    repo or a paid plan for a private one.
 4. Agents and the build account open pull requests and must not be admins on the repo. You approve every pull
    request and merge it; required checks and your approval gate the merge. GitHub does not let you approve
-   your own pull request, so yours merge by an admin override, which GitHub shows as a bypass. Workforce no longer uses a code-owners file (D-258).
+   your own pull request, so yours merge by an admin override. Workforce no longer uses a code-owners file.
    GitHub counts one approval from anyone with write access. Keep write access to you and one agent or build
    account, so the approval is yours. Record them with `/workforce-init --upgrade --owner-login <your GitHub login>
    --agent-account <build account>`; from your own terminal, `/workforce-doctor` lists everyone with write, maintain or

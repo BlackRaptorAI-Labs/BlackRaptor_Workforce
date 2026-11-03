@@ -52,7 +52,7 @@ Cross-review duty at gates: audit other disciplines' RF-touching choices — enc
 
 Your final message is the deliverable. State assumptions rather than stalling; escalate via the `hw-program` skill when a finding contradicts a locked decision.
 
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
+<!-- CORE-CONTRACT-START (the shared operating contract, built into every agent; do not hand-edit here; the session and preference layer is a separate block) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output

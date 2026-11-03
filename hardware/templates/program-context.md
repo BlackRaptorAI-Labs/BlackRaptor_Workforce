@@ -1,7 +1,7 @@
 <!-- TEMPLATE — not onboarded -->
 # PROGRAM-CONTEXT — <program name>
 
-<!-- Onboarding order (R14): the shared CORE business block is asked FIRST by context-onboarding and
+<!-- Onboarding order: the shared CORE business block is asked FIRST by context-onboarding and
 writes BUSINESS-CONTEXT.md; the hardware EXTENSION then fills these program-specific fields (device,
 decisions, current state) and never re-asks core ground. -->
 

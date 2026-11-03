@@ -50,13 +50,33 @@ RE_TEXT='[^[:space:]]'
 # The text below never holds a quote or a backslash, so it is valid inside a JSON string as it stands.
 say_notice() { printf '{"systemMessage": "%s"}\n' "$1"; }
 say_block() { printf '{"decision": "block", "reason": "This turn cannot be treated as gated:\\n  - %s\\nStop and report it to the human with the reason above; do not disable the check."}\n' "$1"; }
+# D-344 (2.8.5, audit 14Q Q02): a block this wrapper prints is counted. It is recorded as its own new file beside the transcript, made
+# with the shell's no-clobber redirect (an exclusive create: no lock, and no other record can be overwritten or lost); the helper
+# imports each record into the turn's count at the next Stop, under the count's lock. The transcript path is read only from a payload
+# with exactly one literal "transcript_path" key whose value holds no escape (D-340's rule). When no record can be made, the turn ends
+# with the FAILED notice instead of a block, so no block is ever left uncounted.
+RE_TPATH='"transcript_path"[[:space:]]*:[[:space:]]*"([^"\\]+)"'
+RE_TWO_TPATH='"transcript_path"[[:space:]]*:.*"transcript_path"[[:space:]]*:'
+RE_ESC_KEY='"([A-Za-z_]|\\u[0-9A-Fa-f]{4})*\\u[0-9A-Fa-f]{4}([A-Za-z_]|\\u[0-9A-Fa-f]{4})*"[[:space:]]*:'   # a key spelled
+# with \u escapes could be transcript_path a second time (JSON in last_assistant_message never matches: its quotes are escaped)
+record_block() {
+  local tp base
+  [[ $PAYLOAD =~ $RE_TWO_TPATH ]] && return 1
+  [[ $PAYLOAD =~ $RE_ESC_KEY ]] && return 1
+  [[ $PAYLOAD =~ $RE_TPATH ]] || return 1
+  tp="${BASH_REMATCH[1]}"
+  case "$tp" in *.jsonl) base="${tp%.jsonl}" ;; *) base="$tp" ;; esac
+  ( set -C; : > "$base.br-wblock.$$.$RANDOM$SECONDS" ) 2>/dev/null
+}
 fail_closed() {
   if [ "$MODE" = "--snapshot" ]; then
     say_notice "Verdict check: the turn snapshot could not be recorded ($1); the Stop check falls back to counting files it cannot compare as changed."
   elif [[ $PAYLOAD =~ $RE_ACTIVE ]]; then     # D-325 (audit 13R F7): the shell's own match, no grep
     say_notice "Verdict check FAILED and was not fixed: $1"
-  else
+  elif record_block; then
     say_block "$1"
+  else
+    say_notice "Verdict check FAILED and was not fixed: $1; the block could not be counted, so the turn ends here"
   fi
   exit 0
 }

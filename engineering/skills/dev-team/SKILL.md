@@ -7,7 +7,7 @@ description: Run the development team's delivery lifecycle for any non-trivial c
 
 Drive a change from approved spec to verified, gated delivery. **This skill runs in
 the main session, which dispatches each specialist as its own subagent** — there is no
-orchestrator subagent (P1/P2). It holds no content authority: it routes, convenes, and
+orchestrator subagent. It holds no content authority: it routes, convenes, and
 assembles verdicts; it never designs or writes code itself.
 
 **Delegation policy:** when a task matches a specialist's domain, delegate rather than self-perform.
@@ -21,7 +21,7 @@ runs on `/gate-review`, `/pre-merge`, `/red-team` and inside this skill; a gate 
 the main session after a hand edit does not run it, so send any gate after such an edit through
 `/gate-review`.
 
-**Context read-path (repo-native, R10).** Engineering is project-scoped; context lives in the repo:
+**Context read-path (repo-native).** Engineering is project-scoped; context lives in the repo:
 `CLAUDE.md` (auto-loaded, technical) + `BUSINESS-CONTEXT.md` (business) + `USER-PREFS.md` at the repo
 root — update-proof by construction. The Core `prompt-brief` intake runs the Rung-0 context precheck
 at session start. A **bare repo** (no `CLAUDE.md`, no business context) ⇒ `context-onboarding` runs
@@ -31,7 +31,7 @@ repo** ⇒ no welcome; offer a short "review and fill gaps" pass. Same provenanc
 
 ## 2. Seat selection rule — the tier matrix
 
-**Intake first (the ROSTER §6 hand-off).** Requirement intake runs through the Core `prompt-brief`
+**Intake first.** Requirement intake runs through the Core `prompt-brief`
 ladder, which escalates to **`product-manager`** when a change needs a defined problem statement, user
 stories, and acceptance criteria before design — Intake → `product-manager` → `principal-architect`.
 With that brief in hand, start with **`principal-architect`** for the spec on any new feature. Then
@@ -48,7 +48,7 @@ step never depends on prose recall.
 | Audit trail, access control, retention, change management | `compliance-officer` | spec + review |
 | Personal data collected/stored/transferred/sent to an LLM | `privacy-counsel` | spec + review |
 | Data of record underpinning a regulated output | `domain-compliance` | spec + review |
-| Any test missing or weak | `qa-test-engineer` (plan-time strategy, writes the tests), then `completion-auditor` runs the suite or mutation, then `test-auditor` (audit gate) with that MEASURED output as an input — after the run, not alongside it (D-101) | plan + pre-review |
+| Any test missing or weak | `qa-test-engineer` (plan-time strategy, writes the tests), then `completion-auditor` runs the suite or mutation, then `test-auditor` (audit gate) with that MEASURED output as an input — after the run, not alongside it | plan + pre-review |
 | Any migration or schema file, in any framework (for example `prisma/schema.prisma` or `prisma/migrations/`, Alembic `versions/`, Rails `db/migrate/`, Django `*/migrations/`, Flyway or Liquibase changelogs, or a raw `.sql` migration) | `schema-reviewer` (gate; `data-engineer` authors and does not gate its own migration) | review |
 | `/infrastructure/`, `/.github/` change | `infra-reviewer` (gate; `devops-sre` authors and does not gate its own change) | review |
 | UI surface | `ux-designer` | spec + review |
@@ -56,7 +56,7 @@ step never depends on prose recall.
 | Consequential automated/AI-driven/irreversible action | `operational-readiness` | spec + review |
 | Operator-facing workflow readiness | `operational-readiness` | spec + definition-of-done |
 | As-built spec drift | `technical-writer` (checked by `code-reviewer`) | review |
-| Every change, no exception — unconditional, not surface-matched; include it even when the ask is framed as "just the gate wave" or names only the surface-matched gates (D-78) | `code-reviewer` + green CI, then `completion-auditor` last (§8) | review + close |
+| Every change, no exception — unconditional, not surface-matched; include it even when the ask is framed as "just the gate wave" or names only the surface-matched gates | `code-reviewer` + green CI, then `completion-auditor` last (§8) | review + close |
 
 **IP triggers.** Dispatch `ip-counsel` (council pack, if installed; otherwise return the question to
 the human) when the user asks about patents, copyright, trademarks, licences, trade secrets or "can
@@ -82,16 +82,16 @@ dispatched together once the ladder is green (except `test-auditor`, which waits
 `completion-auditor`'s MEASURED run of the suite and gets the ladder table as its input; before it and before
 any `completion-auditor` verdict dispatch, commit and push the branch, `git push -u origin HEAD`, never
 `--force` and never the default branch, because CI is the judge of whether the tests pass and runs on the pushed
-commit, D-252) — **(4)
+commit) — **(4)
 `completion-auditor`** — closes, per §8. Do not open wave *n+1* before wave *n*'s outputs exist; within
 a wave, dispatch concurrently (§5 below).
 
-- **CI decides whether tests pass** (D-252): on a clean machine, for the exact commit. The local check is an
+- **CI decides whether tests pass**: on a clean machine, for the exact commit. The local check is an
   early warning; agents judge whether the tests are strong; the human decides. The final report shows, per
   test-auditor and completion-auditor verdict, the CI state the Stop hook gave: passed, waiting (with the run URL)
   or failed (with the job URL). A waiting gate is not a PASS; a later turn re-reads CI. Never poll in a loop.
 - **Agents never merge.** A person merges once CI and the gates pass. `/workforce-init --setup-branch-protection`
-  asks GitHub to require `head-suite`, `base-suite` and one approving review, the owner's while write access stays with the owner and one agent account (D-253, D-260). Agents
+  asks GitHub to require `head-suite`, `base-suite` and one approving review, the owner's, while write access stays with the owner and one agent account. Agents
   open pull requests as the build or agent account, never as the owner, so the owner can approve them.
 - **A gate's FAIL stops the merge.** Route the FAIL and its stated fix back to the owning producer;
   the producer's fix re-enters wave 2, not wave 3 — a fixed diff is a new build, not a patched review.
@@ -118,9 +118,8 @@ tool) so they run concurrently; sequence only where a real dependency exists (sp
 build → gate review). Give each a context packet (§6). Producers work from the approved
 spec, TDD-style.
 
-**`code-reviewer` is part of every gate wave, dispatched regardless of how the ask is framed
-(D-78).** A request scoped to "just the gate-review wave" or one that names only the
-surface-matched gates does not narrow row 55 of the tier matrix — that row is unconditional, not
+**`code-reviewer` is part of every gate wave, dispatched regardless of how the ask is framed.** A request scoped to "just the gate-review wave" or one that names only the
+surface-matched gates does not narrow the tier matrix's "Every change, no exception" row — that row is unconditional, not
 a surface match, so it is never read out of the selection by the framing of the ask.
 
 **Your final message is the deliverable.** A turn that ends while a dispatched gate is still running
@@ -131,7 +130,7 @@ the turn.
 
 Each gets: the approved spec/plan, the specific surface it owns, and the acceptance
 criteria (the prompt-brief Done-criteria where one exists). A **gate reviewer must NOT
-receive the producer's reasoning** — its fresh-context ignorance is the value (P5).
+receive the producer's reasoning** — its fresh-context ignorance is the value.
 Pass the diff/artifact to the gate, not the author's rationale.
 
 ## 7. Synthesis rule
@@ -173,7 +172,7 @@ missing class coverage, minimum fix or proof of closure.
 `git show <sha>:path`), never the working tree. Before publishing, re-check every Critical and a
 random 10 percent of the other findings yourself, and state the sample.
 
-**Test-quality pairing (D-101).** On every test-quality gate, dispatch `test-auditor` after
+**Test-quality pairing.** On every test-quality gate, dispatch `test-auditor` after
 `completion-auditor` returns: `completion-auditor` executes the run and hands back the MEASURED lines,
 and `test-auditor` judges them. No MEASURED line, no test-quality PASS.
 

@@ -1,5 +1,5 @@
 <!-- TEMPLATE — not onboarded -->
-# Engineering context — extension question set (repo-native, R10)
+# Engineering context — extension question set (repo-native)
 
 The engineering pack's EXTENSION set for the `context-onboarding` interview. Engineering is
 repo-native: the shared CORE block (what it is · who it's for · stage · how money comes in ·

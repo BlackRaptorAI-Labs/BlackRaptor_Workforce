@@ -1,9 +1,9 @@
 # Gate enforcement map (step 3.5) — every gate's recorded enforcement category
 
-> **Sanctioned Rule-3 registry (SPEC §9.2).** This is the one Core reference whose *subject* is the
+> **A sanctioned shared registry.** This is the one Core reference whose *subject* is the
 > gate roster itself, so it names gate-agent slugs by necessity — a capability-vocabulary rewrite
 > would destroy the map. It is the explicit exception the audit named ("mark the registry as the
-> sanctioned exception"); `verify.sh`'s Rule-3 grep skips this file. The names here are a catalogue,
+> sanctioned exception"). The names here are a catalogue,
 > not a dispatch instruction, and confer no cross-pack dependency.
 
 Product-agnostic. For each GATE agent, record HOW it is actually enforced — never overclaim. Three
@@ -21,7 +21,7 @@ claim Mechanical if the paths do not cover the concern.
 
 | Gate agent | category (nature / ruling) | mechanism | gap covered by the discipline step | model | effort |
 |---|---|---|---|---|---|
-| `claims-gate` | **Checklist-only** — *ruled order-8 (8 Aug); mechanism updated A1 (13 Aug)* | **Guaranteed** = the mandatory agent-dispatch step in the `marketing-campaign` skill. **Best-effort** for ad-hoc single assets = an always-on rule on LOADED surfaces (the `compliance-claims-gate` skill + producer descriptions; no hook carries it — the core `SessionStart` hook does onboarding only, and the `UserPromptSubmit` claims hook was removed in 2.2.0) — NOT the plugin-root `CLAUDE.md` carrier, which does not load on a marketplace install (measured, SPEC §2 P11). Known limit: single-asset isolated dispatch is not guaranteed (the model tends to self-review). Marketing assets have no stable CI paths → not Mechanical. | every external claim's proof | `opus` | `high` |
+| `claims-gate` | **Partial** — *recorded 30 Oct 2026 (Checklist-only from 8 Aug 2026, before the 2.1.0 write gate; mechanism updated 13 Aug 2026)* | **Partial mechanical control (2.1.0 on):** in a folder marked with `.br-assets`, the Core `PreToolUse` write hook (`enforce-draft-gate.sh`) refuses a final `.md` until a sibling `.verdict.md` holds a claims-gate PASS that validates; this is a local hook, not a required CI check. **Required step** = the agent-dispatch step in the `marketing-campaign` skill (carried out by the model). **Best-effort** for ad-hoc single assets outside marked folders = an always-on rule on LOADED surfaces (the `compliance-claims-gate` skill + producer descriptions; none of the three Core `SessionStart` hooks (onboarding, session contract, upgrade notice) carries it, and the `UserPromptSubmit` claims hook was removed in 2.2.0) — NOT the plugin-root `CLAUDE.md` carrier, which does not load on a marketplace install. Known limit: single-asset isolated dispatch is not guaranteed (the model tends to self-review). Known paths covered: folders marked with `.br-assets`; anywhere else the discipline step covers it. | every external claim's proof | `opus` | `high` |
 | `code-reviewer` | Mechanical (nature) | required CI review check on PRs | style/architecture judgment beyond CI | `opus` | `high` |
 | `test-auditor` | Checklist-only (quality) | — (read-only; `completion-auditor` supplies the MEASURED runs) | test honesty (tautological/over-mocked) | `opus` | `high` |
 | `schema-reviewer` | Partial (schema) | the Tier-3 hook on migration paths, and the owner's approval | migration safety (expand/contract, lock impact, rollback) | `opus` | `high` |
@@ -39,7 +39,7 @@ claim Mechanical if the paths do not cover the concern.
 | `compliance-cert` | Checklist-only | — | regulatory/cert applicability (opus gate; 5.8 disposition ratified opus 2026-08-12) | `opus` | `high` |
 | `hw-design-reviewer` | Checklist-only | — | adversarial design review before a board spin | `opus` | `high` |
 
-**Model and effort:** the last two columns mirror each gate's agent file (`governance/check_model_tiers.py` fails the build if they drift): every gate is `opus` with `effort: high`.
+**Model and effort:** the last two columns mirror each gate's agent file: every gate is `opus` with `effort: high`.
 
 **Rule:** a gate whose category is Checklist-only must say so — an unenforced "Mechanical" claim is
 the exact overclaim `enforcement-liveness` exists to catch. When an install adds CI paths

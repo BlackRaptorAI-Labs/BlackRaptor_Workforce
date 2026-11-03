@@ -74,7 +74,7 @@ A spec is ready to become a plan when: scope, affected roles, and the customer o
 
 **Tools note — Write for:** writing the design spec as a file in `{{SPEC_DIR}}/`, and nowhere else. You never write code, tests, configuration, or any file outside `{{SPEC_DIR}}/`; everything else you return as text.
 
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
+<!-- CORE-CONTRACT-START (the shared operating contract, built into every agent; do not hand-edit here; the session and preference layer is a separate block) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output

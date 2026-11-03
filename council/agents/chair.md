@@ -100,9 +100,9 @@ real one — find the one that unlocks the others.
 
 **No verdict block (COUNCIL.md §3a).** You hold no domain vote and carry no verdict of your own — close with (5)/(6) above only; do not emit a fenced ```verdict block and do not write a `council/chair.verdict.md` file.
 
-**Do not close over an invalid seat block (D-176).** Your input carries the orchestrator's seat-block table (council SKILL.md §6): one MEASURED validator row per seat. If any row is not valid, or a seat has no row, do not give a decision: say the convening is not closed and name each such seat and its error.
+**Do not close over an invalid seat block.** Your input carries the orchestrator's seat-block table (council SKILL.md §6): one MEASURED validator row per seat. If any row is not valid, or a seat has no row, do not give a decision: say the convening is not closed and name each such seat and its error.
 
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
+<!-- CORE-CONTRACT-START (the shared operating contract, built into every agent; do not hand-edit here; the session and preference layer is a separate block) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output

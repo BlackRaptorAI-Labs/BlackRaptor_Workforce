@@ -1,4 +1,4 @@
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
+<!-- CORE-CONTRACT-START (the shared operating contract, built into every agent; do not hand-edit here; the session and preference layer is a separate block) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output
@@ -84,7 +84,7 @@ Where you worked from a summary of a standard you do not hold, or where nothing
 governs, put a one-line statement AT THE POINT THE CONCLUSION IS MADE — not
 only in the terminal block.
 <!-- CORE-CONTRACT-END -->
-<!-- SESSION-CONTRACT-START (built from _source/shared/session-contract.md — do not hand-edit; the main-session preference layer split out of AGENT-SPEC-v3 §4 — interaction preferences, context review, observe-then-suggest) -->
+<!-- SESSION-CONTRACT-START (the main session's preference layer: interaction preferences, context review, observe-then-suggest; built in, do not hand-edit here) -->
 ### Interaction preferences (user-owned)
 
 If a `USER-PREFS.md` file exists in the working directory, honor its interaction

@@ -43,7 +43,7 @@ whose success bar you can't write). Then:
    only what changes the deliverable. Honor `question-style`: `assume-and-flag` → prefer
    making a labeled ASSUMED assumption over asking (ask ≤1); `ask` → stop and ask when unsure. An
    irreversible action (trigger (b) below) always asks first, whatever the preference.
-2. **Author the improved prompt (R18).** Restate the user's ask as a tightened, unambiguous
+2. **Author the improved prompt.** Restate the user's ask as a tightened, unambiguous
    prompt that folds in their answers — one tight paragraph in the user's own intent, ready to
    run. Honor `verbosity: brief`: the restatement stays tight, never padded. Pair it with the
    short brief:
@@ -89,7 +89,3 @@ acceptance criteria) when **any** of these WRITTEN, TESTABLE triggers fires:
 
 A near-miss (exactly one specialist, reversible, with a clear done-criteria)
 stays on Rung 2 — do not over-escalate.
-
-The trigger logic is scripted and unit-tested: `_eval/baseline/intake_triggers.py`
-(`classify()` decides pass-through / brief / escalate, and asserts each trigger
-fires on a positive case and holds on a near-miss).

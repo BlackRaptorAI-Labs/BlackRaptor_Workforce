@@ -47,13 +47,13 @@ fi
     if [ -f "$offered_marker" ]; then
       instr=""   # already offered once in this project and not taken up — stay silent forever
     else
-      instr="BlackRaptor Workforce onboarding (R15): this looks like a fresh project — no filled context file and no USER-PREFS.md were found at the project root. On the user FIRST message this session, open the first-run welcome via the context-onboarding skill: greet with the W1 welcome and the Set up now / Later choice before other substantive work. Honor Later per R7.1 — if the user already chose Later in a PRIOR session in this project, do NOT re-open the flow; proceed and mark any business assumptions with the ASSUMED provenance label. If this is instead an existing engineering repo with substantial content, offer the R10 review-and-fill-gaps pass rather than the full welcome. This is guidance to you (the agents), not text to show the user verbatim."
+      instr="BlackRaptor Workforce onboarding: this looks like a fresh project — no filled context file and no USER-PREFS.md were found at the project root. On the user's FIRST message this session, open the first-run welcome via the context-onboarding skill: greet with the W1 welcome and the Set up now / Later choice before other substantive work. Honor Later — if the user already chose Later in a PRIOR session in this project, do NOT re-open the flow; proceed and mark any business assumptions with the ASSUMED provenance label. If this is instead an existing engineering repo with substantial content, offer the review-and-fill-gaps pass rather than the full welcome. This is guidance to you (the agents), not text to show the user verbatim."
       mkdir -p .claude 2>/dev/null && : > "$offered_marker" 2>/dev/null
     fi
   elif [ "$ctx" = 1 ] && [ "$prefs" = 0 ]; then
-    instr="BlackRaptor Workforce onboarding (R15): a filled context file exists but USER-PREFS.md is missing. Before substantive work, offer the defaults-first settings round from the context-onboarding skill. Honor Later; do not re-open in the same session if declined. Guidance to you (the agents), not user-facing text."
+    instr="BlackRaptor Workforce onboarding: a filled context file exists but USER-PREFS.md is missing. Before substantive work, offer the defaults-first settings round from the context-onboarding skill. Honor Later; do not re-open in the same session if declined. Guidance to you (the agents), not user-facing text."
   else
-    instr="BlackRaptor Workforce onboarding (R15): USER-PREFS.md exists but no filled context file was found for the pack in use. Before substantive work, run the context interview via the context-onboarding skill (shared core block, then the installed pack extension), writing to the project root. Honor Later; do not re-open in the same session if declined. Guidance to you (the agents), not user-facing text."
+    instr="BlackRaptor Workforce onboarding: USER-PREFS.md exists but no filled context file was found for the pack in use. Before substantive work, run the context interview via the context-onboarding skill (shared core block, then the installed pack extension), writing to the project root. Honor Later; do not re-open in the same session if declined. Guidance to you (the agents), not user-facing text."
   fi
 
   if [ -n "$instr" ]; then

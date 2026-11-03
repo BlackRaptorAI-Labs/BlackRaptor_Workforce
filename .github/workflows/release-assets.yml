@@ -14,10 +14,11 @@ jobs:
       - name: Zip each pack
         run: |
           set -euo pipefail
-          version="${GITHUB_REF_NAME#v}"
           mkdir -p out
+          # Each zip carries its own pack's version, read from that pack's plugin.json; the job fails if one cannot be read.
           for pack in core engineering council marketing hardware; do
             test -d "$pack"
+            version="$(python3 -c 'import json, re, sys; v = json.load(open(sys.argv[1]))["version"]; assert isinstance(v, str) and re.fullmatch(r"[0-9]+[.][0-9]+[.][0-9]+", v), v; print(v)' "$pack/.claude-plugin/plugin.json")"
             zip -qr "out/${pack}-${version}.zip" "$pack"
           done
           ls -l out

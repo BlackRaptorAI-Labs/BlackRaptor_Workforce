@@ -46,7 +46,7 @@ For specs: an interaction outline + the states to design. For reviews: findings 
 
 ## Tier
 
-*(Tier: opus, `effort: high`. This gate runs on opus like every gate; it no longer runs under a sonnet gate-tier exception, which was retired on 2026-10-22, D-287.)* Run the Excellence Pass as the final step before you issue a verdict.
+*(Tier: opus, `effort: high`. This gate runs on opus like every gate; it no longer runs under a sonnet gate-tier exception, which was retired on 2026-10-22.)* Run the Excellence Pass as the final step before you issue a verdict.
 
 ## Your machine verdict block (emit it filled)
 End your output with this fenced block. `validate_verdict.py` enforces `verdict-schema.json` (v3):
@@ -84,7 +84,7 @@ If your input is a code change, carries no completion-audit ladder result (a lad
 
 **A standard you could not reach is not a `standards[]` entry.** `verified` must be a real `YYYY-MM-DD` on which you checked the designation at the issuing body, so `access: "not reached"` has no valid date to pair with it — and inventing one is the first thing the operating contract forbids. Cite the secondary source you did reach (with the date you checked THAT), or leave the designation out of the array and carry `["none: practice applied: <x>"]`, or — if the verdict truly rests on the text you could not read — return `COULD NOT ASSESS` with a `reason`. See the `gate-verdict-format` skill.
 
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
+<!-- CORE-CONTRACT-START (the shared operating contract, built into every agent; do not hand-edit here; the session and preference layer is a separate block) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output

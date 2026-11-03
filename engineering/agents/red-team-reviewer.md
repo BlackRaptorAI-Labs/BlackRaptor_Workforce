@@ -96,7 +96,7 @@ If your input is a code change, carries no completion-audit ladder result (a lad
 
 **A standard you could not reach is not a `standards[]` entry.** `verified` must be a real `YYYY-MM-DD` on which you checked the designation at the issuing body, so `access: "not reached"` has no valid date to pair with it — and inventing one is the first thing the operating contract forbids. Cite the secondary source you did reach (with the date you checked THAT), or leave the designation out of the array and carry `["none: practice applied: <x>"]`, or — if the verdict truly rests on the text you could not read — return `COULD NOT ASSESS` with a `reason`. See the `gate-verdict-format` skill.
 
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
+<!-- CORE-CONTRACT-START (the shared operating contract, built into every agent; do not hand-edit here; the session and preference layer is a separate block) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output

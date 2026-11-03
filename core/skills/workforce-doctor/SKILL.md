@@ -55,7 +55,7 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    missing manifest, a name/version mismatch, or an empty `agents/` or `skills/`.
    Report each pack's agent count as counted from its install folder (`ls <pack>/agents/*.md | wc -l`,
    top level only) and quote the command. Never take a count from a README, a manifest or memory.
-   Then report each gate's model and effort (D-287, D-288). Read the list of gates from the `"gates"` key of the core
+   Then report each gate's model and effort. Read the list of gates from the `"gates"` key of the core
    pack's `skills/gate-verdict-format/verdict-schema.json`; for each gate whose agent file is in an installed pack, read the `model:` and
    `effort:` lines in that file's frontmatter (`sed -n '1,12p' <pack>/agents/<name>.md`) and print one line per gate, `<gate>: model <x>, effort <y>`
    (`effort <none>` when there is no line). Expected: every gate `model opus, effort high`. Also report any agent file in an installed pack whose `model:` line is `best` (the architecture authority of the engineering pack):
@@ -64,7 +64,7 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    Say plainly that this is what the files ask for; the session or the environment (`CLAUDE_CODE_EFFORT_LEVEL`, `CLAUDE_CODE_SUBAGENT_MODEL`)
    can still override it, and the doctor cannot see what a past run used.
 
-4. **Core hooks wiring (R15.4; `blackraptor-core` is always installed).** Five hooks live in the
+4. **Core hooks wiring (`blackraptor-core` is always installed).** Five hooks live in the
    CORE pack: the welcome/onboarding trigger, the session-contract hook and the upgrade notice (all three `SessionStart`; the
    session-contract hook is off unless `BR_SESSION_CONTRACT=on`, and the upgrade notice speaks only when this repo's install is
    older or incomplete, so their silence is expected), the DRAFT/GATED write gate
@@ -81,16 +81,16 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
      (`PreToolUse`), and `core/hooks/validate-verdicts.sh` (`Stop`) are all present **and executable**
      (`test -x`). A hook the client cannot execute is a silently disabled rule.
    - `command -v python3` succeeds, and `core/hooks/validate-verdicts.py`, `core/hooks/enforce-draft-gate.py`
-     and `core/skills/gate-verdict-format/validate_verdict.py` are present (D-267, D-268). The write gate
+     and `core/skills/gate-verdict-format/validate_verdict.py` are present. The write gate
      and the verdict validator run in Python. Without `python3` on PATH, or without one of these files, a gate
      hook cannot run as built: the verdict hook says gates are not checked, or blocks the turn, and the write gate
-     denies writes it would otherwise judge (D-305), so a missing one is a **FAIL**, not an anomaly to note: report
+     denies writes it would otherwise judge, so a missing one is a **FAIL**, not an anomaly to note: report
      `FAIL: the verdict check cannot run (<what is missing>); gates are NOT checked`.
    - the core `plugin.json` does **NOT** declare a `"hooks"` key. On client 2.1.170+ `hooks/hooks.json`
      auto-loads by convention, so declaring it is a fatal "Duplicate hooks file detected" load failure —
      a **blocking** anomaly.
    Report the wiring status for all five hooks; a missing/non-executable hook means that rule won't
-   auto-fire (for onboarding, the in-skill R3/R7 triggers still apply as the backstop) — note it,
+   auto-fire (for onboarding, the in-skill first-run triggers still apply as the backstop) — note it,
    non-blocking.
    Stop-hook scope: the verdict hook checks verdict blocks that a gate dispatched in the turn returned,
    and verdict files written in that turn. It does not check a block the main session writes itself. A
@@ -100,7 +100,7 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    report a quiet Stop hook on a turn with no gate as a defect.
 
 5. **Client version.** Record `claude --version`. Note it in the report — hook-loading and
-   marketplace behavior have varied across client versions. The minimum is 2.1.288 (D-291): compare as version numbers
+   marketplace behavior have varied across client versions. The minimum is 2.1.288: compare as version numbers
    (2.1.99 < 2.1.288 < 2.1.300). An older client is an **ANOMALY (blocking)**, `FAIL: Claude Code <version> is older than
    2.1.288, the minimum Workforce supports: the verdict check reads each agent's own transcript, which was confirmed on 2.1.288 and
    2.1.296 and an older client may not write, and blocks a turn that ran an agent when it cannot find them; update Claude Code`. A version you cannot read is a **WARNING** that says so; never report it as passing.
@@ -111,7 +111,7 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    - **ONBOARDED** — a filled context file is present, has **no** `<!-- TEMPLATE — not onboarded -->`
      first-line marker, and carries a date stamp. Also **count and report the remaining UNKNOWN
      markers** in it (`UNKNOWN — user to provide` / `[unknown]`): a file with unknowns is still
-     ONBOARDED, but report e.g. "ONBOARDED (3 UNKNOWN left)" so the gaps stay visible (R12e).
+     ONBOARDED, but report e.g. "ONBOARDED (3 UNKNOWN left)" so the gaps stay visible.
    - **TEMPLATE** — the template marker is present (onboarding has not been run).
    - **MISSING** — no context file found at the resolved location.
    Expected file names at the project root: `BUSINESS-CONTEXT.md` (council), `MARKETING-CONTEXT.md`
@@ -157,7 +157,7 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    repo root is the fix. Exception: if `.claude/workforce-installed.json` says `"mode": "user"`, the user
    chose not to put these files in the repo; report them as a **WARNING** (the Tier-3 hook and the Change
    Record CI check are not running here), not an anomaly.
-   **Then compare each enforcement file with the pack's (D-191).** Present does not mean intact: a repo copy
+   **Then compare each enforcement file with the pack's.** Present does not mean intact: a repo copy
    that differs from the pack's can switch a check off while it still exists. Read `core_root` and
    `engineering_root` from `.claude/workforce-installed.json`, and run `shasum -a 256` on each pair:
    `.claude/hooks/protect-tier3.py` with `<engineering_root>/claude/hooks/protect-tier3.py`;
@@ -178,7 +178,7 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    return COULD NOT ASSESS on any gate-critical value they cannot read. Fix: relaunch from the project
    root, or run `context-onboarding` to create the file. (Check 6 still reports per-pack state.)
 
-11. **Sandbox (D-223).** Read `sandbox.enabled` from `.claude/settings.local.json`, then
+11. **Sandbox.** Read `sandbox.enabled` from `.claude/settings.local.json`, then
    `.claude/settings.json`, then `~/.claude/settings.json` (the first file that sets it wins; quote the
    file and the value). Unset or `false` is an **ANOMALY (blocking)** whose first line reads
    `FAIL: sandbox off: enforcement files are not protected without the sandbox; hooks still run, but an agent with a shell can edit them`;
@@ -196,7 +196,7 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    line and say the sandbox must be turned on per user (`/sandbox`). The sandbox covers shell commands only;
    hooks run outside it.
 
-12. **Test command, tamper baseline and runner config (D-222, D-231, D-233, D-239, D-245, D-246).** Read
+12. **Test command, tamper baseline and runner config.** Read
    `test_cmd` (one command, or a list of commands that must each pass) and `test_timeout` from
    `.claude/workforce-installed.json` and quote them. In plugin mode, no `test_cmd` is an
    **ANOMALY (blocking)** whose first line reads
@@ -220,7 +220,7 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    "copy mode checks the test runner config against the base branch, not a protected baseline; this is
    weaker, because an agent can rewrite git refs".
 
-13. **CI judge and merge protection (D-251 to D-254, D-260; engineering pack, plugin or copy mode).** Run
+13. **CI judge and merge protection (engineering pack, plugin or copy mode).** Run
    `python3 <core_root>/hooks/validate-verdicts.py --ci-status <repo>` (`core_root` from
    `.claude/workforce-installed.json`; in copy mode the core plugin's own folder) and quote its JSON. It
    reads the workflow file against the recorded hash and, through `gh`, the default branch's required checks
@@ -239,15 +239,15 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
    - `branch_protection.requires_both` false: an **ANOMALY (blocking)**,
      `FAIL: branch protection on <branch> does not require head-suite and base-suite: run /workforce-init --setup-branch-protection from your own terminal`.
      A `branch_protection.error` (gh missing, not signed in, offline) is a **WARNING** naming it. Inside Claude
-     Code's sandbox on macOS, gh cannot verify GitHub's certificate (measured: `_eval/reviews/PATCH-283-STATE.md`, the C-5 doctor probe), so the error says "run it from
+     Code's sandbox on macOS, gh may be unable to verify GitHub's certificate, so the error says "run it from
      your own terminal": give the user the exact command, `python3 <core_root>/hooks/validate-verdicts.py
      --ci-status <repo>`, and report branch protection as not checked, never as passing.
    - `branch_protection.reviews_readable` true and `required_approving_review_count` below 1 or
-     `dismiss_stale_reviews` false: an **ANOMALY (blocking)** (D-260),
+     `dismiss_stale_reviews` false: an **ANOMALY (blocking)**,
      `FAIL: branch protection on <branch> does not require one approving review with stale approvals dismissed: run /workforce-init --setup-branch-protection from your own terminal`.
      Workforce uses no code-owners file and does not ask about one. The approval is the owner's only while write access stays with the
      owner and one agent account (see `writers` and `actions_approve` below).
-   - `branch_protection.strict` false (read, so an admin login or a ruleset): an **ANOMALY (blocking)** (D-276; audit 9V W11),
+   - `branch_protection.strict` false (read, so an admin login or a ruleset): an **ANOMALY (blocking)**,
      `FAIL: branch protection on <branch> does not require branches to be up to date before merging: run /workforce-init --setup-branch-protection from your own terminal`.
      Without it a pull request can merge after the base moved, on checks that ran against an older base.
    - `branch_protection.require_last_push_approval` false (read): a **WARNING**,
@@ -256,9 +256,9 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
      GitHub login to read; run `python3 <core_root>/hooks/validate-verdicts.py --ci-status <repo>` from your
      own terminal". Report them as not checked, never as passing.
    - `branch_protection.enforce_admins` (when read): an **INFO** line, "enforce_admins is <value>: false lets an
-     admin (the owner) merge their own pull request by an override GitHub shows as a bypass; true makes every
+     admin (the owner) merge their own pull request by an admin override; true makes every
      admin wait for an approval too." Quote `strict` the same way (true: the branch must be up to date first).
-   - `writers` (D-273). GitHub counts one approval from anyone with write access, so the approval is the owner's only
+   - `writers`. GitHub counts one approval from anyone with write access, so the approval is the owner's only
      while write, maintain and admin access stay with the owner and the one agent or build account the install recorded
      (`owner_login`, `agent_accounts` in `.claude/workforce-installed.json`):
      - `writers.readable` false: a **WARNING**, "who has write access to <repo> cannot be read with this GitHub login
@@ -271,17 +271,17 @@ Work through these and collect anomalies as you go. Report **PASS** only if ever
        `FAIL: <logins> have write, maintain or admin access to <repo> and are not the recorded owner or agent accounts: GitHub counts one approval from anyone with write access, so remove them or record them with /workforce-init --upgrade --agent-account`.
      - otherwise an **INFO**: "write access: <logins>; all are the recorded owner or agent accounts." When `truncated`
        is true add "(100 collaborators or more: only the first 100 were read)".
-     - `writers.multiple_agents` true (D-283): a **WARNING**, "more than one account besides the owner has write access
+     - `writers.multiple_agents` true: a **WARNING**, "more than one account besides the owner has write access
        (<logins>): one agent can approve another's pull request, so the approval is no longer only the owner's; keep one agent account".
-   - `actions_approve` (D-283; reading it needs an admin login):
+   - `actions_approve` (reading it needs an admin login):
      - `can_approve` true: an **ANOMALY (blocking)**,
        `FAIL: GitHub Actions can approve pull requests on <repo>: turn off "Allow GitHub Actions to create and approve pull requests" (Settings, Actions, General, Workflow permissions); a workflow's approval would count as the one approval`.
      - `readable` false: a **WARNING**, "whether GitHub Actions can approve pull requests on <repo> needs an admin GitHub login to read;
        run `python3 <core_root>/hooks/validate-verdicts.py --ci-status <repo>` from your own terminal". Never report it as passing.
-   - `disk_check.skipped` true (D-279): a **WARNING**, "the disk check would be skipped on this repo (<reason>): verdict files and
+   - `disk_check.skipped` true: a **WARNING**, "the disk check would be skipped on this repo (<reason>): verdict files and
      marked assets written outside the Write tool are not checked; the verdict hook says so on every turn it skips". The reason
-     names a folder it cannot read when that is the cause (D-289). `skipped` false: nothing to report.
-   - `disk_check.partial` set (D-294): a **WARNING**, "the disk check's search for marked folders inside git-ignored folders
+     names a folder it cannot read when that is the cause. `skipped` false: nothing to report.
+   - `disk_check.partial` set: a **WARNING**, "the disk check's search for marked folders inside git-ignored folders
      stops short on this repo (<partial>): a marked asset there that a script or shell command wrote may not be caught; the verdict
      hook says so on every turn". Empty: nothing to report.
    - Quote `judge.msg` for HEAD as a note (CI passed, waiting, failed, or why it was not read).

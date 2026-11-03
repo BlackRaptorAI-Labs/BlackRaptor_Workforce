@@ -971,7 +971,7 @@ def do_setup_branch_protection(repo, args):
     say("branch protection set on %s/%s %s: head-suite and base-suite required (GitHub Actions, up to date with the "
         "base), one approving review required, stale approvals dismissed, the last push approved; admins can override "
         "(that is how the owner merges their own pull request). GitHub counts one approval from anyone with write access: keep write "
-        "access to you and one agent or build account, so the approval is yours; /workforce-doctor lists who has it (D-273)"
+        "access to you and one agent or build account, so the approval is yours; /workforce-doctor lists who has it"
         % (gr[0], gr[1], branch))
     return 0
 
@@ -1444,11 +1444,11 @@ def finish_notes(repo, packs, rec, mode, sandbox, args, by):
                 "terminal): /workforce-init --setup-branch-protection, which runs:\n" + protection_command(gr[0], gr[1], "<default branch>"))
             if rec.get("owner_login"):
                 say("approval: GitHub counts one approval from anyone with write access. Keep write access to %s and one agent or build "
-                    "account (%s), so the approval is yours; /workforce-doctor lists who has it (D-273)."
+                    "account (%s), so the approval is yours; /workforce-doctor lists who has it."
                     % (rec["owner_login"], ", ".join(rec.get("agent_accounts") or ["none recorded"])))
             else:
                 say("approval: GitHub counts one approval from anyone with write access. Record whose it is, so /workforce-doctor can check who has "
-                    "write access: /workforce-init --upgrade --owner-login <your GitHub login> --agent-account <build account> (D-273)")
+                    "write access: /workforce-init --upgrade --owner-login <your GitHub login> --agent-account <build account>")
         else:
             say("note: no GitHub remote: a test-auditor or completion-auditor PASS stays INCOMPLETE (no CI judge) until "
                 "the repo is on GitHub with Actions on, or you run /workforce-init --upgrade --no-ci-judge")
@@ -1631,19 +1631,19 @@ def main(argv=None):
     ap.add_argument("--accept-runner-config", action="store_true",
                     help="plugin mode: record the test runner config as it is now (after you reviewed a change)")
     ap.add_argument("--test-glob", action="append",
-                    help="a test-file glob for workforce-proof's base-suite; give it more than once (D-251)")
+                    help="a test-file glob for workforce-proof's base-suite; give it more than once")
     ap.add_argument("--no-ci-judge", action="store_true",
-                    help="no GitHub Actions: this machine's check is the judge, which an agent can fake (D-254)")
+                    help="no GitHub Actions: this machine's check is the judge, which an agent can fake")
     ap.add_argument("--ci-judge", action="store_true", help="turn the CI judge back on after --no-ci-judge")
     ap.add_argument("--setup-branch-protection", action="store_true",
-                    help="from your own terminal: require workforce-proof's two checks and the owner's approval (D-253, D-260)")
-    ap.add_argument("--owner-login", help="your GitHub login: write access should stay with you and one agent account, so the approval is yours (recorded; the doctor checks who has write access, D-273, D-283)")
+                    help="from your own terminal: require workforce-proof's two checks and the owner's approval")
+    ap.add_argument("--owner-login", help="your GitHub login: write access should stay with you and one agent account, so the approval is yours (recorded; the doctor checks who has write access)")
     ap.add_argument("--agent-account", action="append",
-                    help="the GitHub login of the agent or build account that has write access (use one account; the doctor warns when more than one has it; recorded, D-273, D-283)")
+                    help="the GitHub login of the agent or build account that has write access (use one account; the doctor warns when more than one has it; recorded)")
     ap.add_argument("--test-timeout", type=int, help="seconds the Stop hook's own test run may take (default 300)")
     ap.add_argument("--plugin-data", help=argparse.SUPPRESS)   # test only: the core plugin's data folder
     ap.add_argument("--test-cmd", action="append",
-                    help="the test command the Stop hook runs; give it more than once for several (D-246)")
+                    help="the test command the Stop hook runs; give it more than once for several")
     ap.add_argument("--lint-cmd")
     ap.add_argument("--typecheck-cmd")
     ap.add_argument("--suggest", action="store_true", help="print what was found and the suggested answers as JSON")

@@ -1,3 +1,27 @@
+## 2.8.5 — 2026-11-02 — A plain shell read of a verdict file no longer blocks (on a client that sends a turn id)
+
+A Bash read of a verdict file no longer blocks the turn in the plain forms the hooks README lists (`cat`, `head`, `tail`, `wc`, `diff`, `cmp`, `stat`, `ls` of the file): the program must be the system's own, the client must send a turn id (Claude Code 2.1.310 does), the call must have its own complete record showing it changed nothing, no other call's record may have been taken while it ran, and it must not run in the background. Other forms still block. A shell `grep` that names a verdict file still blocks, on every client; use the Read tool. The safe-read rule was measured on macOS only; on Linux it is expected to work the same but was not measured.
+
+A turn is blocked at most three times in all, including a block the shell wrapper prints when the check could not answer, plus once for each distinct background result that arrives late with an invalid verdict; the same result delivered twice gets one. A stop whose turn cannot be read counts against the turn this session last counted, so a turn can end sooner, never later. Apart from those late-result checks, the block count never lets a stop block after 2.8.4's count would have ended the turn: the hook also keeps the count 2.8.4 would have kept, and the larger of the two counts decides. When the count cannot be read or saved, the turn ends with "Verdict check FAILED" at once, with no block.
+
+The two gate hooks now read the turn from one shared module, so a background-task notice with no text no longer starts a new turn, which in 2.8.4 let an invalid verdict written before it go unblocked, and the write gate compares times as moments, so a time written with a time-zone offset is read correctly.
+
+When Claude Code sends a turn id (2.1.310 does), a turn-start snapshot is used only by the turn that made it; one an earlier turn left behind that could not be replaced is named on the stop instead of being used. Without a turn id, the 2.8.4 rule still applies: the snapshot is used when it is from the same project and session.
+
+A gate result whose dispatch has no agent id now blocks the turn ("the agent id of the <gate> dispatch ..."), because that agent's own writes could not be read.
+
+The marked-folder search inside git-ignored folders has no depth limit and covers up to 200,000 entries; past that it says a marked folder there may not have been found. It never searches `.git`, `node_modules`, Python environment folders (`.venv`, `venv`, `.tox`) or cache folders (`__pycache__`, `.pytest_cache`, `.mypy_cache`), at any level.
+
+A `cd "$NAME"` is resolved when the same command set NAME to a plain value just before; two command shapes that hid a `cd` from the write gate (a `cd` after a command substitution, or after an assignment on the same line) are now seen and judged.
+
+When the write gate's helper cannot answer, it also denies a Write, Edit or MultiEdit through a link or into a marked folder, and a shell call it cannot read with certainty (more than one command field, an escaped character, or over 64 KB).
+
+The gate enforcement map now records `claims-gate` as Partial, not Checklist-only: in a folder marked with `.br-assets`, the write gate refuses a final `.md` until a claims-gate PASS that validates sits beside it, and the map names that hook (a local hook, not a required CI check).
+
+The first-run onboarding message the session start gives the agents now reads "On the user's FIRST message" (it read "On the user FIRST message").
+
+The READMEs, changelogs, agents, skill instructions, commands and pack descriptions no longer cite decision numbers, internal spec codes or the maintainers' private test records. Comments inside the hook, installer, validator and CI workflow code, and the verdict schema's version notes and its test fixtures, keep their maintainer notes.
+
 ## 2.8.4 — 2026-10-26 — More checks that skip or fail now say so
 
 Plugin installs from 2.8.3 that have a recorded test command need no /workforce-init re-run; a copy-mode repo is told at each session start, until you run /workforce-init --upgrade there, that its copies of the agents and skills are older than the packs. Claude Code 2.1.288 or newer is now required.
@@ -299,26 +323,23 @@ repo; the doctor tells you when your repo copies are behind.
 
 ### Fixed
 - **The Stop hook now finds a council seat's or the claims gate's verdict when it was written to a
-  file instead of echoed inline (D-57).** The hook could previously tell a standalone gate dispatch
+  file instead of echoed inline.** The hook could previously tell a standalone gate dispatch
   from a seat in a council convening only by name, and a seat's `council/<slug>.verdict.md` write
   did not satisfy it — a false block. It now checks, in order: an inline fenced verdict block; a
   council seat's `.verdict.md` file; for `claims-gate` only, a `.verdict.md` beside its `.DRAFT.md`.
   `verdict-schema.json` and `validate_verdict.py` are unchanged — only where the hook looks changed.
-- **A directional ordering bug in that same fix, caught live in the first re-test (D-60).** The
+- **A directional ordering bug in that same fix, caught live in the first re-test.** The
   file-lookup branch required the DRAFT write to happen at or after the gate's own dispatch, but the
   real workflow writes the draft BEFORE the gate ever runs, so the branch could never pass. Fixed by
   dropping the ordering constraint on the DRAFT write while keeping it on the verdict file itself.
 - **The hook now reads a gate seat's result from its background-task notification, and waits for a
-  seat still running instead of treating it as missing (D-65).** Claude Code can dispatch a subagent
+  seat still running instead of treating it as missing.** Claude Code can dispatch a subagent
   in the background and deliver its result later as a notification; the hook previously saw only the
   dispatch's immediate placeholder result and blocked every backgrounded seat. It now reads the
   notification's completed text, and if a seat has not finished when the turn is about to end, it
   blocks with a plain "gate seat still running; wait for its result" reason instead of a false "no
-  verdict found." See `UPDATING-YOUR-WORKFORCE.md` for the plain-language version. Ref:
-  `docs/workforce-state.md` D-65. The fixture proving this (`run_fixture_d65.py`) lives in this
-  repository's `_eval/` tree, which does not ship; a live empirical re-run against a real council
-  convening is still open (tracked in `docs/workforce-state.md`, condition (iii)) and has no
-  dossier section yet.
+  verdict found." See `UPDATING-YOUR-WORKFORCE.md` for the plain-language version. A live re-run
+  against a real council convening was still open at this release.
 
 ### Added
 - **The DRAFT/GATED convention for external-facing marketing copy is now mechanical**, not just
@@ -329,32 +350,11 @@ repo; the doctor tells you when your repo copies are behind.
   Two enforcement-liveness fixtures prove it (block ungated, permit gated, inert unmarked). New kill
   switch: `BR_CLAIMS_HOOK=off`. See `UPDATING-YOUR-WORKFORCE.md`.
 
-### Measured, not fixed
-- Two isolated malformed verdict-block emissions surfaced live during Phase 2 testing, in agents
-  shipped by other packs: `compliance-cert` (hardware pack, D-53) and `ethics-governance` (council
-  pack, D-54). Both are single JSON-syntax defects in the model's own output — a missing array
-  bracket and a blank `standards[]` entry — not hook or schema bugs. Tracked as measured,
-  self-measured contract-compliance rates internal to this test programme, not an independent or
-  audited figure: 32/33 verdict blocks schema-valid and 17/18, not treated as shipped fixes. The raw
-  `runs.jsonl` records live in this repository's `_eval/` tree, which does not ship; the figures are
-  reproduced in `docs/TEST-BATTERY-DOSSIER.md` §6(c) result (32/33) and §6(d) result (17/18).
+### Withdrawn note
+- Withdrawn in 2.8.5: a note on how often two agents in other packs (`compliance-cert` and `ethics-governance`) wrote a malformed verdict block, with its figures, rested on test records that do not ship, so it is not repeated.
 
-### Build-process notes (not shipped)
-- **D-71: a metered test run breached the foreground-only rule a third time and was killed mid-run
-  by the session's own background-task timeout, losing uncommitted records.** Not a product defect —
-  the loop runner (`_eval/loop/br-build-loop.sh`) and every metered-run script in this repository's
-  `_eval/baseline/` tree now print "FOREGROUND ONLY" as their first line and write a `.heartbeat`
-  file every 30s while running; the runner also exports `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0` as
-  a safety net so a breach does not lose records again (not a licence — the foreground rule still
-  stands). None of this ships; it governs how this release's own tests are run. Ref:
-  `docs/workforce-state.md` D-71.
-- **D-72: the string-gate test tool had the same class of blind spot as D-65, in its own code
-  rather than the shipped hook.** `run_string_gate.py` (also `_eval/baseline/`, not shipped) read
-  only a dispatch's final result text for the verdict block; a run whose gate seat completed in the
-  background left the real verdict only in the task notification, and the tool reported `verdict:
-  null` even though the dispatch had genuinely finished. Fixed the same way as D-65: read the
-  notification summary first, falling back to the final result text. Ref: `docs/workforce-state.md`
-  D-72.
+### Build-process notes
+- Withdrawn in 2.8.5: these notes described the maintainers' own test tooling, which does not ship.
 
 ## Corrections — 3 Sep 2026
 
@@ -362,27 +362,24 @@ The pre-release claims gate for 2.0.0 found published statements this pack could
 substantiate. They are retracted or qualified here rather than edited out of the entries below,
 which stay as written.
 
-- **Retracted: the model-gap study.** Several surfaces cited "a small-N, non-blind model-gap study
-  recorded in the maintainers' test-battery dossier" and reported findings from it — that Sonnet's
+- **Retracted: the model-gap study.** Several places cited a "small-N, non-blind model-gap" study or test
+  and reported findings from it — that Sonnet's
   gaps concentrated in the Excellence Pass checks, that Opus was at near-parity, that a
-  4-task x 3-model side-by-side test established which behaviours separate the tiers. **No such
-  record exists** in the dossier, in `_eval/`, or anywhere else. Every statement resting on it is
+  4-task x 3-model side-by-side test established which behaviours separate the tiers. **No record of
+  it could be found.** Every statement resting on it is
   removed across the operating standard, the `excellence-pass` skill, the per-tier notes and the
   shared output-quality lines carried by individual agents. The five Excellence Pass checks
   themselves are unchanged and stand on being cheap, self-evidently good practice — which is the
   only claim now made for them.
 - **Corrected: the release validation stamp.** Its basis line said the "agent-trigger eval sets"
-  were run for this release. They were not: T-A is deferred to Phase 3. The stamp now names only
-  what ran — T-C gate liveness on the 20-artifact seeded-defect corpus (n=3, before and after,
-  2026-09-02) and the agent-behaviour eval set (19 sets / 53 scenarios, 2026-09-03), both on
-  `claude-opus-4-8` under Claude Code 2.1.258 — and says plainly that T-A was not run.
+  were run for this release. They were not. The figures this entry once gave for what did run are not
+  repeated here.
 - **Corrected: the verdict-hook kill switch.** The upgrade guide said the hook "prints one line to
   stderr when disabled, so you can always tell whether it is on". Measured behaviour: interactive
   sessions show that line, `claude -p` does not surface hook stderr. On that path, check the
   `BR_VERDICT_HOOK` variable instead.
 - **Corrected: hand-typed roster counts removed from the pack manifests.** A manifest described the
-  Core pack as "seven cross-cutting agents". Counts now come from the built tree only, and
-  `verify.sh [MAN]` fails the build if one reappears in a manifest.
+  Core pack as "seven cross-cutting agents". Counts now come from the built tree only.
 
 ## 2.0.0 — 2026-09-02 — One verdict contract, live enforcement
 
@@ -475,7 +472,7 @@ skills those teams share.
 - **`clean-output`** — a new Core skill: keeps AI-attribution boilerplate and authoring-tool fingerprints out of delivered documents/commits. Hard boundary: it never removes the Claude text watermark or C2PA image credentials.
 - **`content-craft` extended** (now Core): a human-voice avoid-list (`references/ai-tells.md`, on-demand), a structure menu that auto-selects by deliverable type (Minto for analytical), rhythm rules, match-length-to-ask, and a refresh rule.
 - **state-file v2**: per-workstream `<slug>-state.md`, done-condition-first, ADR-disciplined decisions (immutable, supersede-not-edit), merge/tombstone rules, `STATE-INDEX.md`, and doctor staleness reporting.
-- **R15 welcome/onboarding trigger hook** (Core `UserPromptSubmit`): fires the first-run welcome even on a bare "hello", silent once onboarded, fail-open. workforce-doctor gains the hook-wiring check.
+- **Welcome/onboarding trigger hook** (Core `UserPromptSubmit`): fires the first-run welcome even on a bare "hello", silent once onboarded, fail-open. workforce-doctor gains the hook-wiring check.
 - **Change-record template is roster-neutral** — it names gate ROLES; each team pack ships a `seat-list.md` (role→agent), guarded by a new `[SEAT]` check.
 
 ### Changed
@@ -484,16 +481,16 @@ skills those teams share.
 ## [1.0.4] — 2026-08-20
 
 ### Added
-- **First-run welcome & interview experience (R7–R14).** `context-onboarding` now opens with a welcome (buttons "Set up now" / "Later"), runs a shared CORE interview block (seven topics) then the pack's extension set, states the effort up front, ends with a closing summary + an offer to start work, and can be deferred at any point with "Later" (partial save, resume later). Cross-pack reuse skips the core block when a business layer already exists.
-- **Preferences wired up (R13).** The Core contract's interaction-preferences directive goes from four honored dimensions to **seven** (reading level, verbosity, question style, checkpoint frequency, decisions grouping, context-review cadence, units) plus optional `role`/`declined`/`offered`; adds the in-session context-review reminder (R13.2) and the observe-then-suggest tuning rules (R13.4). The `set-preferences` skill and `prefs_conformance.py` (new `validate` mode) cover all seven keys.
-- `workforce-doctor` check 6 now reports the remaining UNKNOWN count for ONBOARDED files (R12e).
+- **First-run welcome & interview experience.** `context-onboarding` now opens with a welcome (buttons "Set up now" / "Later"), runs a shared CORE interview block (seven topics) then the pack's extension set, states the effort up front, ends with a closing summary + an offer to start work, and can be deferred at any point with "Later" (partial save, resume later). Cross-pack reuse skips the core block when a business layer already exists.
+- **Preferences wired up.** The Core contract's interaction-preferences directive goes from four honored dimensions to **seven** (reading level, verbosity, question style, checkpoint frequency, decisions grouping, context-review cadence, units) plus optional `role`/`declined`/`offered`; adds the in-session context-review reminder and the observe-then-suggest tuning rules.
+- `workforce-doctor` check 6 now reports the remaining UNKNOWN count for ONBOARDED files.
 
 ## [1.0.3] — 2026-08-19
 
 ### Added
-- **`context-onboarding`** — a new shared Core skill (ships to all five packs): one standardized interview that teaches a pack your company/project before substantive work. Choice-first (questions / documents / mix), document-fed with per-entry provenance, clarifiers only for gaps and conflicts, approval before writing, and a dated file with a Sources section at your **project root** (never inside the pack, so pack updates cannot overwrite it). Opens with owner-ratified verbatim copy; later material produces proposed diffs, never silent rewrites (R5/R6).
-- **`prompt-brief`** gains a Rung-0 context precheck: before context-dependent work, resolve the pack's context file per the resolution order; missing or still-template ⇒ run `context-onboarding` first (R3).
-- **`workforce-doctor`** gains **check 6 — context onboarding**: reports each pack's context state ONBOARDED / TEMPLATE / MISSING. Non-blocking/cosmetic (R4).
+- **`context-onboarding`** — a new shared Core skill (ships to all five packs): one standardized interview that teaches a pack your company/project before substantive work. Choice-first (questions / documents / mix), document-fed with per-entry provenance, clarifiers only for gaps and conflicts, approval before writing, and a dated file with a Sources section at your **project root** (never inside the pack, so pack updates cannot overwrite it). Opens with owner-ratified verbatim copy; later material produces proposed diffs, never silent rewrites.
+- **`prompt-brief`** gains a Rung-0 context precheck: before context-dependent work, resolve the pack's context file per the resolution order; missing or still-template ⇒ run `context-onboarding` first.
+- **`workforce-doctor`** gains **check 6 — context onboarding**: reports each pack's context state ONBOARDED / TEMPLATE / MISSING. Non-blocking/cosmetic.
 
 ## [1.0.2] — 2026-08-18
 

@@ -9,14 +9,14 @@ installed; you do not wire anything yourself.
 | `inject-session-contract.sh` | `SessionStart` | Off by default. With `BR_SESSION_CONTRACT=on` it adds the session contract (honor `USER-PREFS.md`, the context-review reminder, at most one preference suggestion per session) to each session, at a cost of about 270 tokens per turn. | 10 s |
 | `upgrade-notice.sh` | `SessionStart` | When this repo's install record is older than 2.8.3 (the last release that changed a plugin-mode install) or has no test command, tells you once per session: "Workforce <version> needs /workforce-init --upgrade in this repo (run it from your own terminal). Until then test-auditor and completion-auditor passes may be blocked." In copy mode, when the repo's copies of the agents and skills are older than the packs, it says so and asks for the same command. In plugin mode it also says when this machine has no tamper baseline for the repo. Silent otherwise. | 10 s |
 | `enforce-draft-gate.sh` | `PreToolUse` (Write, Edit, MultiEdit, Bash) | In a folder marked for marketing assets, blocks writing a final `.md`, with the Write tool or a shell command (cp, mv, a redirect, an archive extract), until a sibling `.verdict.md` holds a claims-gate PASS that validates and was written in the same turn (an approval from an earlier turn does not clear new copy). Everywhere, blocks a Bash command that names the `.verdict.md` file it writes in a form it parses (a redirect, tee, cp or mv, sed -i, dd, an interpreter's -c text; not curl -o, touch or awk, which the stop catches where its disk check runs): verdict files are written with the Write tool so the gate check can read them. Where it cannot tell whether a folder is marked (its own check cannot run, or a `cd` it cannot resolve), it denies a `.md` write anywhere; "Turning them off" below has the exact rule. | 10 s |
-| `validate-verdicts.sh` | `Stop`; also `UserPromptSubmit` and `PostToolUse` (Bash) to record verdict and asset files on disk | When a turn dispatched a gate agent, the stop blocks the turn until that gate's verdict block validates, at most three times; then the turn ends with "Verdict check FAILED". A verdict block must name the agent that returned it. A verdict file, or an asset under a marked folder, that appeared or changed in the turn with no Write or Edit of it blocks the turn where the disk check runs (where it is skipped or partial, the stop says so). A test-auditor or completion-auditor PASS is checked by the hook's own run of your test command. | 900 s (Stop; it may run your tests), 20 s (snapshots) |
+| `validate-verdicts.sh` | `Stop`; also `UserPromptSubmit` and `PostToolUse` (Bash, Write, Edit, MultiEdit) to record verdict and asset files on disk | When a turn dispatched a gate agent, the stop blocks the turn until that gate's verdict block validates, at most three times (once more for each background result that arrives late with an invalid verdict); then the turn ends with "Verdict check FAILED". A verdict block must name the agent that returned it. A verdict file, or an asset under a marked folder, that appeared or changed in the turn with no Write or Edit of it blocks the turn where the disk check runs (where it is skipped or partial, the stop says so). A test-auditor or completion-auditor PASS is checked by the hook's own run of your test command. | 900 s (Stop; it may run your tests), 20 s (snapshots) |
 
 ## What the hooks can and cannot do
 
 Hooks catch honest mistakes and shortcuts; they are not a security boundary on their own. With the sandbox
 on, the enforcement files are protected: no agent's shell command can write them (measured on Claude Code
 2.1.296 for the main session, the built-in general-purpose and `claude` agents, and every pack agent with a
-shell: `_eval/proofs/2026-10-patch283/amendment4/p0/p0-table.md`, `_eval/proofs/2026-10-patch283/amendment5/l1/l1-table.md`). `/workforce-init` turns the sandbox on by default. CI decides whether tests pass, on a clean machine,
+shell). `/workforce-init` turns the sandbox on by default. CI decides whether tests pass, on a clean machine,
 for the exact commit. The local check is an early warning. Agents judge whether tests are strong. You decide.
 A test-auditor or completion-auditor PASS stands only when GitHub Actions ran the workforce-proof workflow for
 the commit and both its jobs passed (see "CI is the judge" below); the hook's own run of your test command
@@ -28,9 +28,12 @@ CI too; it is visible in the diff, where code-reviewer and a person review it. T
 - It checks the verdict block of every gate dispatched in the turn, and every `.verdict.md` file written
   in the turn with the Write or Edit tool, including files a subagent writes in its own run. A verdict
   file must carry a block that a dispatch of that same agent returned in the turn.
-- A `.verdict.md` file that any Bash command in the turn names (a write, or a read such as `cat`) is
-  unverified: with no Write or Edit of it in the turn, it blocks as "verdict file not produced by a gate
-  dispatch this turn". Read verdict files with the Read tool.
+- A `.verdict.md` file that any Bash command in the turn names is unverified: with no Write or Edit of it in
+  the turn, it blocks as "verdict file not produced by a gate dispatch this turn". A plain read can be excused: every
+  command that named it must be one of `cat`, `head`, `tail`, `wc`, `diff`, `cmp`, `stat` or `ls`, change nothing, and meet the
+  other conditions in "When a Bash read of a verdict file does not block" below (the real system program, no alias or function of
+  that name, not in the background and not by an agent running in the background). That section
+  gives the exact rule. Read verdict files with the Read tool.
 - It does not check a verdict block the main session writes in its own reply. Only a gate's verdict
   counts: a block signed by an agent that is not a gate (or a council seat) is rejected as "not a gate
   agent", inline or in a verdict file. A verdict counts only for the gate that was dispatched: a block signed with another
@@ -60,15 +63,14 @@ CI too; it is visible in the diff, where code-reviewer and a person review it. T
   A path may differ only in form: absolute or relative to the repo, with or without a leading `./`, or
   shortened to its last two parts (`scratchpad/probe.py`); a `<name>` placeholder stands for one word.
   If none of its backticked commands was run, the turn is blocked with "MEASURED command not executed
-  in this session", naming the nearest command that did run. A cited path may be shortened (D-225,
-  D-238, D-248): repo-relative or absolute, a leading `…/` or `.../` for any prefix, `<name>` for one whole
+  in this session", naming the nearest command that did run. A cited path may be shortened: repo-relative or absolute, a leading `…/` or `.../` for any prefix, `<name>` for one whole
   argument or one path segment, but at least one folder of the cited path must be written out
   (`…/scratchpad/probe.py`, not `…/probe.py` or `<dir>/check.py`). A script matches by its basename alone
   only when the run reached it through a shell variable or substitution the hook cannot expand (`bash
   $S/mutants.sh`, `python3 $(pwd)/probe.py`); never another runner or another script name. A command that exited non-zero still counts
   as run. A command written over several lines is read as the separate commands its lines hold. This shows
   a command ran, not what it proved.
-- CI is the judge (D-252). For a test-auditor or completion-auditor PASS the hook first runs your test command
+- CI is the judge. For a test-auditor or completion-auditor PASS the hook first runs your test command
   locally (the early warning below). If that passes, it reads GitHub once (20 s at most, with `gh`, outside the
   sandbox) for the current `HEAD`: the work tree must have no uncommitted change, `HEAD` must be on GitHub, the
   workforce-proof workflow file in that commit must match the hash `/workforce-init` recorded, and that
@@ -85,26 +87,26 @@ CI too; it is visible in the diff, where code-reviewer and a person review it. T
   (the first Workforce pull request) both jobs fail and the review check ends INCOMPLETE "base branch has no
   Workforce install record; the first Workforce pull request is approved by the owner on review, not by CI";
   when the base branch has no test files, base-suite fails "no base tests to run" and the review check ends
-  INCOMPLETE: the owner's review decides that pull request (D-261). Every workforce-proof run for the commit
+  INCOMPLETE: the owner's review decides that pull request. Every workforce-proof run for the commit
   (the push run and the pull-request run) must be complete: one still running is INCOMPLETE, and a failed,
-  cancelled or timed-out job in any of them blocks (D-262). The base the review check uses is the open pull request's
+  cancelled or timed-out job in any of them blocks. The base the review check uses is the open pull request's
   base branch (read with `gh pr view --json baseRefName`, outside the sandbox) when the current branch has one, else the default
   branch, and the message says which ("base used: ..."). CI's pull-request run uses the pull request's base, so a CI run that judged a
   different base than this check used leaves the check INCOMPLETE, never a PASS; a base that is not in this clone is INCOMPLETE until
-  you fetch it (D-275).
-- No GitHub remote, or `/workforce-init --no-ci-judge` (D-254): with no remote a quality PASS is INCOMPLETE
+  you fetch it.
+- No GitHub remote, or `/workforce-init --no-ci-judge`: with no remote a quality PASS is INCOMPLETE
   "no CI judge for this repo". `--no-ci-judge` makes the local run the judge and every clean line says "No CI
   judge: test passes are checked only on this machine, where an agent can fake them. Use CI for real proof."
   Without the CI judge, anything else the test run loads can still be written to fake a pass; CI on every
   pull request is the proof.
 - Agents never merge. A person merges once CI and the gates pass; `/workforce-init
   --setup-branch-protection` (from your own terminal) asks GitHub to require `head-suite` and `base-suite` (up
-  to date with the base) and one approving review with stale approvals dismissed (D-253, D-260);
+  to date with the base) and one approving review with stale approvals dismissed;
   `--dry-run` prints the exact call. Agents and the build account open pull requests and must not be admins; the
   owner approves and merges, and merges their own pull requests by an admin override, which GitHub shows as a
   bypass.
   GitHub counts one approval from anyone with write access. Keep write access to you and one agent or build
-  account, so the approval is yours (D-273): `/workforce-init` records your GitHub login and the agent or build
+  account, so the approval is yours: `/workforce-init` records your GitHub login and the agent or build
   account name (`--owner-login`, `--agent-account`) in the install record, and `/workforce-doctor`, from your own
   terminal, lists everyone with write, maintain or admin access to the repo and reports a FAIL when anyone other
   than those accounts has it. Keep the repo setting "Allow GitHub Actions to create and approve pull requests" off.
@@ -116,15 +118,15 @@ CI too; it is visible in the diff, where code-reviewer and a person review it. T
   mocha, bun test, dotnet test, maven; `npm test`, `pnpm test` or `yarn test` when the package.json test
   script is one of those, alone), written to a folder the hook owns outside the repo. `uv run`, `poetry run`,
   `pipenv run`, `hatch run`, `pdm run` and `rye run` in front of one of those runners are read through, with
-  the wrapper's own flags; a wrapper flag that takes a value is not parsed, so that command has no report
-  (D-246). A command with no machine report (a script, `make test`, `turbo test`, `nx test`, `tox`, `cargo
+  the wrapper's own flags; a wrapper flag that takes a value is not parsed, so that command has no report.
+  A command with no machine report (a script, `make test`, `turbo test`, `nx test`, `tox`, `cargo
   test`) cannot carry a PASS: it blocks with "the test command `<cmd>` has no machine report the hook can
-  read; record a direct runner command" and names the "Direct test commands" table below (D-234, D-246), and
+  read; record a direct runner command" and names the "Direct test commands" table below, and
   `.claude/test-summary-patterns.txt` no longer makes one pass. `test_cmd` may be a list (give
   `/workforce-init --test-cmd` more than once): every command must have a machine report and pass, and the
   counts add; the block names the command that failed ("command 2 of 2: ..."). No recorded command blocks
   with "no test command recorded; run /workforce-init". The run uses `NO_COLOR=1`, `FORCE_COLOR=0` and
-  `CI=1`: CI is the reference, so a test that passes only under `CI=1` passes here too (D-235). It runs for
+  `CI=1`: CI is the reference, so a test that passes only under `CI=1` passes here too. It runs for
   at most `test_timeout` seconds (default 300, capped at 600 so the whole hook finishes inside its 840-second budget; past that it blocks with "test run exceeded N s; raise
   test_timeout or split the suite"). On macOS the run cannot write the enforcement files (`sandbox-exec`);
   elsewhere it is not confined, and the clean line says so. If the recorded command names test files, one
@@ -132,7 +134,7 @@ CI too; it is visible in the diff, where code-reviewer and a person review it. T
   `__init__.py` or `index.js`; a test file counts as changed only when the change adds a test case to it.
   The change is measured against `origin/HEAD`, else the upstream branch, else main, master, trunk or
   develop. A heredoc body is not a command that ran unless the heredoc feeds a shell or interpreter.
-- Test runner config (D-233). Before that run can carry a PASS, the files that steer the runner must match
+- Test runner config. Before that run can carry a PASS, the files that steer the runner must match
   what a person last accepted. The list is one constant, `RUNNER_CONTROL` in `validate-verdicts.py` (the
   installer keeps the same list): every `conftest.py`, `pytest.ini`, `.pytest.ini`, `pytest.toml`,
   `.pytest.toml`, `sitecustomize.py`, `usercustomize.py` and `*.pth` at any depth; `jest.config.*`,
@@ -145,7 +147,7 @@ CI too; it is visible in the diff, where code-reviewer and a person review it. T
   and in `setup.cfg` (an `entry_points` or `options.entry_points` section naming `pytest11`); and any repo
   file the test command names (test files aside). The walk skips `.git`, `node_modules`, `.venv`, `venv`,
   `__pycache__`, `.pytest_cache`, `.tox` and `.mypy_cache`, but reads these files inside the in-repo
-  environments (D-243): in every `.venv`, `venv`, `.tox/<env>` and any folder holding `pyvenv.cfg`, and in
+  environments: in every `.venv`, `venv`, `.tox/<env>` and any folder holding `pyvenv.cfg`, and in
   the virtualenv the test command's interpreter lives in even when it is outside the repo, each
   `site-packages` folder's `*.pth`, `sitecustomize.py` and `usercustomize.py`, and every
   `*.dist-info/entry_points.txt` or `*.egg-info/entry_points.txt` with a `[pytest11]` section (entry points
@@ -163,20 +165,20 @@ CI too; it is visible in the diff, where code-reviewer and a person review it. T
   2.8.3, or a plugin bump with no re-init) is recorded by the hook itself on its first quality PASS, which
   prints once "Workforce recorded this repo's test runner config for the first time. Review it with
   /workforce-doctor; from now on a change to it needs /workforce-init --accept-runner-config." and goes on to
-  its own run and then CI, as for any quality PASS (D-245). The hook does that only when the sandbox protects the install record,
+  its own run and then CI, as for any quality PASS. The hook does that only when the sandbox protects the install record,
   or when the baseline already has an entry for this repo path from an earlier install; otherwise it still
   blocks with "no accepted test runner config for this repo; run /workforce-init --upgrade from your own
-  terminal". When the baseline file itself is missing (D-270: nothing from 2.8.3 was ever installed or
+  terminal". When the baseline file itself is missing (nothing from 2.8.3 or later was ever installed or
   upgraded for this machine, or the file was deleted) the hook records nothing and a turn that dispatched an agent
   (a gate or not) blocks with "tamper baseline missing: run /workforce-init --upgrade from your own terminal"; a turn that
   dispatched no agent is not affected. Copy mode compares with the merge base of the base branch instead, which is weaker: an agent can
   rewrite git refs. The in-repo environments are not in git, so copy mode does not check them.
-- Known limit of the local run (D-235, D-244). The tests, the code under test and the contents of installed packages (in
+- Known limit of the local run. The tests, the code under test and the contents of installed packages (in
   `.venv` or `node_modules`, beyond the files listed above) run inside the hook's run, so any of them can
   still be written to forge a pass (for example by rewriting the report on exit). Anything else the test run
   loads can still be written to fake a pass; CI on every pull request is the proof.
 - A run's result is reused only by a later stop in the same turn (the same last message from you), and for
-  at most 10 minutes; a new turn runs the tests again (D-249). Within that window the key is the test
+  at most 10 minutes; a new turn runs the tests again. Within that window the key is the test
   commands, their timeout, every tracked and untracked file's content, the runner config above, and the
   path, size and modified time of every git-ignored file in the repo (the skipped folders above aside; with
   more than 2,000 such files, nothing is reused). Files outside the repo are not in the key, so a test that
@@ -189,18 +191,19 @@ CI too; it is visible in the diff, where code-reviewer and a person review it. T
   on, run these from your own terminal: a session's shell commands cannot write those files. Copy mode has
   no protected place for that record, so it has no tamper check.
 - A `completion-auditor` dispatch whose prompt opens with the line `MODE: ladder-only (no verdict)` runs
-  the check ladder and owes no verdict (D-237); `/gate-review`, `/pre-merge`, `/red-team` and `dev-team`
+  the check ladder and owes no verdict; `/gate-review`, `/pre-merge`, `/red-team` and `dev-team`
   wave 2b use it. Any verdict block such a dispatch returns is ignored and never counts as a PASS. The
   marker means nothing on any other gate.
 - It checks every stop, including the one right after it blocked, so a re-emitted block is judged too. It
-  blocks at most 3 times in one turn; on the next stop with problems it lets the turn end and prints them
-  in a message that starts "Verdict check FAILED and was not fixed:". If the only problem is a reviewer
-  still running, the message says "Verdict check INCOMPLETE" instead.
+  blocks at most 3 times in one turn, plus once for each distinct background result that arrives late with an
+  invalid verdict (the same result delivered again gets no further block); on the next stop with problems it
+  lets the turn end and prints them in a message that starts "Verdict check FAILED and was not fixed:". If
+  the only problem is a reviewer still running, the message says "Verdict check INCOMPLETE" instead.
 - A gate dispatched in the background is checked when its completion notice arrives, in the same turn
   or a later one, also when you sent another message before it finished. A gate with no result and no notice yet blocks as
-  "still running". The own transcript of every agent judged in the turn whose result names its agent id is read, including one
-  resumed with SendMessage (every result recorded from Claude Code 2.1.288 to 2.1.310 names one: 237 of 237 results in 97
-  transcripts, `_eval/proofs/2026-10-patch284/amend1/q6/agent-id-scan.txt`; a result without one is not traced, a known gap).
+  "still running". The own transcript of every agent judged in the turn is read, including one resumed with SendMessage.
+  In every session scanned from Claude Code 2.1.288 to 2.1.310, each result named its agent; a result that names none blocks the turn ("the agent
+  id of the <gate> dispatch ..."), because that agent's own writes could not be read.
 - A gate dispatched with no result at all when the turn ends is not blocked, since the agent cannot fix a
   result that never came: the stop says "Verdict check INCOMPLETE: <gate> returned no result: this turn is
   not gated".
@@ -212,9 +215,23 @@ CI too; it is visible in the diff, where code-reviewer and a person review it. T
 - A block lists the first five problems, then "and N more", and ends with every note the check made
   (a skipped disk check, for one), so every note is in the message and the other problems are counted.
 
+### When a Bash read of a verdict file does not block
+
+A Bash command that names a `.verdict.md` file is excused, so it does not block the turn, only when every call that named it
+meets all four rows below. If the hook cannot confirm a row, the name blocks. The file is still checked on disk like any other verdict file.
+
+| Row | What it requires | If it fails |
+|---|---|---|
+| The command | One simple command, or commands joined by `\|`, of `cat`, `head`, `tail`, `wc`, `diff`, `cmp`, `stat` or `ls`, with only the options the hook lists (such as `head -n 20` or `ls -la`) and plain arguments: no redirect, `$`, backquote, glob, `~`, `;`, `&&`, `\|\|` or here-document. | The name blocks, as in 2.8.4. |
+| The program | No alias or function of that name in any of Claude Code's shell snapshots (`~/.claude/shell-snapshots/`, and no global alias at all), PATH finds it first in `/bin` or `/usr/bin`, it is a compiled program owned by the system, and no variable that loads code into programs is set (such as `DYLD_INSERT_LIBRARIES` or `LD_PRELOAD`). `grep` is not on the list: a shell `grep` that names a verdict file always blocks; use the Read tool. | The name blocks. |
+| What it changed | The hook's own record of that call, taken when the call finished, belongs to this turn, covers the whole disk check, shows no file changed or removed, and no other call's record was taken while it ran. A call that failed (non-zero exit) gets no record, so it is never excused. | The name blocks. |
+| How it ran | Not in the background, and not by an agent running in the background. | The name blocks. |
+
+The client behaviour these rows rely on (the shell snapshots and the functions in them, the per-call record) was measured on Claude Code 2.1.310 on macOS; the hook's own rule is tested with fixtures.
+
 ## Direct test commands
 
-The hook needs a command whose runner writes a machine report. Record the runner itself (D-246):
+The hook needs a command whose runner writes a machine report. Record the runner itself:
 
 | Your project | Record this | Not this (no machine report) |
 |---|---|---|
@@ -242,42 +259,47 @@ Set an environment variable before you start Claude Code:
 - `BR_CLAIMS_HOOK=off` turns off the marketing write gate only.
 
 A hook that is off prints one line to stderr saying so. The two hooks that guard a gate, the verdict
-check and the marketing write gate, fail closed (D-267): if one breaks or a tool it needs is missing, it
+check and the marketing write gate, fail closed: if one breaks or a tool it needs is missing, it
 says so instead of passing quietly. The verdict check blocks the turn with "the verdict check crashed
 (...): this turn is not gated; report it". The same goes for a verdict validator that cannot run ("the verdict
 validator could not run"), a gate's output file that cannot be read, and a turn that ran an agent with no
 subagents folder beside its transcript ("subagent transcripts are missing (<folder>): this turn is not gated;
 Claude Code 2.1.288 or newer is required"). Blocks in one turn are counted together, whatever caused them (problems, a crash,
-a timeout), in a file of their own beside the transcript, so a dropped snapshot does not reset the count; after three
-(four, when the first block came from the shell wrapper answering for a check that could not) the turn ends with a "Verdict check FAILED" message, so it cannot loop (a damaged background-task notice in the transcript can give one turn a second count of three blocks, a known limit to be fixed in 2.8.5). When it cannot read the
-transcript, or the shell wrapper has to answer for the helper, it blocks only a turn not yet blocked and ends any later stop of
-that turn with FAILED at once. If python3, the helper or the validator is missing, it prints
+a timeout, or the shell wrapper answering for a check that could not), in a file of their own beside the transcript, so a
+dropped snapshot does not reset the count; after three (plus one for each late background result, above) the turn ends with
+a "Verdict check FAILED" message, so it cannot loop. The shell wrapper records each block it prints beside the transcript, so
+the next stop counts it; if it cannot record it, the turn ends with FAILED at once instead of a block. A stop whose turn
+cannot be read (the transcript or the hook's turn reader cannot be read) is counted against the turn this session last
+counted, so a turn can end sooner this way, never later. If python3, the helper or the validator is missing, it prints
 "gates in this turn are NOT checked" on every stop, and `/workforce-doctor` reports a FAIL. When the write gate's helper
 cannot answer (it is missing, it ends without a decision, or its 7-second watchdog fires), the gate does not guess where the
-marketing-asset folders are: it denies a write to a file named `.md`, a shell command that names a `.md` file (also with quotes, escapes or a line break inside the name), a shell command that copies a folder, unpacks an archive or copies with a wildcard, and a shell command over 2048 bytes
+marketing-asset folders are: it denies a write to a file whose name ends in `.md`, a Write, Edit or MultiEdit whose target is a link or
+whose real folder is marked or inside a marked folder, a shell command that names a `.md` file (also with quotes, escapes or a line break inside the name), a shell command that copies a folder, unpacks an archive or copies with a wildcard, a shell call it cannot read with certainty (more than one command field, an escaped character, or over 64 KB), and a shell command over 2048 bytes
 long as the client sends it (both of its fallbacks count the same bytes), which it does not try to read ("the claims-gate check could not run (<reason>): this call
 is not allowed until the check works; report it"), and lets every other call through with one line on stderr. An error the
 helper catches itself is decided by the same rule, with "the claims-gate check could not run (<error>): this write is not
 allowed; report it". A folder the write gate cannot read counts as marked. A `cd` it cannot resolve (`cd "$DIR"`, `cd -`) before a relative `.md` write in a form it parses (a redirect, tee, cp or mv, sed -i, dd, an interpreter's -c text; not `curl -o`, `wget -O` or `touch`, which the stop catches where its disk check runs) or an
-archive extract is denied in every project (D-314): no record of where the marked folders are can be trusted to be current, so
-the gate does not guess. The three hooks that only inform (onboarding, session contract, upgrade notice) still fail open:
+archive extract is denied in every project: no record of where the marked folders are can be trusted to be current, so
+the gate does not guess. A variable set to a plain value earlier in the same command, with nothing but `;`, `&&` or a line
+break before the `cd` (`D=assets; cd "$D" && ...`), is resolved and that folder is judged; a variable from an earlier call,
+`$HOME`, a value made by a command, or one set after `||` or inside a condition is not. The three hooks that only inform (onboarding, session contract, upgrade notice) still fail open:
 they cannot affect a PASS.
 
-Each gate hook also has its own deadline, below the client's timeout (D-278), because Claude Code cancels a hook that
-outlives its timeout and lets the turn end, or the write through, without a word. We measured this on client 2.1.296 (audit 10V X1, `_eval/proofs/2026-10-patch283/amendment11/z6/audit10v-timeout/AUDIT-10V-REPORT.md`) by running a throwaway
+Each gate hook also has its own deadline, below the client's timeout, because Claude Code cancels a hook that
+outlives its timeout and lets the turn end, or the write through, without a word. We measured this on clients 2.1.296 and 2.1.310 by running a throwaway
 install whose hook slept past its timeout: the client cancelled it and the turn ended, or the write went through, with no message. It is our
 measurement, not a documented guarantee, and you can repeat it on your client with the same test. The verdict check answers within 840
 of the Stop call's 900 seconds (12 of 20 for the snapshot calls), and its shell watchdog at 855 leaves at least 30 seconds; the
 write gate within 5 of its 10, with its shell watchdog at 7 and 1 second to stop the helper, so when the helper hangs it is built to
 answer within 9 of the 10 seconds. The watchdogs count clock time. At the deadline the
 verdict check blocks the turn with "the verdict check ran out of time (<step>): this turn is not gated; report it" (a
-systemMessage on a snapshot call), and the write gate denies the calls listed above (a write to a file named `.md`, and the
+systemMessage on a snapshot call), and the write gate denies the calls listed above (a write to a file whose name ends in `.md`, and the
 shell commands) with "the claims-gate check ran out of time: this write is not allowed; report it". A shell watchdog a few seconds later answers
 if the helper cannot answer at all, by the rule in the paragraph above, without searching the project. The disk check lists files with git, so a
 large repo is still checked; where it cannot run (no git and a large tree, a huge marked folder, or a folder it cannot
 read) the Stop says "disk check skipped (<reason>): verdict files and marked assets written outside the Write tool are
-not checked this turn", and `/workforce-doctor` warns. It also finds marked folders inside git-ignored folders, up to 8
-levels deep and outside the folders it never searches (node_modules, Python environment and cache folders); where that search stops short (over 20,000 entries, a folder deeper than 8 levels, or an ignored folder it cannot read) the Stop says
+not checked this turn", and `/workforce-doctor` warns. It also finds marked folders inside git-ignored folders, at any depth,
+outside the folders it never searches (node_modules, Python environment and cache folders, at any level); where that search stops short (over 200,000 entries in git-ignored folders, or an ignored folder it cannot read) the Stop says
 "disk check partial (<reason>)", and the rest of the check still runs.
 
 How a gate can be off, and what is left (the ways we know of):
@@ -286,22 +308,21 @@ How a gate can be off, and what is left (the ways we know of):
   shows what is installed.
 - CI as the judge of tests. The hook's own test run is an early warning; GitHub's `head-suite` and `base-suite` decide.
 - Limits that remain: a hook killed from outside (the machine sleeps, the process is killed, the client crashes) cannot say
-  anything; the disk check does not look at files in git-ignored folders unless they sit in a marked folder, and finds
-  marked folders inside git-ignored folders only up to 8 levels deep; it never walks into node_modules or Python environment
-  and cache folders, and does not follow a link to a folder outside the project; and the deadlines were measured on client 2.1.296
-  only (the test is described above). While the write gate's helper cannot answer, a shell command that writes a marked
-  asset without naming a `.md` (a copy onto a link with another name, a moved folder, a script), or a Write to a link with
-  another name, is not denied there; where the stop's disk check runs, it then blocks the turn unless a claims-gate PASS sits
-  beside the asset (where that check is skipped or partial, the stop says so instead). A gate result that names no agent
-  id is not traced (see above). Without the sandbox, an agent with a shell can edit the install record and set
-  `ci_judge: false`; the stop then notes, with each test-auditor or completion-auditor PASS it judges, that the local
-  judge can be faked. A turn-start snapshot that names another project or session, or that could not be finished, is not used;
-  the stop then counts the files it cannot compare as changed. Known limits to be fixed in 2.8.5: a damaged background-task notice
-  in the transcript can give one turn a second count of three blocks; a turn-start snapshot that can be neither rewritten nor removed
-  (a read-only folder) is used for the next turn, which can then be blocked for the previous turn's asset; and the write gate
-  compares a subagent's time with the turn's start as text, so a time written with a time-zone offset can make it take an earlier
-  turn's PASS as this turn's and let the asset through; the stop reads only the transcripts of agents dispatched, resumed or finished in the turn, so it does not take that PASS
-  as written in the turn.
+  anything; the disk check does not look at files in git-ignored folders unless they sit in a marked folder; it never walks
+  into node_modules or Python environment and cache folders, and does not follow a link to a folder outside the project; and
+  the deadlines were measured on clients 2.1.296 and 2.1.310 only (the test is described above). While the
+  write gate's helper cannot answer, a shell command that writes a marked asset without naming a `.md` (a copy onto a link with
+  another name, a moved folder, a script) is not denied there; where the stop's disk check runs, it then blocks the turn
+  unless a claims-gate PASS sits beside the asset (where that check is skipped or partial, the stop says so instead). Without the sandbox, an agent with a shell can edit the
+  install record and set `ci_judge: false`; the stop then notes, with each test-auditor or completion-auditor PASS it judges,
+  that the local judge can be faked. A turn-start snapshot that names another project, session or turn, or that could not be
+  finished, is not used; the stop then counts the files it cannot compare as changed, and names a snapshot an earlier turn left
+  that could not be replaced. The block-count lock, the per-call records and the safe-read rule were measured on macOS only;
+  on Linux they are expected to work the same but were not measured. On native Windows the block-count lock uses Windows' own file
+  lock (`msvcrt`), which was tested only with a stand-in on macOS, not on Windows; the sandbox does not run there (its documentation says it runs on macOS, Linux and WSL2). A process that keeps the
+  block count's lock (a file beside the session's transcript) past the stop's wait for it does not stop the count: the stop then
+  keeps it without the lock, as 2.8.4 did. A count file that cannot be read or saved ends the turn with FAILED at once, with no
+  block: loud, never a silent pass.
 
 These switches are for you, not for the agents. A block message never offers them: it tells the agent
 to stop and report to you why it thinks the block is wrong, and leaves the decision to you.
@@ -319,8 +340,12 @@ file to copy.
 
 - `bash` and `python3` on your PATH. Without `python3` the verdict check cannot judge (every stop says gates are NOT checked)
   and the write gate denies the calls its fail-closed rule above lists. The `workforce-doctor` skill checks for it.
-- Claude Code 2.1.288 or newer. Each agent's own transcript beside the session's was confirmed on clients 2.1.288 and
-  2.1.296 (2.1.288: `docs/workforce-state.md`, D-117; 2.1.296: 77 agent transcripts found beside their sessions,
-  `_eval/proofs/2026-10-patch284/amend1/q6/subagent-file-scan.txt`); on an older client it may be missing, and the verdict check then blocks any turn that ran an agent. The `workforce-doctor` skill checks the version.
+- Claude Code 2.1.288 or newer. Each agent's own transcript beside the session's was found on client 2.1.296
+  (77 found by a scan of local sessions; the same scan did not find 129 others, and it does not show why) and on 2.1.310
+  (a live check of this release: one claims-gate dispatch, its transcript found, the stop passed; the same scan of earlier local
+  sessions on 2.1.310 found none of 34, and it does not show why). On any client it may be missing, and the verdict check then
+  blocks any turn that ran an agent.
+  The turn id the hooks use to tie a snapshot and a call record to their turn was measured on 2.1.310; a client that does not
+  send it is judged as 2.8.4 judged it (a snapshot of the same project and session is used) and gets no safe-read excuse. The `workforce-doctor` skill checks the version.
 - On Windows, run Claude Code with Git Bash available (Git for Windows), since the hooks are bash
   scripts.

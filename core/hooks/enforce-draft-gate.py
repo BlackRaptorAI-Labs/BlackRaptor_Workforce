@@ -64,6 +64,18 @@ import subprocess
 import sys
 import time
 
+# D-337 (2.8.5): the one reader of the client's transcript, shared with the Stop hook. Without it, a marked write that needs the
+# turn is denied (Cannot); nothing else here depends on it.
+sys.dont_write_bytecode = True     # no __pycache__ beside the shipped hook
+try:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import br_transcript as BRT
+except Exception:   # D-270 (closed; D-337): every caller below raises Cannot, so the write is denied
+    BRT = None
+finally:
+    if sys.path and sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+        sys.path.pop(0)
+
 COVERED_TOOLS = ("Write", "Edit", "MultiEdit")
 VERDICT_BASH_MESSAGE = "Verdict files are written with the Write tool so the gate check can read them."
 HEREDOC = re.compile(r"(?<!<)<<(?!<)-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
@@ -229,6 +241,15 @@ def guard_failure(exc, timed=False):
             elif tool in COVERED_TOOLS:
                 fp = str(ti.get("file_path") or "")
                 deny = fp.lower().endswith(".md") if fp else ".md" in json.dumps(ti).lower()
+                if fp and not deny:     # D-351 (2.8.5, audit 14P F12): a link, or a real folder that is marked or inside a marked one
+                    ap = fp if os.path.isabs(fp) else os.path.join(str(payload.get("cwd") or os.getcwd()), fp)
+                    d = os.path.realpath(os.path.dirname(ap))
+                    deny = os.path.islink(ap)
+                    while not deny:
+                        deny = os.path.exists(os.path.join(d, ".br-assets"))
+                        if os.path.dirname(d) == d:
+                            break
+                        d = os.path.dirname(d)
             else:
                 deny = False
     except Exception:
@@ -257,13 +278,23 @@ def _strip_heredoc_bodies(cmd):
     return "\n".join(out)
 
 
+PUNCT = re.compile(r"&&|\|\||\|&|>>|>&|<&|&>|[;&|()<>]")
+
+
 def _tokens(cmd):
     try:
         lex = shlex.shlex(cmd.replace("\n", " ; "), posix=True, punctuation_chars=True)
         lex.whitespace_split = True
-        return list(lex)
+        toks = list(lex)
     except ValueError:
         return cmd.replace("\n", " ; ").split()
+    out = []
+    for t in toks:   # D-346 (2.8.5, found while building B4): shlex returns `);` or `)&&` as one token; split it so the separators count
+        if t and t not in SEPARATORS and not t.strip("();&|<>") and any(c in t for c in "();&|"):   # code review R3: `)>` too
+            out.extend(PUNCT.findall(t))
+        else:
+            out.append(t)
+    return out
 
 
 def _is_verdict(tok):
@@ -452,7 +483,9 @@ def bash_marked_decision(cmd, cwd, project_dir, validator):
     folder is blocked, since the hook cannot see which files it writes."""
     files, dirs = bash_write_targets(cmd)
     bases = [cwd]
-    for c in cd_targets(cmd):      # D-305 (Rule F review): `cd assets && cp ../a page.md` writes in assets/
+    for c, known in cd_targets_resolved(cmd):      # D-305 (Rule F review): `cd assets && cp ../a page.md` writes in assets/
+        if known is not None:
+            c = known              # D-346 (2.8.5): a variable this same command set to a plain value before the cd, on a path that always runs
         if re.search(r"[$`*?]", c) or c == "-":
             if any(p.lower().endswith(".md") and not os.path.isabs(p) for p, _s in files) or dirs:   # D-314: in every project
                 raise Cannot("the command changes to a folder the hook cannot resolve (%s)" % c)
@@ -483,6 +516,10 @@ def turn_start_unchanged(verdict_path, project_dir):
     root = os.path.realpath(project_dir)
     if state.get("root") != root or state.get("session") != (_STATE.get("payload") or {}).get("session_id"):
         return False       # another project or session (or an older hook's file): not this turn's start; the Stop decides
+    if BRT is None:
+        raise Cannot("the turn reader br_transcript.py could not be loaded")
+    if BRT.other_turn(state.get("turn"), (_STATE.get("payload") or {}).get("prompt_id")):
+        return False       # D-338 (2.8.5): made by another turn (both ids present and different): not this turn's start; the Stop decides
     rel = os.path.relpath(os.path.realpath(verdict_path), root)
     old = (state.get("turn_start") or {}).get(rel) if isinstance(state.get("turn_start"), dict) else None
     if not old:
@@ -509,21 +546,6 @@ def turn_start_unchanged(verdict_path, project_dir):
     return True
 
 
-def _real_user(ev):
-    """The Stop hook's rule (turn_identity) for a message that starts a turn: a `user` event that is not synthetic or meta, carries no
-    tool result and is not a task notice."""
-    if not isinstance(ev, dict) or ev.get("type") != "user" or ev.get("isSynthetic") or ev.get("isMeta"):
-        return False
-    c = (ev.get("message") or {}).get("content") if isinstance(ev.get("message"), dict) else None
-    if isinstance(c, list):
-        if any(isinstance(b, dict) and b.get("type") == "tool_result" for b in c):
-            return False
-        c = "\n".join(b.get("text", "") for b in c if isinstance(b, dict) and b.get("type") == "text")
-    if (ev.get("origin") or {}).get("kind") == "task-notification" or (isinstance(c, str) and c.lstrip().startswith("<task-notification>")):
-        return False
-    return True
-
-
 def written_this_turn(verdict_path, project_dir):
     """D-324 (audit 13R F1): True when a Write, Edit or MultiEdit of verdict_path appears in the session transcript after the turn's
     real user message, or in a subagent transcript of the session at or after that message's time. A transcript that cannot be read
@@ -531,7 +553,8 @@ def written_this_turn(verdict_path, project_dir):
     tp = (_STATE.get("payload") or {}).get("transcript_path")
     cwd = (_STATE.get("payload") or {}).get("cwd") or project_dir
     target = os.path.realpath(verdict_path)
-    name = os.path.basename(verdict_path)
+    if BRT is None:
+        raise Cannot("the turn reader br_transcript.py could not be loaded")
 
     def writes(lines, since_idx=0, since_ts=None):
         denied = set()     # D-326 (audit 13S S1): the Stop hook's rule (D-284): a Write or Edit whose tool result is an error did not happen
@@ -547,14 +570,16 @@ def written_this_turn(verdict_path, project_dir):
                 if isinstance(b, dict) and b.get("type") == "tool_result" and b.get("is_error") is True and b.get("tool_use_id"):
                     denied.add(b["tool_use_id"])
         for line in lines[since_idx:]:
-            if name not in line:
+            if '"tool_use"' not in line:   # D-337: every Write, Edit and MultiEdit is resolved; its text need not hold the target's name
                 continue
             try:
                 ev = json.loads(line)
-            except Exception:
+            except Exception:   # D-270 (normal): a line that is not JSON is not a tool call
                 continue
-            if since_ts and isinstance(ev, dict) and str(ev.get("timestamp") or "") < since_ts:
-                continue
+            if since_ts is not None and isinstance(ev, dict):
+                t = BRT.parse_ts(ev.get("timestamp"))      # D-337: instants, not text; an unknown time is never "earlier"
+                if t is not None and t < since_ts:
+                    continue
             for b in ((ev.get("message") or {}).get("content") or []) if isinstance(ev, dict) and isinstance(ev.get("message"), dict) else []:
                 if isinstance(b, dict) and b.get("type") == "tool_use" and b.get("name") in ("Write", "Edit", "MultiEdit") \
                         and b.get("id") not in denied:
@@ -575,12 +600,12 @@ def written_this_turn(verdict_path, project_dir):
             ev = json.loads(line)
         except Exception:
             continue
-        if _real_user(ev):
-            start, start_ts = i, ev.get("timestamp")
+        if BRT.is_real_user(ev):
+            start, start_ts = i, BRT.parse_ts(ev.get("timestamp"))
     if writes(lines, start):
         return True
     sub = os.path.join(tp[:-len(".jsonl")] if tp.endswith(".jsonl") else tp, "subagents")
-    if start_ts and os.path.isdir(sub):
+    if os.path.isdir(sub):      # D-337: with no known turn time, every subagent write counts (an unknown time is never earlier)
         for f in sorted(os.listdir(sub)):
             if f.startswith("agent-") and f.endswith(".jsonl"):
                 try:
@@ -599,17 +624,63 @@ def _session_base():
     return tp[:-len(".jsonl")] if tp.endswith(".jsonl") else tp
 
 
-def cd_targets(cmd):
-    """The folder of each `cd` or `pushd` in a shell command, in order (`~` for a bare cd)."""
-    out, seg = [], []
-    for tok in _tokens(_strip_heredoc_bodies(cmd)) + [";"]:
-        if tok in SEPARATORS:
-            if seg and os.path.basename(seg[0]) in ("cd", "pushd"):
-                args = [a for a in seg[1:] if not (a.startswith("-") and a != "-")]
-                out.append(args[0] if args else "~")
-            seg = []
-        else:
+ASSIGN = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$", re.S)
+CD_VAR = re.compile(r"^\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))(/.*)?$", re.S)
+CONTROL_WORDS = {"if", "then", "else", "elif", "fi", "while", "until", "do", "done", "for", "case", "esac", "select", "function", "{", "}",
+                 "!", "coproc", "[[", "]]"}
+CD_PREFIX = CONTROL_WORDS | {"builtin", "command", "time", "noglob", "nocorrect"}        # code review R2: `builtin cd`, `{ cd ...; }`
+STATE_WORDS = {".", "source", "eval", "set", "export", "declare", "typeset", "readonly", "local", "unset", "read", "shopt", "alias", "cd", "pushd",
+               "popd", "trap"}                      # C5 red-team F6: a command that can change a variable, the folder or how cd works
+
+
+def cd_targets_resolved(cmd):
+    """D-346 (2.8.5, B4; PATCH-285 M4: 271 of 27,208 real Bash calls hit the D-314 denial, about 179 of them set the variable earlier
+    in the same command): [(cd argument, its folder or None)]. A `cd "$NAME"` (or `${NAME}`, with a /sub path after it) is resolved
+    only from a plain assignment `NAME=value` that is a whole command of its own, earlier in the SAME command, with every command
+    before the cd joined by `;`, `&&` or a newline (never `||`, a pipe, `&`, a subshell or a control word such as if or while), a value
+    with no `$`, backquote, glob, `~` or backslash, and no other command in between naming the variable. The hook's own environment is
+    never used (it is not the shell's), and nothing else is resolved: `$HOME`, a variable from an earlier call, `$(...)`."""
+    toks = _tokens(_strip_heredoc_bodies(cmd))
+    sets_home = any(re.match(r"^HOME=", t) for t in toks)                                   # code review R2
+    cdpath = bool(os.environ.get("CDPATH")) or any(re.match(r"^CDPATH=", t) for t in toks)   # code review R2: the shell searches CDPATH first
+    out, seg, known, safe = [], [], {}, True
+    for tok in toks + [";"]:
+        if tok not in SEPARATORS:
             seg.append(tok)
+            continue
+        if seg:
+            if seg[0] in CONTROL_WORDS:
+                safe = False
+            lead = 0
+            while lead < len(seg) - 1 and (ASSIGN.match(seg[lead]) or seg[lead] in CD_PREFIX):
+                if seg[lead] in CONTROL_WORDS or ASSIGN.match(seg[lead]):
+                    safe = safe and not seg[lead] in CONTROL_WORDS
+                lead += 1          # `D=x cd "$D"`, `builtin cd`, `{ cd`, `then cd`: the cd is still a cd
+            if os.path.basename(seg[lead]) in ("cd", "pushd"):
+                args = [x for x in seg[lead + 1:] if not (x.startswith("-") and x != "-")]
+                arg = args[0] if args else "~"
+                m = CD_VAR.match(arg)
+                name = (m.group(1) or m.group(2)) if m else None
+                single = name is not None and re.search(r"'\$\{?%s\b" % re.escape(name), cmd)   # code review R2: '$D' is not expanded
+                if arg == "~" or arg.startswith("~/"):
+                    arg = ("$HOME" + arg[1:]) if sets_home else arg      # the command's own HOME is not the hook's
+                elif cdpath and not arg.startswith(("/", ".", "$", "-")):
+                    arg = "$CDPATH/" + arg                                # CDPATH can send a relative cd elsewhere
+                out.append((arg, known[name] + (m.group(3) or "") if safe and not lead and name in known and not single else None))
+            if seg[lead] in STATE_WORDS and os.path.basename(seg[lead]) not in ("cd", "pushd"):
+                safe = False      # C5 red-team F6: after `.`, `source`, `eval`, `read` and the like, no assignment is trusted
+            elif len(seg) == 1 and ASSIGN.match(seg[0]):
+                name, val = ASSIGN.match(seg[0]).groups()
+                if safe and val and not re.search(r"[$`*?\[~\\]", val):
+                    known[name] = val
+                else:
+                    known.pop(name, None)
+            else:
+                for name in [k for k in known if any(k in t for t in seg)]:
+                    known.pop(name)     # another command that names it may change it (read, export, unset, a loop)
+        if tok not in (";", "&&"):
+            safe = False
+        seg = []
     return out
 
 

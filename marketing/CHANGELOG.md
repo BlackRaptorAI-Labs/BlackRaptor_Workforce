@@ -1,3 +1,7 @@
+## 2.5.5 — 2026-11-02 — Docs, agents and skills no longer cite decision numbers or private test records
+
+Decision numbers, internal spec codes and pointers to the maintainers' private test records are removed from this pack's agents, skills and changelog. The edits remove or reword those references; figures in this changelog that cited those records are withdrawn.
+
 ## 2.5.4 — 2026-10-26 — The operating standard names principal-architect's effort
 
 The shipped operating standard now says that the gates and `principal-architect` pin `effort: high` in their agent files and every other agent follows your session's effort. No agent in this pack changed model or effort.
@@ -75,7 +79,7 @@ the release-wide fix and the affected packs' entries for their shorter descripti
 ## 2.1.0 — 2026-09-06 — `product-marketing` arrives; DRAFT/GATED becomes mechanical
 
 ### Added
-- **`product-marketing` moves in from the Engineering pack (owner ruling D3).** Release notes,
+- **`product-marketing` moves in from the Engineering pack.** Release notes,
   positioning and regulated-claim review for shipped features now live here, under this pack's
   DRAFT/GATED convention and claims-gate scope like every other producer. See
   `UPDATING-YOUR-WORKFORCE.md`.
@@ -95,20 +99,18 @@ The pre-release claims gate for 2.0.0 found published statements this pack could
 substantiate. They are retracted or qualified here rather than edited out of the entries below,
 which stay as written.
 
-- **Retracted: the model-gap study.** Several surfaces cited "a small-N, non-blind model-gap study
-  recorded in the maintainers' test-battery dossier" and reported findings from it — that Sonnet's
+- **Retracted: the model-gap study.** Several places cited a "small-N, non-blind model-gap" study or test
+  and reported findings from it — that Sonnet's
   gaps concentrated in the Excellence Pass checks, that Opus was at near-parity, that a
-  4-task x 3-model side-by-side test established which behaviours separate the tiers. **No such
-  record exists** in the dossier, in `_eval/`, or anywhere else. Every statement resting on it is
+  4-task x 3-model side-by-side test established which behaviours separate the tiers. **No record of
+  it could be found.** Every statement resting on it is
   removed across the operating standard, the `excellence-pass` skill, the per-tier notes and the
   shared output-quality lines carried by individual agents. The five Excellence Pass checks
   themselves are unchanged and stand on being cheap, self-evidently good practice — which is the
   only claim now made for them.
 - **Corrected: the release validation stamp.** Its basis line said the "agent-trigger eval sets"
-  were run for this release. They were not: T-A is deferred to Phase 3. The stamp now names only
-  what ran — T-C gate liveness on the 20-artifact seeded-defect corpus (n=3, before and after,
-  2026-09-02) and the agent-behaviour eval set (19 sets / 53 scenarios, 2026-09-03), both on
-  `claude-opus-4-8` under Claude Code 2.1.258 — and says plainly that T-A was not run.
+  were run for this release. They were not. The figures this entry once gave for what did run are not
+  repeated here.
 - **Qualified: "Marketing context is now update-proof."** The mechanism is real — your filled
   context lives at the project root and the pack ships only the template, so an update cannot
   overwrite it. "-proof" claims more than the mechanism delivers; read it as "an update does not
@@ -163,11 +165,11 @@ Validated against `claude-opus-4-8` as of 2026-09-02.
 
 ## 1.1.6 — 2026-08-20
 
-- First-run welcome & interview experience (R7–R14) via the shared `context-onboarding` skill: welcome → path → shared core interview → marketing extension (brand/personas/GTM/voice/competitors/proof standards, reorganized to never re-ask core) → friendly settings round → closing summary → offer to start. The marketing question set is now an extension set that deepens core answers. Seven-dimension preference wire-up (R13) via the shared Core contract; §6 hard gates preserved.
+- First-run welcome & interview experience via the shared `context-onboarding` skill: welcome → path → shared core interview → marketing extension (brand/personas/GTM/voice/competitors/proof standards, reorganized to never re-ask core) → friendly settings round → closing summary → offer to start. The marketing question set is now an extension set that deepens core answers. Seven-dimension preference wire-up via the shared Core contract; §6 hard gates preserved.
 
 ## 1.1.5 — 2026-08-19
 
-- **Marketing context is now update-proof.** The filled context lives at your **project root** as `MARKETING-CONTEXT.md`; the in-pack `context/marketing-context.md` is a blank **template** only (now marked `<!-- TEMPLATE — not onboarded -->`), so a pack update can no longer overwrite your filled context (R1/R2). `marketing-core` resolves the project-root file per the standardized resolution order and, when it is missing or still the template, invokes the shared `context-onboarding` skill (R3) — which uses the new marketing question set (`marketing-core/references/context-questions.md`) and preserves the §6 hard-gate rules. Context updates now propose a diff rather than silently rewriting.
+- **Marketing context is now update-proof.** The filled context lives at your **project root** as `MARKETING-CONTEXT.md`; the in-pack `context/marketing-context.md` is a blank **template** only (now marked `<!-- TEMPLATE — not onboarded -->`), so a pack update can no longer overwrite your filled context. `marketing-core` resolves the project-root file per the standardized resolution order and, when it is missing or still the template, invokes the shared `context-onboarding` skill — which uses the new marketing question set (`marketing-core/references/context-questions.md`) and preserves the §6 hard-gate rules. Context updates now propose a diff rather than silently rewriting.
 
 ## 1.1.4 — 2026-08-18
 

@@ -1,7 +1,7 @@
 <!-- TEMPLATE — not onboarded -->
 # BUSINESS-CONTEXT.md — Grounding for the Council
 
-<!-- Onboarding order (R14): the shared CORE block (what it is · who it's for · stage · how money
+<!-- Onboarding order: the shared CORE block (what it is · who it's for · stage · how money
 comes in · priorities · off-limits · role) is asked FIRST by context-onboarding and fills the
 matching fields below. The council EXTENSION only asks the REMAINING fields — it never re-asks core
 ground. -->

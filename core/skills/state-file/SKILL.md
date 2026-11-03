@@ -43,10 +43,8 @@ related: <other state files, if any>
 ## next          # immediate next steps (forward-looking; no ref)
 ```
 
-- **PROVENANCE RULE (enforced).** Every entry in `done`, `in-progress`, `decisions`, `ruled-out`
+- **PROVENANCE RULE.** Every entry in `done`, `in-progress`, `decisions`, `ruled-out`
   carries a checkable ref — a commit hash or a file path. Prose-only claims are banned there.
-  `_eval/baseline/state_audit.py` resolves refs against reality and the new header fields, and FAILs
-  on a prose-only entry, an unresolvable ref, or a missing `status`/`done-condition`.
 - **Size-capped.** When a section grows past ~15 lines, move settled entries to the append-only
   archive — moved **VERBATIM, never summarized** (summarization is where drift lives).
 
@@ -54,7 +52,7 @@ related: <other state files, if any>
 Each decision entry: an **ID** (D-01, D-02…), a **date**, one decision, why, and its ref. Entries are
 **immutable** — reversing a decision is a NEW entry ("D-07 supersedes D-03: <why>"), never an edit or
 deletion. The trail of mind-changes is itself the record. The section is append-only:
-`state_audit.py` fails a file in which a decision ID appears twice.
+each decision ID is given to one entry only; a later entry may refer to an earlier ID but never reuses it.
 
 ### 1.5 Update cadence
 Update at chunk boundaries and whenever the significance trigger fires (a decision made, a

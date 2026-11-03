@@ -54,6 +54,16 @@
             "timeout": 20
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/validate-verdicts.sh --snapshot write",
+            "timeout": 20
+          }
+        ]
       }
     ],
     "Stop": [

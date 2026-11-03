@@ -1,3 +1,7 @@
+## 2.7.5 — 2026-11-02 — Docs, agents and skills no longer cite decision numbers or private test records
+
+Decision numbers, internal spec codes and pointers to the maintainers' private test records are removed from this pack's agents, skills and changelog. The edits remove or reword those references; figures in this changelog that cited those records are withdrawn.
+
 ## 2.7.4 — 2026-10-26 — The operating standard names principal-architect's effort
 
 The shipped operating standard now says that the gates and `principal-architect` pin `effort: high` in their agent files and every other agent follows your session's effort. No agent in this pack changed model or effort.
@@ -87,25 +91,22 @@ The ethics-governance seat flags a code change that arrives without the cheap ch
 ## 2.1.0 — 2026-09-06 — The orchestrator review step replaces the cross-review mandate; seats echo their verdict inline
 
 ### Changed
-- **The seat-to-seat cross-review mandate is deleted (owner ruling D4).** The main-session `council`
+- **The seat-to-seat cross-review mandate is deleted.** The main-session `council`
   skill orchestrator is the reviewer instead: before the chair wave it reads every seat's verdict
-  file, re-runs each numbers seat's model per D2a, and hands the chair the verdicts verbatim.
+  file, re-runs each numbers seat's model under the Output contract in that seat's agent file, and hands the chair the verdicts verbatim.
   Cross-review between seats is logged as a candidate feature, not built. `COUNCIL.md` §2 and §6, and
   the SKILL.md dispatch instructions, are rewritten accordingly.
 - **Every seat now echoes its verdict block inline in its returned text, in addition to writing
-  `council/<slug>.verdict.md` (D-64).** Seats are commonly dispatched in the background, where only
+  `council/<slug>.verdict.md`.** Seats are commonly dispatched in the background, where only
   the returned text — not a file write — reliably reaches the Stop hook before the turn ends;
   `run_in_background` is now explicitly banned for a seat dispatch, and **the chair is dispatched
-  only after every seat's result has arrived (D-65).**
+  only after every seat's result has arrived.**
 - The Stop hook shipped in the Core pack now also reads a seat's `council/<slug>.verdict.md` file
-  when no inline block is present (D-57), and a backgrounded seat's completed background-task result
-  rather than only its immediate placeholder result (D-65) — see the Core changelog.
+  when no inline block is present, and a backgrounded seat's completed background-task result
+  rather than only its immediate placeholder result — see the Core changelog.
 
-### Measured, not fixed
-- `ethics-governance` emitted one malformed verdict block during the Phase 2 regression guard
-  (D-54): a fully blank fourth `standards[]` entry, a JSON-syntax defect in the model's own emission.
-  17/18 verdict blocks were schema-valid across that batch; tracked as a measured contract-compliance
-  rate, not a shipped fix. Ref: `docs/TEST-BATTERY-DOSSIER.md` §6(d) result — regression guard.
+### Withdrawn note
+- Withdrawn in Workforce 2.8.5: a note on how often `ethics-governance` wrote a malformed verdict block, with its figures, rested on test records that do not ship, so it is not repeated.
 
 ## Corrections — 3 Sep 2026
 
@@ -113,23 +114,21 @@ The pre-release claims gate for 2.0.0 found published statements this pack could
 substantiate. They are retracted or qualified here rather than edited out of the entries below,
 which stay as written.
 
-- **Retracted: the model-gap study.** Several surfaces cited "a small-N, non-blind model-gap study
-  recorded in the maintainers' test-battery dossier" and reported findings from it — that Sonnet's
+- **Retracted: the model-gap study.** Several places cited a "small-N, non-blind model-gap" study or test
+  and reported findings from it — that Sonnet's
   gaps concentrated in the Excellence Pass checks, that Opus was at near-parity, that a
-  4-task x 3-model side-by-side test established which behaviours separate the tiers. **No such
-  record exists** in the dossier, in `_eval/`, or anywhere else. Every statement resting on it is
+  4-task x 3-model side-by-side test established which behaviours separate the tiers. **No record of
+  it could be found.** Every statement resting on it is
   removed across the operating standard, the `excellence-pass` skill, the per-tier notes and the
   shared output-quality lines carried by individual agents. The five Excellence Pass checks
   themselves are unchanged and stand on being cheap, self-evidently good practice — which is the
   only claim now made for them.
 - **Corrected: the release validation stamp.** Its basis line said the "agent-trigger eval sets"
-  were run for this release. They were not: T-A is deferred to Phase 3. The stamp now names only
-  what ran — T-C gate liveness on the 20-artifact seeded-defect corpus (n=3, before and after,
-  2026-09-02) and the agent-behaviour eval set (19 sets / 53 scenarios, 2026-09-03), both on
-  `claude-opus-4-8` under Claude Code 2.1.258 — and says plainly that T-A was not run.
+  were run for this release. They were not. The figures this entry once gave for what did run are not
+  repeated here.
 - **Corrected: hand-typed seat counts removed from the pack manifests.** The council manifests said
   "12 seats, eight of them answering to C-suite names". The seats and their names are unchanged;
-  the counts are gone, and `verify.sh [MAN]` now fails the build if one reappears in a manifest.
+  the counts are gone.
 
 ## 2.0.0 — 2026-09-02 — Seat verdicts join the workforce vocabulary
 
@@ -226,12 +225,12 @@ slugs keep working as-is.
 ## [1.2.5] — 2026-08-20
 
 ### Added
-- First-run welcome & interview experience (R7–R14, via the shared `context-onboarding` skill): welcome → path choice → shared core interview → council extension (remaining business-context fields, never re-asking core) → friendly settings round → closing summary → offer to start. The seven-dimension preference wire-up (R13) rides the shared Core contract.
+- First-run welcome & interview experience (via the shared `context-onboarding` skill): welcome → path choice → shared core interview → council extension (remaining business-context fields, never re-asking core) → friendly settings round → closing summary → offer to start. The seven-dimension preference wire-up rides the shared Core contract.
 
 ## [1.2.4] — 2026-08-19
 
 ### Changed
-- The council now grounds on `BUSINESS-CONTEXT.md` at your **project root** via the standardized resolution order; if it is missing or still the blank template, the council invokes the shared `context-onboarding` skill first (interviewing against the business-context template fields) and writes the approved, dated file to the project root — never into the pack (R1–R3). The in-pack `business-context` template now carries a `<!-- TEMPLATE — not onboarded -->` marker so "still template" is machine-checkable.
+- The council now grounds on `BUSINESS-CONTEXT.md` at your **project root** via the standardized resolution order; if it is missing or still the blank template, the council invokes the shared `context-onboarding` skill first (interviewing against the business-context template fields) and writes the approved, dated file to the project root — never into the pack. The in-pack `business-context` template now carries a `<!-- TEMPLATE — not onboarded -->` marker so "still template" is machine-checkable.
 
 ## [1.2.3] — 2026-08-18
 

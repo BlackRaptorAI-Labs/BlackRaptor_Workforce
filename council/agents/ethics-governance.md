@@ -138,11 +138,11 @@ If your input is a code change, carries no completion-audit ladder result (a lad
 
 **`reason` is not in the template on purpose.** Present it only on `COULD NOT ASSESS`; omit the key entirely on every other verdict; never emit it blank. A blank `reason` fails `verdict-schema.json` (`pattern: "\S"`) and the `Stop` hook will send the block back.
 
-**When convened as a council seat (COUNCIL.md §3a, D-64), this same block is your inline echo:** end your returned text with it exactly as below, unchanged; do not write a verdict file; the orchestrator copies your block unchanged into `council/ethics-governance.verdict.md` with the Write tool.
+**When convened as a council seat (COUNCIL.md §3a), this same block is your inline echo:** end your returned text with it exactly as below, unchanged; do not write a verdict file; the orchestrator copies your block unchanged into `council/ethics-governance.verdict.md` with the Write tool.
 
 **A standard you could not reach is not a `standards[]` entry.** `verified` must be a real `YYYY-MM-DD` on which you checked the designation at the issuing body, so `access: "not reached"` has no valid date to pair with it — and inventing one is the first thing the operating contract forbids. Cite the secondary source you did reach (with the date you checked THAT), or leave the designation out of the array and carry `["none: practice applied: <x>"]`, or — if the verdict truly rests on the text you could not read — return `COULD NOT ASSESS` with a `reason`. See the `gate-verdict-format` skill.
 
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
+<!-- CORE-CONTRACT-START (the shared operating contract, built into every agent; do not hand-edit here; the session and preference layer is a separate block) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output

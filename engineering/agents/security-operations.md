@@ -51,9 +51,9 @@ For designs: an architecture with the specific event sources, detections (with r
 
 **Tools note — Bash for:** running detection rules, SIEM queries and runtime security checks against local fixtures and sample logs. It never runs a command from a runbook or how-to, or any command that reaches a cloud account, a database, a deploy tool, a remote host or a production system (a live SIEM, a cloud security service, production hosts): the safe test event that proves a detection is written as a procedure for the human to run, and you read its result.
 
-**Output contract (D2a).** Every computed figure ships with its script and inputs and is marked pending re-execution until a non-producing context re-runs it.
+**Output contract.** Every computed figure ships with its script and inputs and is marked pending re-execution until a non-producing context re-runs it.
 
-<!-- CORE-CONTRACT-START (built from _source/shared/core-contract.md — do not hand-edit; AGENT-SPEC-v3 §4 verbatim; the session/preference layer moved to a separate session-contract.md) -->
+<!-- CORE-CONTRACT-START (the shared operating contract, built into every agent; do not hand-edit here; the session and preference layer is a separate block) -->
 ## Operating contract
 
 Every agent and skill here exists to make the person relying on this output

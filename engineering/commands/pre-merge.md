@@ -17,7 +17,7 @@ Run the pre-merge sequence on the current branch.
    red rung and its command; write no verdict block of your own for the ladder. Otherwise pass the
    table to every gate you dispatch (`test-auditor` cites it as CITED: the output path and the backticked command).
    **Then push the branch** (`git push -u origin HEAD`; never `--force`, never the default branch) before any
-   `test-auditor` or `completion-auditor` dispatch: CI is the judge of whether the tests pass (D-252), and it
+   `test-auditor` or `completion-auditor` dispatch: CI is the judge of whether the tests pass, and it
    runs on the pushed commit. Commit first if the tree has changes. If the push fails, say so and go on: the
    Stop hook will report those gates INCOMPLETE ("commit and push; CI decides"), not PASS.
 1. Use the code-reviewer subagent on `git diff main...HEAD`: conventional
